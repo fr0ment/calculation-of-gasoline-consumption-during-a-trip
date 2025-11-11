@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/card_background"
+    android:layout_margin="4dp">
+
+    <TextView
+        android:id="@+id/tvDistance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Расстояние: 100 км"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tvFuel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Топливо: 10 л"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tvCost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Стоимость: 500 руб"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tvTimestamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="01.01.2024 12:00"
+        android:textSize="12sp"
+        android:textColor="#666" />
+
+</LinearLayout>
