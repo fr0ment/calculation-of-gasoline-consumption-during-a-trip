@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
@@ -14,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvFuelNeeded, tvTripCost, tvResults;
     private Button btnSave, btnCalculate, btnHistory;
 
+    private LinearLayout results;
     private CalculationResult currentResult;
 
     @Override
@@ -33,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
         tvFuelNeeded = findViewById(R.id.tvFuelNeeded);
         tvTripCost = findViewById(R.id.tvTripCost);
         tvResults = findViewById(R.id.tvResults);
+
+        results = findViewById(R.id.results);
 
         btnCalculate = findViewById(R.id.btnCalculate);
         btnSave = findViewById(R.id.btnSave);
@@ -93,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private void displayResults(double fuelNeeded, double tripCost) {
         tvResults.setVisibility(View.VISIBLE);
         btnSave.setVisibility(View.VISIBLE);
+        results.setVisibility(View.VISIBLE);
 
         tvFuelNeeded.setText(String.format("Топливо: %.2f л", fuelNeeded));
         tvTripCost.setText(String.format("Стоимость: %.2f руб", tripCost));

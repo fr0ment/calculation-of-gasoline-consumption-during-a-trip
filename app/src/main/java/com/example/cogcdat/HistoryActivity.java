@@ -3,6 +3,7 @@ package com.example.cogcdat;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,7 +15,7 @@ public class HistoryActivity extends AppCompatActivity {
     private CalculationAdapter adapter;
     private DatabaseHelper dbHelper;
     private List<CalculationResult> calculations;
-
+    public Button btnBack;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,9 +23,9 @@ public class HistoryActivity extends AppCompatActivity {
 
         listView = findViewById(R.id.listView);
         dbHelper = new DatabaseHelper(this);
+        btnBack = findViewById(R.id.buttonBack);
 
         loadCalculations();
-
         // Долгое нажатие для удаления
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -34,6 +35,13 @@ public class HistoryActivity extends AppCompatActivity {
                 Toast.makeText(HistoryActivity.this, "Запись удалена", Toast.LENGTH_SHORT).show();
                 loadCalculations(); // Обновляем список
                 return true;
+            }
+        });
+
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
             }
         });
     }
