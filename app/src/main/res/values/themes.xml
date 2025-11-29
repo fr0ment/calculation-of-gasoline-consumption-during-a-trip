@@ -1,21 +1,17 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Базовая тема приложения Material 3 -->
     <style name="Base.Theme.CarManager" parent="Theme.Material3.DayNight">
         <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary</item>
         <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/primary</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorSurface">@color/background</item>
+        <item name="colorOnSurface">@color/white</item>
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor">@color/background</item>
-
-        <!-- Для поддержки MaterialCardView в Material3 -->
-        <item name="materialCardViewStyle">@style/Widget.Material3.CardView</item>
+        <item name="android:statusBarColor">@color/primary</item>
     </style>
 
-    <style name="Theme.CoGCDat_2" parent="Base.Theme.CoGCDat_2" />
-
-    <style name="Widget.Material3.CardView" parent="Widget.MaterialComponents.CardView">
-        <item name="cardBackgroundColor">@color/card_background</item>
-        <item name="cardCornerRadius">12dp</item>
-        <item name="cardElevation">4dp</item>
-    </style>
+    <style name="Theme.CarManager" parent="Base.Theme.CarManager" />
 </resources>

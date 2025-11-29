@@ -7,6 +7,17 @@
     <color name="background">#303245</color>
     <color name="card_background">#3A3E52</color>
     <color name="primary">#4A6EFF</color>
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#AAAAAA</color>
+    <color name="primary_dark">#3A5AFF</color>
+    <color name="secondary">#03DAC6</color>
+    <color name="secondary_dark">#00BFA5</color>
+
+    <!-- Material 3 colors -->
+    <color name="colorPrimary">#4A6EFF</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorPrimaryContainer">#4A6EFF</color>
+    <color name="colorOnPrimaryContainer">#FFFFFF</color>
+    <color name="colorSecondary">#03DAC6</color>
+    <color name="colorOnSecondary">#000000</color>
+    <color name="colorSurface">#303245</color>
+    <color name="colorOnSurface">#FFFFFF</color>
 </resources>

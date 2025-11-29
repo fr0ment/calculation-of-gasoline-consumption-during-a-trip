@@ -4,6 +4,7 @@ public class Car {
     private int id;
     private String name;
     private String description;
+    private String imagePath;
     private String distanceUnit;
     private String fuelUnit;
     private String fuelConsumptionUnit;
@@ -18,12 +19,13 @@ public class Car {
 
     public Car() {}
 
-    public Car(String name, String description, String distanceUnit, String fuelUnit,
+    public Car(String name, String description, String imagePath, String distanceUnit, String fuelUnit,
                String fuelConsumptionUnit, String fuelType, double tankVolume,
                String brand, String model, String year, String licensePlate,
                String vin, String insurancePolicy) {
         this.name = name;
         this.description = description;
+        this.imagePath = imagePath;
         this.distanceUnit = distanceUnit;
         this.fuelUnit = fuelUnit;
         this.fuelConsumptionUnit = fuelConsumptionUnit;
@@ -37,7 +39,6 @@ public class Car {
         this.insurancePolicy = insurancePolicy;
     }
 
-    // Геттеры и сеттеры
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -46,6 +47,9 @@ public class Car {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
     public String getDistanceUnit() { return distanceUnit; }
     public void setDistanceUnit(String distanceUnit) { this.distanceUnit = distanceUnit; }
