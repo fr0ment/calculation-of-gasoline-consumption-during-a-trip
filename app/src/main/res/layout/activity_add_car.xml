@@ -67,11 +67,11 @@
                 android:id="@+id/ivCarPhoto"
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
-                android:scaleType="centerInside"
+                android:layout_marginBottom="12dp"
+                android:contentDescription="TODO"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_car_outline"
-                android:background="#2A2D3E"
-                app:tint="#666666"
-                android:layout_marginBottom="12dp" />
+                android:visibility="visible" />
 
             <Button
                 android:id="@+id/btnAddPhoto"

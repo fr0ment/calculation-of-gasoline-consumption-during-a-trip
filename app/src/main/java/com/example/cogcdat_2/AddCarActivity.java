@@ -1,13 +1,14 @@
 package com.example.cogcdat_2;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -15,36 +16,31 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import androidx.core.content.FileProvider;
-import java.io.File;
-import java.io.IOException;
 
+import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-// Добавьте эти импорты:
-import androidx.annotation.NonNull;
-import android.util.Log;
 import java.io.InputStream;
 
 public class AddCarActivity extends AppCompatActivity {
+
     private static final int PICK_IMAGE_REQUEST = 1;
     private static final int PERMISSION_REQUEST_READ_EXTERNAL_STORAGE = 2;
 
     private EditText etName, etDescription, etFuelType, etTankVolume, etBrand,
             etModel, etYear, etLicensePlate, etVin, etInsurancePolicy;
     private Spinner spinnerDistanceUnit, spinnerFuelUnit, spinnerFuelConsumption;
-    private Button btnSave, btnBack;
+    private Button btnSave, btnBack, btnAddPhoto;
     private ImageView ivCarPhoto;
-    private Button btnAddPhoto;
 
     private DatabaseHelper dbHelper;
     private boolean isFirstLaunch;
-    private String selectedImagePath = "";
+    private String selectedImagePath = ""; // Здесь будет храниться путь к локальному файлу
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +71,6 @@ public class AddCarActivity extends AppCompatActivity {
         etInsurancePolicy = findViewById(R.id.etInsurancePolicy);
         btnSave = findViewById(R.id.btnSave);
         btnBack = findViewById(R.id.btnBack);
-
         ivCarPhoto = findViewById(R.id.ivCarPhoto);
         btnAddPhoto = findViewById(R.id.btnAddPhoto);
     }
@@ -101,36 +96,21 @@ public class AddCarActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveCar();
+        btnSave.setOnClickListener(v -> saveCar());
+
+        btnBack.setOnClickListener(v -> {
+            if (isFirstLaunch) {
+                finishAffinity();
+            } else {
+                finish();
             }
         });
 
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isFirstLaunch) {
-                    finishAffinity();
-                } else {
-                    finish();
-                }
-            }
-        });
-
-        btnAddPhoto.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openImageChooser();
-            }
-        });
+        btnAddPhoto.setOnClickListener(v -> openImageChooser());
     }
 
     private void openImageChooser() {
-        // Для Android 13+ (API 33+) используем новые разрешения
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ - используем READ_MEDIA_IMAGES
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
@@ -138,12 +118,9 @@ public class AddCarActivity extends AppCompatActivity {
                         PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
                 return;
             }
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            // Android 10-12 - не требуется разрешение для ACTION_GET_CONTENT
-            launchImagePicker();
-            return;
-        } else {
-            // Android 9 и ниже - используем READ_EXTERNAL_STORAGE
+        } else if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P) {
+            // Для Android 9 и ниже нужно разрешение, для 10-12 обычно не нужно для ACTION_GET_CONTENT,
+            // но проверка не повредит
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
@@ -152,10 +129,9 @@ public class AddCarActivity extends AppCompatActivity {
                 return;
             }
         }
-
-        // Если разрешения есть, запускаем выбор изображения
         launchImagePicker();
     }
+
     private void launchImagePicker() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -163,138 +139,130 @@ public class AddCarActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Выберите изображение"), PICK_IMAGE_REQUEST);
     }
 
-    // Добавьте этот метод для обработки разрешений
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_READ_EXTERNAL_STORAGE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение получено, запускаем выбор изображения
                 launchImagePicker();
             } else {
-                Toast.makeText(this, "Разрешение необходимо для выбора изображения", Toast.LENGTH_SHORT).show();
-                // Можно показать диалог с объяснением
                 showPermissionExplanation();
             }
         }
     }
-    // Метод для объяснения необходимости разрешения
+
     private void showPermissionExplanation() {
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
-        builder.setTitle("Необходимо разрешение")
-                .setMessage("Для выбора фотографий автомобиля необходимо разрешение на доступ к изображениям")
-                .setPositiveButton("OK", (dialog, which) -> {
-                    // Снова запрашиваем разрешение
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                        ActivityCompat.requestPermissions(this,
-                                new String[]{Manifest.permission.READ_MEDIA_IMAGES},
-                                PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
-                    } else {
-                        ActivityCompat.requestPermissions(this,
-                                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                                PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
-                    }
-                })
+        new AlertDialog.Builder(this)
+                .setTitle("Необходимо разрешение")
+                .setMessage("Для выбора фотографий автомобиля необходимо разрешение.")
+                .setPositiveButton("OK", (dialog, which) -> openImageChooser()) // Попытка снова
                 .setNegativeButton("Отмена", null)
                 .show();
     }
-    private String copyImageToInternalStorage(Uri uri) {
-        InputStream inputStream = null;
-        FileOutputStream outputStream = null;
 
-        try {
-            inputStream = getContentResolver().openInputStream(uri);
-            String fileName = "car_image_" + System.currentTimeMillis() + ".jpg";
-            File outputFile = new File(getFilesDir(), fileName);
-
-            outputStream = new FileOutputStream(outputFile);
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer, 0, length);
-            }
-
-            return outputFile.getAbsolutePath();
-        } catch (Exception e) {
-            Log.e("ImageDebug", "Error copying image: " + e.getMessage());
-            return null;
-        } finally {
-            // Закрываем потоки в блоке finally чтобы гарантировать их закрытие
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    // --- ГЛАВНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ ---
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             Uri uri = data.getData();
-            selectedImagePath = uri.toString();
-
             Log.d("ImageDebug", "Selected URI: " + uri.toString());
 
-            // Предоставляем постоянные права доступа к URI
-            try {
-                final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                getContentResolver().takePersistableUriPermission(uri, takeFlags);
-                Log.d("ImageDebug", "Persistable permission taken for URI: " + uri.toString());
-            } catch (Exception e) {
-                Log.e("ImageDebug", "Error taking persistable permission: " + e.getMessage());
-            }
+            // 1. Копируем файл во внутреннее хранилище
+            String internalPath = copyImageToInternalStorage(uri);
 
-            try {
-                // Загружаем изображение для предпросмотра
-                InputStream inputStream = getContentResolver().openInputStream(uri);
-                final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            if (internalPath != null) {
+                // 2. Сохраняем ПУТЬ К ФАЙЛУ в переменную
+                selectedImagePath = internalPath;
+                Log.d("ImageDebug", "Saved internal path: " + selectedImagePath);
 
-                if (inputStream != null) {
-                    inputStream.close();
-                }
+                // 3. Отображаем с помощью безопасного метода (чтобы не было серого фона)
+                setPic(ivCarPhoto, selectedImagePath);
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (bitmap != null) {
-                            ivCarPhoto.setImageBitmap(bitmap);
-                            ivCarPhoto.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            Toast.makeText(AddCarActivity.this, "Изображение загружено", Toast.LENGTH_SHORT).show();
-                            Log.d("ImageDebug", "Bitmap dimensions: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                        } else {
-                            Toast.makeText(AddCarActivity.this, "Не удалось загрузить изображение", Toast.LENGTH_SHORT).show();
-                            Log.e("ImageDebug", "Bitmap is null");
-                            setDefaultImage(ivCarPhoto);
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.e("ImageDebug", "Error loading image: " + e.getMessage());
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(AddCarActivity.this, "Ошибка загрузки изображения", Toast.LENGTH_SHORT).show();
-                        setDefaultImage(ivCarPhoto);
-                    }
-                });
+                Toast.makeText(this, "Фото загружено", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Ошибка сохранения фото", Toast.LENGTH_SHORT).show();
+                setDefaultImage(ivCarPhoto);
             }
         }
     }
+
+    /**
+     * Метод для безопасного отображения больших изображений.
+     * Предотвращает ошибку OutOfMemory и "серый фон".
+     */
+    private void setPic(ImageView imageView, String currentPhotoPath) {
+        // Получаем размеры ImageView
+        int targetW = imageView.getWidth();
+        int targetH = imageView.getHeight();
+
+        // Если View еще не отрисован, задаем стандартный размер для декодирования
+        if (targetW == 0 || targetH == 0) {
+            targetW = 500; // примерный размер
+            targetH = 500;
+        }
+
+        // Читаем размеры изображения (без загрузки в память)
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Вычисляем коэффициент уменьшения
+        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+
+        // Загружаем изображение с уменьшением
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        } else {
+            setDefaultImage(imageView);
+        }
+    }
+
+    private String copyImageToInternalStorage(Uri uri) {
+        InputStream inputStream = null;
+        FileOutputStream outputStream = null;
+
+        try {
+            inputStream = getContentResolver().openInputStream(uri);
+            // Создаем уникальное имя файла
+            String fileName = "car_" + System.currentTimeMillis() + ".jpg";
+            File outputFile = new File(getFilesDir(), fileName);
+
+            outputStream = new FileOutputStream(outputFile);
+            byte[] buffer = new byte[4096]; // Буфер 4KB
+            int length;
+            while ((length = inputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, length);
+            }
+
+            return outputFile.getAbsolutePath(); // Возвращаем полный путь к файлу
+        } catch (Exception e) {
+            Log.e("ImageDebug", "Error copying image: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (inputStream != null) inputStream.close();
+                if (outputStream != null) outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void setDefaultImage(ImageView imageView) {
-        imageView.setImageResource(R.drawable.ic_car_outline);
+        imageView.setImageResource(R.drawable.ic_car_outline); // Убедитесь, что этот ресурс существует
         imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
     }
 
@@ -305,18 +273,26 @@ public class AddCarActivity extends AppCompatActivity {
             return;
         }
 
-        Log.d("ImageDebug", "Saving car. Image path: " + (selectedImagePath != null ? selectedImagePath : "NULL"));
+        Log.d("ImageDebug", "Saving car. Final Image Path: " + selectedImagePath);
+
+        double tankVolume = 0;
+        try {
+            if (!etTankVolume.getText().toString().isEmpty()) {
+                tankVolume = Double.parseDouble(etTankVolume.getText().toString());
+            }
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Неверный формат объема бака", Toast.LENGTH_SHORT).show();
+        }
 
         Car car = new Car(
                 name,
                 etDescription.getText().toString().trim(),
-                selectedImagePath,
+                selectedImagePath, // Сохраняем путь к локальному файлу
                 spinnerDistanceUnit.getSelectedItem().toString(),
                 spinnerFuelUnit.getSelectedItem().toString(),
                 spinnerFuelConsumption.getSelectedItem().toString(),
                 etFuelType.getText().toString().trim(),
-                etTankVolume.getText().toString().isEmpty() ? 0 :
-                        Double.parseDouble(etTankVolume.getText().toString()),
+                tankVolume,
                 etBrand.getText().toString().trim(),
                 etModel.getText().toString().trim(),
                 etYear.getText().toString().trim(),
@@ -326,30 +302,20 @@ public class AddCarActivity extends AppCompatActivity {
         );
 
         long carId = dbHelper.addCar(car);
-        Log.d("ImageDebug", "Car saved with ID: " + carId);
 
-        // Проверим, что автомобиль действительно сохранился
-        Car savedCar = dbHelper.getCarById((int) carId);
-        if (savedCar != null) {
-            Log.d("ImageDebug", "Retrieved car image path: " + savedCar.getImagePath());
-            Log.d("ImageDebug", "Retrieved car name: " + savedCar.getName());
+        if (carId > 0) {
+            Toast.makeText(this, "Автомобиль сохранен", Toast.LENGTH_SHORT).show();
+
+            if (isFirstLaunch) {
+                getSharedPreferences("app_prefs", MODE_PRIVATE)
+                        .edit()
+                        .putBoolean("first_launch", false)
+                        .apply();
+                startActivity(new Intent(AddCarActivity.this, MainActivity.class));
+            }
+            finish();
         } else {
-            Log.e("ImageDebug", "Failed to retrieve saved car");
+            Toast.makeText(this, "Ошибка сохранения в БД", Toast.LENGTH_SHORT).show();
         }
-
-        if (isFirstLaunch) {
-            // Сохраняем флаг первого запуска
-            android.content.SharedPreferences preferences = getSharedPreferences("app_prefs", MODE_PRIVATE);
-            android.content.SharedPreferences.Editor editor = preferences.edit();
-            editor.putBoolean("first_launch", false);
-            editor.apply();
-
-            // Переходим на главную страницу
-            Intent intent = new Intent(AddCarActivity.this, MainActivity.class);
-            startActivity(intent);
-        }
-        finish();
-
-        Toast.makeText(this, "Автомобиль сохранен", Toast.LENGTH_SHORT).show();
     }
 }

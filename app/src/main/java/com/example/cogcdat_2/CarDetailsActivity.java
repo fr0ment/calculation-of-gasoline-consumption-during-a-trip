@@ -1,11 +1,7 @@
 package com.example.cogcdat_2;
 
-import static android.app.PendingIntent.getActivity;
-
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
@@ -13,7 +9,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
-import java.io.InputStream;
 
 public class CarDetailsActivity extends AppCompatActivity {
 
@@ -32,7 +27,13 @@ public class CarDetailsActivity extends AppCompatActivity {
             car = dbHelper.getCarById(carId);
             if (car != null) {
                 setupViews();
+            } else {
+                Log.e("CarDetails", "Car not found with ID: " + carId);
+                finish(); // Закрываем, если не нашли машину
             }
+        } else {
+            Log.e("CarDetails", "Invalid car ID provided.");
+            finish();
         }
     }
 
@@ -47,7 +48,7 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvBrandModel.setText(car.getBrand() + " " + car.getModel());
         tvDescription.setText(car.getDescription());
 
-        // Загрузка изображения
+        // Загрузка изображения: используем локальный путь (не URI)
         if (car.getImagePath() != null && !car.getImagePath().isEmpty()) {
             loadImageSafe(ivCarImage, car.getImagePath());
         } else {
@@ -75,40 +76,67 @@ public class CarDetailsActivity extends AppCompatActivity {
             return;
         }
 
-        new Thread(() -> {
-            try {
-                Uri uri = Uri.parse(imagePath);
-                InputStream inputStream = getActivity().getContentResolver().openInputStream(uri);
-                final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        // Вызываем безопасный метод декодирования файла
+        setPic(imageView, imagePath);
+    }
 
-                if (inputStream != null) {
-                    inputStream.close();
-                }
+    /**
+     * Метод для безопасного отображения больших изображений (с сэмплированием).
+     */
+    private void setPic(ImageView imageView, String currentPhotoPath) {
+        // Получаем размеры ImageView
+        int targetW = imageView.getWidth();
+        int targetH = imageView.getHeight();
 
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> {
-                        if (bitmap != null) {
-                            imageView.setImageBitmap(bitmap);
-                            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            Log.d("ImageDebug", "Image loaded successfully");
-                        } else {
-                            setDefaultImage(imageView);
-                            Log.e("ImageDebug", "Failed to load image");
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                Log.e("ImageDebug", "Error in loadImageSafe: " + e.getMessage());
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> setDefaultImage(imageView));
-                }
+        // Если View еще не отрисован, используем размер из XML (250dp)
+        if (targetW <= 0) {
+            float density = getResources().getDisplayMetrics().density;
+            targetW = getResources().getDisplayMetrics().widthPixels; // Ширина экрана
+            targetH = (int) (250 * density); // Высота 250dp
+        }
+
+        File file = new File(currentPhotoPath);
+        if (!file.exists()) {
+            Log.e("ImageDebug", "File not found at path: " + currentPhotoPath);
+            setDefaultImage(imageView);
+            return;
+        }
+
+        // Читаем размеры изображения (без загрузки в память)
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Определяем коэффициент уменьшения (inSampleSize)
+        int scaleFactor = 1;
+        if (photoW > targetW || photoH > targetH) {
+            scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+        }
+
+        // Загружаем изображение с уменьшением
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        try {
+            Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+
+            if (bitmap != null) {
+                imageView.setImageBitmap(bitmap);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            } else {
+                Log.e("ImageDebug", "Bitmap decoding failed (returned null).");
+                setDefaultImage(imageView);
             }
-        }).start();
+        } catch (Exception e) {
+            Log.e("ImageDebug", "Error decoding bitmap: " + e.getMessage());
+            setDefaultImage(imageView);
+        }
     }
 
-    private Activity getActivity() {
-        return null;
-    }
 
     private void setDefaultImage(ImageView imageView) {
         imageView.setImageResource(R.drawable.ic_car_outline);

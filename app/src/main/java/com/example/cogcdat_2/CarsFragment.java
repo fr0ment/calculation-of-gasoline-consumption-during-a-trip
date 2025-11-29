@@ -3,7 +3,6 @@ package com.example.cogcdat_2;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
-import java.io.InputStream;
+// import java.io.InputStream; // Удалили, так как не используем InputStream
 import java.util.List;
 
 public class CarsFragment extends Fragment {
@@ -39,17 +38,12 @@ public class CarsFragment extends Fragment {
         FloatingActionButton fabAdd = view.findViewById(R.id.fabAdd);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        carList = dbHelper.getAllCars();
+        // carList будет загружен в onResume
 
-        updateEmptyState();
-
-        fabAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), AddCarActivity.class);
-                intent.putExtra("isFirstLaunch", false);
-                startActivity(intent);
-            }
+        fabAdd.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), AddCarActivity.class);
+            intent.putExtra("isFirstLaunch", false);
+            startActivity(intent);
         });
 
         return view;
@@ -69,16 +63,27 @@ public class CarsFragment extends Fragment {
         } else {
             recyclerView.setVisibility(View.VISIBLE);
             emptyState.setVisibility(View.GONE);
-            adapter = new CarAdapter(carList);
-            recyclerView.setAdapter(adapter);
+
+            // Проверяем, существует ли адаптер, чтобы избежать создания нового
+            if (adapter == null) {
+                adapter = new CarAdapter(carList);
+                recyclerView.setAdapter(adapter);
+            } else {
+                adapter.updateList(carList);
+                adapter.notifyDataSetChanged();
+            }
         }
     }
 
     // Вспомогательный метод для установки изображения по умолчанию
     private void setDefaultImage(ImageView imageView) {
+        // Очистка старой картинки перед установкой новой заглушки
+        imageView.setImageBitmap(null);
         imageView.setImageResource(R.drawable.ic_car_outline);
         imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
     }
+
+    // --- ИСПРАВЛЕННЫЙ МЕТОД ЗАГРУЗКИ (СИНХРОННЫЙ, ИСПОЛЬЗУЕМ ФАЙЛ) ---
 
     private void loadImageSafe(ImageView imageView, String imagePath) {
         if (imagePath == null || imagePath.isEmpty()) {
@@ -86,35 +91,60 @@ public class CarsFragment extends Fragment {
             return;
         }
 
-        new Thread(() -> {
-            try {
-                Uri uri = Uri.parse(imagePath);
-                InputStream inputStream = getActivity().getContentResolver().openInputStream(uri);
-                final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        // Вызываем метод безопасного декодирования файла
+        setPic(imageView, imagePath);
+    }
 
-                if (inputStream != null) {
-                    inputStream.close();
-                }
+    /**
+     * Метод для безопасного отображения больших изображений (с сэмплированием).
+     * Читает файл по абсолютному пути, масштабируя его под размер ImageView (200dp).
+     */
+    private void setPic(ImageView imageView, String currentPhotoPath) {
+        // Размеры ImageView в item_car.xml: width=match_parent, height=200dp
+        float density = getResources().getDisplayMetrics().density;
+        int targetW = getResources().getDisplayMetrics().widthPixels;
+        int targetH = (int) (200 * density); // Высота 200dp
 
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> {
-                        if (bitmap != null) {
-                            imageView.setImageBitmap(bitmap);
-                            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            Log.d("ImageDebug", "Image loaded successfully");
-                        } else {
-                            setDefaultImage(imageView);
-                            Log.e("ImageDebug", "Failed to load image");
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                Log.e("ImageDebug", "Error in loadImageSafe: " + e.getMessage());
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> setDefaultImage(imageView));
-                }
+        File file = new File(currentPhotoPath);
+        if (!file.exists()) {
+            Log.e("ImageDebug", "File not found at path: " + currentPhotoPath);
+            setDefaultImage(imageView);
+            return;
+        }
+
+        // Читаем размеры изображения (без загрузки в память)
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Определяем коэффициент уменьшения (inSampleSize)
+        int scaleFactor = 1;
+        if (photoW > targetW || photoH > targetH) {
+            scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+        }
+
+        // Загружаем изображение с уменьшением
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        try {
+            Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+
+            if (bitmap != null) {
+                imageView.setImageBitmap(bitmap);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            } else {
+                Log.e("ImageDebug", "Bitmap decoding failed (returned null).");
+                setDefaultImage(imageView);
             }
-        }).start();
+        } catch (Exception e) {
+            Log.e("ImageDebug", "Error decoding bitmap: " + e.getMessage());
+            setDefaultImage(imageView);
+        }
     }
 
     private class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
@@ -122,6 +152,10 @@ public class CarsFragment extends Fragment {
 
         public CarAdapter(List<Car> cars) {
             this.cars = cars;
+        }
+
+        public void updateList(List<Car> newCars) {
+            this.cars = newCars;
         }
 
         @NonNull
@@ -135,15 +169,18 @@ public class CarsFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Car car = cars.get(position);
+
+            // Очистка перед переиспользованием
+            holder.ivCarImage.setImageBitmap(null);
+
             holder.tvName.setText(car.getName());
             holder.tvBrandModel.setText(car.getBrand() + " " + car.getModel() + " • " + car.getYear());
             holder.tvDescription.setText(car.getDescription());
-            holder.tvSpecs.setText(car.getFuelType() + " • " + car.getTankVolume() + " л");
+            // Убедитесь, что эта строка корректна, поскольку вы не храните пробег в Car
+            // Предполагаю, что вы имели в виду только тип топлива и объем бака.
+            holder.tvSpecs.setText(car.getFuelType() + " • " + car.getTankVolume() + " " + car.getFuelUnit());
 
-            // Загрузка изображения с отладкой
-            Log.d("ImageDebug", "Loading image for car: " + car.getName());
-            Log.d("ImageDebug", "Image path: " + car.getImagePath());
-
+            // Загрузка изображения с использованием исправленного метода
             if (car.getImagePath() != null && !car.getImagePath().isEmpty()) {
                 loadImageSafe(holder.ivCarImage, car.getImagePath());
             } else {
@@ -151,13 +188,10 @@ public class CarsFragment extends Fragment {
             }
 
             // Обработчик клика по карточке
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(getActivity(), CarDetailsActivity.class);
-                    intent.putExtra("car_id", car.getId());
-                    startActivity(intent);
-                }
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), CarDetailsActivity.class);
+                intent.putExtra("car_id", car.getId());
+                startActivity(intent);
             });
         }
 

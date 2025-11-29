@@ -23,8 +23,7 @@
             android:scaleType="centerCrop"
             android:src="@drawable/ic_car_outline"
             android:background="#2A2D3E"
-            android:padding="20dp"
-            app:tint="#666666" />
+            android:padding="20dp" />
 
         <!-- Информация об автомобиле -->
         <LinearLayout
