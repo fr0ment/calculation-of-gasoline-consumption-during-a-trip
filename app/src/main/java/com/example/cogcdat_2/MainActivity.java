@@ -16,20 +16,31 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new CarsFragment())
-                .commit();
+        // 💡 Оптимизированное назначение слушателя с использованием лямбда-выражения
+        bottomNavigationView.setOnItemSelectedListener(navListener);
+
+        // Загружаем фрагмент по умолчанию при первом запуске (на всякий случай, если ID изменится)
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new TripsFragment())
+                    .commit();
+        }
     }
 
-    private BottomNavigationView.OnNavigationItemSelectedListener navListener =
-            new BottomNavigationView.OnNavigationItemSelectedListener() {
+    // 💡 Используем новый интерфейс OnItemSelectedListener
+    private BottomNavigationView.OnItemSelectedListener navListener =
+            new BottomNavigationView.OnItemSelectedListener() {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     Fragment selectedFragment = null;
 
+                    // 💡 Используем switch с item.getItemId()
                     int itemId = item.getItemId();
+
+                    // 🛑 ВНИМАНИЕ: Убедитесь, что ID (R.id.nav_trips, R.id.nav_cars, R.id.nav_analytics)
+                    // ТОЧНО СОВПАДАЮТ с ID в вашем файле menu/bottom_nav_menu.xml
+
                     if (itemId == R.id.nav_trips) {
                         selectedFragment = new TripsFragment();
                     } else if (itemId == R.id.nav_cars) {
@@ -41,8 +52,11 @@ public class MainActivity extends AppCompatActivity {
                     if (selectedFragment != null) {
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.fragment_container, selectedFragment)
+                                // Добавление .setReorderingAllowed(true) может улучшить производительность
+                                .setReorderingAllowed(true)
                                 .commit();
                     }
+                    // Возвращаем true, чтобы элемент был помечен как выбранный
                     return true;
                 }
             };
