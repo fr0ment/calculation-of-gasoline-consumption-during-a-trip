@@ -1,4 +1,4 @@
-package com.example.cogcdat;
+package com.example.cogcdat_2;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.cogcdat", appContext.getPackageName());
+        assertEquals("com.example.cogcdat_2", appContext.getPackageName());
     }
 }

@@ -1,4 +1,4 @@
-package com.example.cogcdat;
+package com.example.cogcdat_2;
 
 import org.junit.Test;
 

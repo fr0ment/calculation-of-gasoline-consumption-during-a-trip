@@ -1,3 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CoGCDaT</string>
+    <string name="app_name">Car Manager</string>
+
+    <!-- Add Car Activity -->
+    <string name="add_car_title">Добавить автомобиль</string>
+    <string name="car_name">Имя</string>
+    <string name="car_description">Описание</string>
+    <string name="units_title">Единицы измерения</string>
+    <string name="distance_units">Единицы расстояния</string>
+    <string name="fuel_units">Единицы топлива</string>
+    <string name="fuel_consumption">Расход топлива</string>
+    <string name="fuel_type_title">Тип топлива</string>
+    <string name="fuel_type">Бензин</string>
+    <string name="tank_volume_title">Объем бака</string>
+    <string name="tank_volume">Объем бака (л)</string>
+    <string name="specs_title">Характеристика</string>
+    <string name="brand">Марка</string>
+    <string name="model">Модель</string>
+    <string name="year">Год</string>
+    <string name="license_plate">Номерные знаки</string>
+    <string name="vin">VIN</string>
+    <string name="insurance_policy">Страховой полис</string>
+    <string name="save">Сохранить</string>
+    <string name="back">Назад</string>
+
+    <!-- Main Activity -->
+    <string name="trips">Поездки</string>
+    <string name="cars">Авто</string>
+    <string name="analytics">Аналитика</string>
+    <string name="no_cars">Нет добавленных автомобилей</string>
+    <string name="add_first_car">Добавьте первый автомобиль</string>
+
+    <!-- Arrays for spinners -->
+    <string-array name="distance_units">
+        <item>Километры</item>
+        <item>Мили</item>
+    </string-array>
+
+    <string-array name="fuel_units">
+        <item>Литры</item>
+        <item>Галлоны (США)</item>
+        <item>Галлоны (Великобритания)</item>
+        <item>кВтч</item>
+        <item>кг</item>
+        <item>м^3</item>
+    </string-array>
+
+    <string-array name="fuel_consumption_units">
+        <item>л/100км</item>
+        <item>км/л</item>
+        <item>миль/галлон (США)</item>
+        <item>миль/галлон (Великобритания)</item>
+        <item>кВтч/100км</item>
+        <item>кг/100км</item>
+        <item>м³/100км</item>
+    </string-array>
 </resources>

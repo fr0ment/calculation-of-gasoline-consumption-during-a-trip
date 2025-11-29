@@ -3,16 +3,16 @@ plugins {
 }
 
 android {
-    namespace = "com.example.cogcdat"
+    namespace = "com.example.cogcdat_2"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.cogcdat"
+        applicationId = "com.example.cogcdat_2"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
+        vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -29,13 +29,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    sourceSets {
-        getByName("main") {
-            assets {
-                srcDirs("src\\main\\assets", "src\\main\\assets")
-            }
-        }
-    }
 }
 
 dependencies {
@@ -51,7 +44,10 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-        // Для округлых углов карточек
-    implementation("androidx.cardview:cardview:1.0.0")
-
+    implementation("androidx.recyclerview:recyclerview:1.3.1")
+    implementation("androidx.fragment:fragment:1.6.1")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.vectordrawable:vectordrawable:1.1.0")
+    implementation("androidx.navigation:navigation-fragment:2.7.0")
+    implementation("androidx.navigation:navigation-ui:2.7.0")
 }

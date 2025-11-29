@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CoGCDaT"
+rootProject.name = "CoGCDat_2"
 include(":app")
  
