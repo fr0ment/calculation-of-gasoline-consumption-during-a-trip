@@ -10,20 +10,14 @@ public class Car {
     private String fuelConsumptionUnit;
     private String fuelType;
     private double tankVolume;
-    private String brand;
-    private String model;
-    private String year;
-    private String licensePlate;
-    private String vin;
-    private String insurancePolicy;
+    // Удалены: brand, model, year, licensePlate, vin, insurancePolicy
 
     public Car() {}
 
+    // Упрощенный конструктор с ID
     public Car(int id, String name, String description, String imagePath, String distanceUnit, String fuelUnit,
-               String fuelConsumptionUnit, String fuelType, double tankVolume,
-               String brand, String model, String year, String licensePlate,
-               String vin, String insurancePolicy) {
-        this.id = id; // Добавляем id
+               String fuelConsumptionUnit, String fuelType, double tankVolume) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.imagePath = imagePath;
@@ -32,35 +26,15 @@ public class Car {
         this.fuelConsumptionUnit = fuelConsumptionUnit;
         this.fuelType = fuelType;
         this.tankVolume = tankVolume;
-        this.brand = brand;
-        this.model = model;
-        this.year = year;
-        this.licensePlate = licensePlate;
-        this.vin = vin;
-        this.insurancePolicy = insurancePolicy;
     }
 
+    // Упрощенный конструктор без ID для добавления
     public Car(String name, String description, String imagePath, String distanceUnit, String fuelUnit,
-               String fuelConsumptionUnit, String fuelType, double tankVolume,
-               String brand, String model, String year, String licensePlate,
-               String vin, String insurancePolicy) {
-        this.name = name;
-        this.description = description;
-        this.imagePath = imagePath;
-        this.distanceUnit = distanceUnit;
-        this.fuelUnit = fuelUnit;
-        this.fuelConsumptionUnit = fuelConsumptionUnit;
-        this.fuelType = fuelType;
-        this.tankVolume = tankVolume;
-        this.brand = brand;
-        this.model = model;
-        this.year = year;
-        this.licensePlate = licensePlate;
-        this.vin = vin;
-        this.insurancePolicy = insurancePolicy;
+               String fuelConsumptionUnit, String fuelType, double tankVolume) {
+        this(-1, name, description, imagePath, distanceUnit, fuelUnit, fuelConsumptionUnit, fuelType, tankVolume);
     }
 
-
+    // Геттеры и Сеттеры
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -88,22 +62,4 @@ public class Car {
 
     public double getTankVolume() { return tankVolume; }
     public void setTankVolume(double tankVolume) { this.tankVolume = tankVolume; }
-
-    public String getBrand() { return brand; }
-    public void setBrand(String brand) { this.brand = brand; }
-
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
-
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
-
-    public String getLicensePlate() { return licensePlate; }
-    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }
-
-    public String getVin() { return vin; }
-    public void setVin(String vin) { this.vin = vin; }
-
-    public String getInsurancePolicy() { return insurancePolicy; }
-    public void setInsurancePolicy(String insurancePolicy) { this.insurancePolicy = insurancePolicy; }
 }

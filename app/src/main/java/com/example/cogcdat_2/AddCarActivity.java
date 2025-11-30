@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -32,81 +33,148 @@ public class AddCarActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
     private static final int PERMISSION_REQUEST_READ_EXTERNAL_STORAGE = 2;
 
-    private EditText etName, etDescription, etFuelType, etTankVolume, etBrand,
-            etModel, etYear, etLicensePlate, etVin, etInsurancePolicy;
+    // УДАЛЕНЫ: etBrand, etModel, etYear, etLicensePlate, etVin, etInsurancePolicy
+    private EditText etName, etDescription, etFuelType, etTankVolume;
     private Spinner spinnerDistanceUnit, spinnerFuelUnit, spinnerFuelConsumption;
     private Button btnSave, btnBack, btnAddPhoto;
     private ImageView ivCarPhoto;
 
     private DatabaseHelper dbHelper;
-    private boolean isFirstLaunch;
-    private String selectedImagePath = ""; // Здесь будет храниться путь к локальному файлу
+    private String selectedImagePath = null;
+    private boolean isFirstLaunch = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_car);
+        // Используем более простой макет
+        setContentView(R.layout.activity_add_car_simple);
 
         dbHelper = new DatabaseHelper(this);
-        isFirstLaunch = getIntent().getBooleanExtra("isFirstLaunch", true);
+
+        isFirstLaunch = getIntent().getBooleanExtra("is_first_launch", false);
 
         initViews();
-        setupSpinners();
         setupListeners();
+        setupSpinners();
+
+        if (isFirstLaunch) {
+            btnBack.setVisibility(View.GONE);
+        }
     }
 
     private void initViews() {
         etName = findViewById(R.id.etName);
         etDescription = findViewById(R.id.etDescription);
+        etFuelType = findViewById(R.id.etFuelType);
+        etTankVolume = findViewById(R.id.etTankVolume);
+
         spinnerDistanceUnit = findViewById(R.id.spinnerDistanceUnit);
         spinnerFuelUnit = findViewById(R.id.spinnerFuelUnit);
         spinnerFuelConsumption = findViewById(R.id.spinnerFuelConsumption);
-        etFuelType = findViewById(R.id.etFuelType);
-        etTankVolume = findViewById(R.id.etTankVolume);
-        etBrand = findViewById(R.id.etBrand);
-        etModel = findViewById(R.id.etModel);
-        etYear = findViewById(R.id.etYear);
-        etLicensePlate = findViewById(R.id.etLicensePlate);
-        etVin = findViewById(R.id.etVin);
-        etInsurancePolicy = findViewById(R.id.etInsurancePolicy);
         btnSave = findViewById(R.id.btnSave);
         btnBack = findViewById(R.id.btnBack);
-        ivCarPhoto = findViewById(R.id.ivCarPhoto);
         btnAddPhoto = findViewById(R.id.btnAddPhoto);
+        ivCarPhoto = findViewById(R.id.ivCarPhoto);
+    }
+
+    private void setupListeners() {
+        btnSave.setOnClickListener(v -> saveCar());
+        btnBack.setOnClickListener(v -> finish());
+        btnAddPhoto.setOnClickListener(v -> checkPermissionAndOpenPicker());
     }
 
     private void setupSpinners() {
-        // Единицы расстояния
+        // Настройка спиннера для единиц расстояния
         ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(this,
                 R.array.distance_units, android.R.layout.simple_spinner_item);
         distanceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerDistanceUnit.setAdapter(distanceAdapter);
 
-        // Единицы топлива
+        // Настройка спиннера для единиц топлива
         ArrayAdapter<CharSequence> fuelAdapter = ArrayAdapter.createFromResource(this,
                 R.array.fuel_units, android.R.layout.simple_spinner_item);
         fuelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerFuelUnit.setAdapter(fuelAdapter);
 
-        // Расход топлива
+        // Настройка спиннера для единиц расхода топлива
         ArrayAdapter<CharSequence> consumptionAdapter = ArrayAdapter.createFromResource(this,
                 R.array.fuel_consumption_units, android.R.layout.simple_spinner_item);
         consumptionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerFuelConsumption.setAdapter(consumptionAdapter);
     }
 
-    private void setupListeners() {
-        btnSave.setOnClickListener(v -> saveCar());
+    private void saveCar() {
+        String name = etName.getText().toString().trim();
+        double tankVolume = 0.0;
 
-        btnBack.setOnClickListener(v -> {
-            if (isFirstLaunch) {
-                finishAffinity();
-            } else {
-                finish();
+        if (name.isEmpty()) {
+            etName.setError("Введите название автомобиля.");
+            return;
+        }
+
+        try {
+            String volumeStr = etTankVolume.getText().toString().trim();
+            if (!volumeStr.isEmpty()) {
+                tankVolume = Double.parseDouble(volumeStr);
             }
-        });
+        } catch (NumberFormatException e) {
+            etTankVolume.setError("Некорректный объем бака.");
+            return;
+        }
 
-        btnAddPhoto.setOnClickListener(v -> openImageChooser());
+        // Используем упрощенный конструктор Car
+        Car car = new Car(
+                name,
+                etDescription.getText().toString().trim(),
+                selectedImagePath,
+                spinnerDistanceUnit.getSelectedItem().toString(),
+                spinnerFuelUnit.getSelectedItem().toString(),
+                spinnerFuelConsumption.getSelectedItem().toString(),
+                etFuelType.getText().toString().trim(),
+                tankVolume
+        );
+
+        long carId = dbHelper.addCar(car);
+
+        if (carId > 0) {
+            Toast.makeText(this, "Автомобиль сохранен", Toast.LENGTH_SHORT).show();
+
+            if (isFirstLaunch) {
+                getSharedPreferences("app_prefs", MODE_PRIVATE)
+                        .edit()
+                        .putBoolean("first_launch", false)
+                        .apply();
+                startActivity(new Intent(AddCarActivity.this, MainActivity.class));
+            }
+            finish();
+        } else {
+            Toast.makeText(this, "Ошибка сохранения в БД", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ... (Методы для работы с фото checkPermissionAndOpenPicker, openImagePicker,
+    //      onRequestPermissionsResult, onActivityResult, saveImageLocally,
+    //      loadBitmapToImageView, setDefaultImage - без изменений)
+
+    private void checkPermissionAndOpenPicker() {
+        if (checkAndRequestPermissions()) launchImagePicker();
+    }
+
+    private boolean checkAndRequestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ использует READ_MEDIA_IMAGES
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_MEDIA_IMAGES}, PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
+                return false;
+            }
+        } else {
+            // До Android 13 использует READ_EXTERNAL_STORAGE
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
+                return false;
+            }
+        }
+        return true;
     }
 
     private void openImageChooser() {
@@ -139,6 +207,7 @@ public class AddCarActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Выберите изображение"), PICK_IMAGE_REQUEST);
     }
 
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -146,18 +215,9 @@ public class AddCarActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 launchImagePicker();
             } else {
-                showPermissionExplanation();
+                Toast.makeText(this, "Разрешение на чтение галереи отклонено.", Toast.LENGTH_SHORT).show();
             }
         }
-    }
-
-    private void showPermissionExplanation() {
-        new AlertDialog.Builder(this)
-                .setTitle("Необходимо разрешение")
-                .setMessage("Для выбора фотографий автомобиля необходимо разрешение.")
-                .setPositiveButton("OK", (dialog, which) -> openImageChooser()) // Попытка снова
-                .setNegativeButton("Отмена", null)
-                .show();
     }
 
     // --- ГЛАВНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ ---
@@ -266,56 +326,4 @@ public class AddCarActivity extends AppCompatActivity {
         imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
     }
 
-    private void saveCar() {
-        String name = etName.getText().toString().trim();
-        if (name.isEmpty()) {
-            Toast.makeText(this, "Введите имя автомобиля", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Log.d("ImageDebug", "Saving car. Final Image Path: " + selectedImagePath);
-
-        double tankVolume = 0;
-        try {
-            if (!etTankVolume.getText().toString().isEmpty()) {
-                tankVolume = Double.parseDouble(etTankVolume.getText().toString());
-            }
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Неверный формат объема бака", Toast.LENGTH_SHORT).show();
-        }
-
-        Car car = new Car(
-                name,
-                etDescription.getText().toString().trim(),
-                selectedImagePath, // Сохраняем путь к локальному файлу
-                spinnerDistanceUnit.getSelectedItem().toString(),
-                spinnerFuelUnit.getSelectedItem().toString(),
-                spinnerFuelConsumption.getSelectedItem().toString(),
-                etFuelType.getText().toString().trim(),
-                tankVolume,
-                etBrand.getText().toString().trim(),
-                etModel.getText().toString().trim(),
-                etYear.getText().toString().trim(),
-                etLicensePlate.getText().toString().trim(),
-                etVin.getText().toString().trim(),
-                etInsurancePolicy.getText().toString().trim()
-        );
-
-        long carId = dbHelper.addCar(car);
-
-        if (carId > 0) {
-            Toast.makeText(this, "Автомобиль сохранен", Toast.LENGTH_SHORT).show();
-
-            if (isFirstLaunch) {
-                getSharedPreferences("app_prefs", MODE_PRIVATE)
-                        .edit()
-                        .putBoolean("first_launch", false)
-                        .apply();
-                startActivity(new Intent(AddCarActivity.this, MainActivity.class));
-            }
-            finish();
-        } else {
-            Toast.makeText(this, "Ошибка сохранения в БД", Toast.LENGTH_SHORT).show();
-        }
-    }
 }

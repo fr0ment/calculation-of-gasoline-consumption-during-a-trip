@@ -3,7 +3,7 @@ package com.example.cogcdat_2;
 // Модель данных для таблицы Trips
 public class Trip {
     private int id;
-    private String name;
+    private String name; // Навзание поездки
     private int carId; // id_Машины
     private String startDateTime; // Дата и время отправления (TEXT, ISO8601)
     private String endDateTime;   // Дата и время прибытия (TEXT, ISO8601)
@@ -22,7 +22,6 @@ public class Trip {
         this.distance = distance;
         this.fuelSpent = fuelSpent;
         this.fuelConsumption = fuelConsumption;
-        // ... остальные поля
     }
 
     // Геттеры и Сеттеры
@@ -44,8 +43,4 @@ public class Trip {
     public double getFuelConsumption() { return fuelConsumption; }
     public void setFuelConsumption(double fuelConsumption) { this.fuelConsumption = fuelConsumption; }
 
-    // Метод для расчета времени в пути (пример)
-    // В реальном приложении лучше использовать JodaTime или java.time, но для простоты здесь
-    // предполагается, что вы будете хранить и оперировать строками ISO8601 в БД.
-    // Реальный расчет времени лучше делать при отображении, используя библиотеки.
 }

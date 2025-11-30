@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/card_background"
+    android:padding="16dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Добавить Поездку"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"/>
+
+        <ImageButton
+            android:id="@+id/btn_close_dialog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_car"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Закрыть"
+            app:tint="#FFFFFF"
+            android:padding="8dp"/>
+    </RelativeLayout>
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_record_gps"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="#4A6EFF"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_car"
+                android:contentDescription="Запись GPS"
+                app:tint="#FFFFFF"
+                android:layout_marginEnd="16dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Записать GPS"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="#FFFFFF"
+                android:contentDescription=""/>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_add_manual"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="#41445A"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_car"
+                android:contentDescription="Добавить вручную"
+                app:tint="#64B5F6"
+                android:layout_marginEnd="16dp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ручной ввод"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="#FFFFFF"
+                android:contentDescription=""/>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

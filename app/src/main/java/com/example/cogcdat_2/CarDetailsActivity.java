@@ -9,11 +9,18 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 public class CarDetailsActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private Car car;
+
+    // УДАЛЕНЫ: tvBrandModel, tvYearPlate, tvVin, tvInsurance
+    private TextView tvName, tvDescription, tvFuelType, tvTankVolume, tvUnits;
+    private ImageView ivCarImage;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,12 +31,12 @@ public class CarDetailsActivity extends AppCompatActivity {
 
         int carId = getIntent().getIntExtra("car_id", -1);
         if (carId != -1) {
-            car = dbHelper.getCarById(carId);
+            car = dbHelper.getCar(carId);
             if (car != null) {
                 setupViews();
             } else {
                 Log.e("CarDetails", "Car not found with ID: " + carId);
-                finish(); // Закрываем, если не нашли машину
+                finish();
             }
         } else {
             Log.e("CarDetails", "Invalid car ID provided.");
@@ -38,71 +45,43 @@ public class CarDetailsActivity extends AppCompatActivity {
     }
 
     private void setupViews() {
-        ImageView ivCarImage = findViewById(R.id.ivCarImage);
-        TextView tvName = findViewById(R.id.tvName);
-        TextView tvBrandModel = findViewById(R.id.tvBrandModel);
-        TextView tvDescription = findViewById(R.id.tvDescription);
-        TextView tvDetails = findViewById(R.id.tvDetails);
+        ivCarImage = findViewById(R.id.ivCarImage);
+        tvName = findViewById(R.id.tvName);
+        tvDescription = findViewById(R.id.tvDescription);
+        tvFuelType = findViewById(R.id.tvFuelType);
+        tvTankVolume = findViewById(R.id.tvTankVolume);
+        tvUnits = findViewById(R.id.tvUnits);
 
         tvName.setText(car.getName());
-        tvBrandModel.setText(car.getBrand() + " " + car.getModel());
         tvDescription.setText(car.getDescription());
+        tvFuelType.setText(car.getFuelType());
 
-        // Загрузка изображения: используем локальный путь (не URI)
-        if (car.getImagePath() != null && !car.getImagePath().isEmpty()) {
-            loadImageSafe(ivCarImage, car.getImagePath());
-        } else {
-            setDefaultImage(ivCarImage);
-        }
+        // Форматируем объем бака
+        String tankVolumeText = String.format(Locale.getDefault(), "%.1f %s", car.getTankVolume(), car.getFuelUnit());
+        tvTankVolume.setText(tankVolumeText);
 
-        // Детальная информация
-        StringBuilder details = new StringBuilder();
-        details.append("Год: ").append(car.getYear()).append("\n\n");
-        details.append("Тип топлива: ").append(car.getFuelType()).append("\n\n");
-        details.append("Объем бака: ").append(car.getTankVolume()).append(" л\n\n");
-        details.append("Номерные знаки: ").append(car.getLicensePlate()).append("\n\n");
-        details.append("VIN: ").append(car.getVin()).append("\n\n");
-        details.append("Страховой полис: ").append(car.getInsurancePolicy()).append("\n\n");
-        details.append("Единицы расстояния: ").append(car.getDistanceUnit()).append("\n\n");
-        details.append("Единицы топлива: ").append(car.getFuelUnit()).append("\n\n");
-        details.append("Расход топлива: ").append(car.getFuelConsumptionUnit());
+        // Форматируем единицы измерения
+        String unitsText = String.format("Расстояние: %s\nТопливо: %s\nРасход: %s",
+                car.getDistanceUnit(), car.getFuelUnit(), car.getFuelConsumptionUnit());
+        tvUnits.setText(unitsText);
 
-        tvDetails.setText(details.toString());
-    }
 
-    private void loadImageSafe(ImageView imageView, String imagePath) {
-        if (imagePath == null || imagePath.isEmpty()) {
-            setDefaultImage(imageView);
-            return;
-        }
-
-        // Вызываем безопасный метод декодирования файла
-        setPic(imageView, imagePath);
+        // Загрузка изображения
+        loadImageSafe(ivCarImage, car.getImagePath());
     }
 
     /**
-     * Метод для безопасного отображения больших изображений (с сэмплированием).
+     * Метод для безопасной загрузки изображения из локального пути.
      */
-    private void setPic(ImageView imageView, String currentPhotoPath) {
-        // Получаем размеры ImageView
-        int targetW = imageView.getWidth();
-        int targetH = imageView.getHeight();
+    private void loadImageSafe(ImageView imageView, String currentPhotoPath) {
+        final int targetW = 500;
+        final int targetH = 250;
 
-        // Если View еще не отрисован, используем размер из XML (250dp)
-        if (targetW <= 0) {
-            float density = getResources().getDisplayMetrics().density;
-            targetW = getResources().getDisplayMetrics().widthPixels; // Ширина экрана
-            targetH = (int) (250 * density); // Высота 250dp
-        }
-
-        File file = new File(currentPhotoPath);
-        if (!file.exists()) {
-            Log.e("ImageDebug", "File not found at path: " + currentPhotoPath);
+        if (currentPhotoPath == null || currentPhotoPath.isEmpty() || !new File(currentPhotoPath).exists()) {
             setDefaultImage(imageView);
             return;
         }
 
-        // Читаем размеры изображения (без загрузки в память)
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
@@ -110,13 +89,11 @@ public class CarDetailsActivity extends AppCompatActivity {
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
 
-        // Определяем коэффициент уменьшения (inSampleSize)
         int scaleFactor = 1;
         if (photoW > targetW || photoH > targetH) {
             scaleFactor = Math.min(photoW / targetW, photoH / targetH);
         }
 
-        // Загружаем изображение с уменьшением
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
         bmOptions.inPurgeable = true;
@@ -139,7 +116,10 @@ public class CarDetailsActivity extends AppCompatActivity {
 
 
     private void setDefaultImage(ImageView imageView) {
+        // Убедитесь, что ic_car_outline существует
         imageView.setImageResource(R.drawable.ic_car_outline);
-        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        // Предполагается, что dark_bg - это существующий цвет
+        imageView.setBackgroundColor(getResources().getColor(R.color.background));
     }
 }

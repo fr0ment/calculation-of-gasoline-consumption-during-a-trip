@@ -12,7 +12,6 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Секция перед началом записи (Pre-Start) -->
         <LinearLayout
             android:id="@+id/layout_pre_start"
             android:layout_width="match_parent"
@@ -33,45 +32,38 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Название поездки (Например: Работа)"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="16dp">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_trip_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textCapSentences"/>
+                    android:inputType="textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Начальное топливо в баке"
-                android:layout_marginBottom="8dp">
+                android:hint="Начальный уровень топлива (л)"
+                android:layout_marginBottom="24dp">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_initial_fuel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="numberDecimal"/>
+                    android:inputType="numberDecimal" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:id="@+id/tv_unit_info"
-                android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/btn_start_recording"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:textSize="12sp"
-                tools:text="Единицы измерения: л (топливо), км (расстояние)"/>
+                android:text="НАЧАТЬ ЗАПИСЬ"
+                android:padding="12dp"
+                android:textSize="18sp"/>
+
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_start_recording"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="НАЧАТЬ ЗАПИСЬ"
-            android:layout_marginTop="24dp"
-            android:visibility="visible"
-            app:layout_constraintTop_toBottomOf="@id/layout_pre_start" />
-
-        <!-- Секция во время записи (Recording Stats) -->
         <LinearLayout
             android:id="@+id/layout_recording"
             android:layout_width="match_parent"
@@ -84,43 +76,92 @@
                 android:id="@+id/tv_current_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ЗАПИСЬ АКТИВНА"
-                android:textAlignment="center"
-                android:textSize="22sp"
+                android:text="Статус: В ожидании GPS..."
+                android:textColor="#FF9800"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="24dp"/>
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/tv_distance_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Пройденное расстояние:"
+                android:textColor="#CCCCCC"
+                android:textSize="14sp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:gravity="bottom"
                 android:layout_marginBottom="16dp">
-                <!-- ВАЖНО: ID для FindViewById -->
-                <include android:id="@+id/stat_distance" layout="@layout/item_stats_row" />
-                <include android:id="@+id/stat_duration" layout="@layout/item_stats_row" />
+                <TextView
+                    android:id="@+id/tv_distance_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.0"
+                    android:textSize="48sp"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:id="@+id/tv_unit_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="км"
+                    android:textSize="20sp"
+                    android:textColor="#CCCCCC"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginBottom="8dp"/>
             </LinearLayout>
 
-            <!-- ВАЖНО: ID для FindViewById -->
-            <include android:id="@+id/stat_fuel_recharged" layout="@layout/item_stats_row"
+
+            <TextView
+                android:id="@+id/tv_duration_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Время в пути:"
+                android:textColor="#CCCCCC"
+                android:textSize="14sp"/>
+            <TextView
+                android:id="@+id/tv_duration_value"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginTop="8dp"/>
+                android:text="00 ч 00 мин"
+                android:textSize="32sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"/>
+
+
+            <TextView
+                android:id="@+id/tv_fuel_recharged_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Заправленное топливо:"
+                android:textColor="#CCCCCC"
+                android:textSize="14sp"/>
+            <TextView
+                android:id="@+id/tv_fuel_recharged_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0.0 л"
+                android:textSize="32sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:layout_marginBottom="24dp"/>
 
         </LinearLayout>
 
-        <!-- Секция элементов управления (Controls) -->
         <LinearLayout
             android:id="@+id/layout_controls"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/layout_recording"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="24dp"
-            app:layout_constraintVertical_bias="0.0">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -153,7 +194,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="СОХРАНИТЬ И ОСТАНОВИТЬ"
-                app:backgroundTint="@color/material_dynamic_primary40"
+                app:backgroundTint="?attr/colorPrimary"
                 android:textColor="@android:color/white"/>
 
         </LinearLayout>

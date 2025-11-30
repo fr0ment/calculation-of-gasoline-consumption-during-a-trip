@@ -46,7 +46,7 @@ public class AddTripManualActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_trip_manual);
 
         dbHelper = new DatabaseHelper(this);
-        carId = getIntent().getIntExtra("CAR_ID", -1);
+        carId = getIntent().getIntExtra("car_id", -1);
 
         if (carId == -1) {
             Toast.makeText(this, "Ошибка: Автомобиль не выбран.", Toast.LENGTH_LONG).show();

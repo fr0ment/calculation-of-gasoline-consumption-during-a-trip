@@ -15,14 +15,15 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 // Сервис для записи GPS-данных в фоновом режиме
 public class GpsRecordingService extends Service implements LocationListener {
@@ -30,334 +31,226 @@ public class GpsRecordingService extends Service implements LocationListener {
     private static final String TAG = "GpsRecordingService";
     private static final int NOTIFICATION_ID = 1;
     private static final String CHANNEL_ID = "GpsRecordingChannel";
-    private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
 
     // Константы для BroadcastReceiver
-    public static final String ACTION_PAUSE_RESUME = "ACTION_PAUSE_RESUME";
-    public static final String ACTION_REFUEL = "ACTION_REFUEL";
-
-    public static boolean isServiceRunning = false;
+    public static final String ACTION_PAUSE_RESUME = "com.example.cogcdat_2.ACTION_PAUSE_RESUME";
 
     private LocationManager locationManager;
-    private DatabaseHelper dbHelper;
-    private TripRecordingRepository repository;
-
-    // Данные поездки
-    private int carId;
-    private String tripName;
-    private double initialFuel;
+    private Location lastLocation;
     private double totalDistanceKm = 0.0;
-    private double fuelRecharged = 0.0;
-    private long startTimeMs = 0;
-    private long pauseTimeOffsetMs = 0;
-    private long lastPauseStartMs = 0;
-    private Location lastLocation = null;
-    private boolean isPaused = false;
-    private double finalFuel = -1.0;
 
-    // BroadcastReceiver для команд управления (Пауза/Продолжить/Заправка)
-    private final BroadcastReceiver controlReceiver = new BroadcastReceiver() {
+    // Состояние времени
+    private long timeStarted = 0;
+    private long timePaused = 0;
+    private long totalTimePaused = 0;
+    private boolean isPaused = false;
+
+    // Таймер для обновления LiveData и уведомления каждую секунду
+    private final Handler handler = new Handler();
+    private final long UPDATE_INTERVAL = 1000; // 1 секунда
+
+    private final Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // FIX: Добавлено условие проверки, что запись активна
+            if (!isPaused && TripRecordingRepository.getInstance().isRecording()) {
+                // Обновляем LiveData в репозитории
+                long currentDuration = calculateCurrentDurationMs();
+                TripRecordingRepository.getInstance().updateTripUpdates(totalDistanceKm, currentDuration);
+
+                // Обновляем уведомление
+                updateNotification(totalDistanceKm, currentDuration);
+            }
+            // Планируем следующее выполнение
+            handler.postDelayed(this, UPDATE_INTERVAL);
+        }
+    };
+
+
+    // Ресивер для действий из уведомления и Activity
+    private final BroadcastReceiver notificationActionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent == null || repository == null) return;
-
-            String action = intent.getAction();
-
-            if (ACTION_PAUSE_RESUME.equals(action)) {
+            if (ACTION_PAUSE_RESUME.equals(intent.getAction())) {
                 togglePauseResume();
-            } else if (ACTION_REFUEL.equals(action)) {
-                // Логика заправки
-                double amount = intent.getDoubleExtra("AMOUNT", 0.0);
-                if (amount > 0) {
-                    fuelRecharged += amount;
-                    updateRepository(); // Обновление LiveData
-                    Log.d(TAG, String.format(Locale.getDefault(), "Заправлено: %.2f L. Общее заправленное: %.2f L", amount, fuelRecharged));
-                }
             }
         }
     };
 
-    /**
-     * Подавляем предупреждение линтера, которое требует флаг RECEIVER_EXPORTED/NOT_EXPORTED
-     * для вызова registerReceiver на старых API (24-32).
-     */
-    @SuppressLint({"MissingPermission", "UnspecifiedRegisterReceiverFlag"})
     @Override
     public void onCreate() {
         super.onCreate();
-        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-
         createNotificationChannel();
-        startForeground(NOTIFICATION_ID, buildNotification(0.0, 0));
-
-        dbHelper = new DatabaseHelper(this);
-
-        // ИСПРАВЛЕНО: Прямое получение экземпляра Repository.
-        // Singleton-паттерн гарантирует, что он будет создан при первом вызове.
-        repository = TripRecordingRepository.getInstance();
-        if (repository == null) {
-            Log.e(TAG, "Критическая ошибка: не удалось получить TripRecordingRepository.");
-            stopSelf();
-            return;
-        }
-
-        isServiceRunning = true;
-
-        // --- РЕГИСТРАЦИЯ КОНТРОЛЬНОГО BROADCASTRECEIVER ---
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_PAUSE_RESUME);
-        filter.addAction(ACTION_REFUEL);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(controlReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(controlReceiver, filter);
-        }
-        // ------------------------------------------------------------------------------------
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        // Регистрируем ресивер для паузы/возобновления
+        // Используем константу для флага экспорта (для совместимости)
+        int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ?
+                Context.RECEIVER_EXPORTED : 0;
+
+        // FIX: Использовать registerReceiver с IntentFilter, который создается всегда,
+        // а не только для O и выше, хотя флаг экспорта актуален для более новых версий.
+        registerReceiver(notificationActionReceiver, new IntentFilter(ACTION_PAUSE_RESUME), flags);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null) {
-            stopSelf();
-            return START_NOT_STICKY;
+
+        // Инициализация при старте (если не была уже начата)
+        if (!TripRecordingRepository.getInstance().isRecording()) {
+            // Инициализация репозитория (установка времени начала, сброс топлива)
+            // InitialFuelLevel уже должен быть установлен из Activity
+            TripRecordingRepository.getInstance().startRecording();
+
+            timeStarted = SystemClock.elapsedRealtime();
+            totalDistanceKm = 0.0;
+            totalTimePaused = 0;
+            isPaused = false;
+
+            // Начинаем работу GPS и таймера
+            startLocationUpdates();
+            handler.post(timerRunnable);
         }
 
-        if (startTimeMs == 0) {
-            carId = intent.getIntExtra("CAR_ID", -1);
-            tripName = intent.getStringExtra("TRIP_NAME");
-            initialFuel = intent.getDoubleExtra("INITIAL_FUEL", 0.0);
-            startTimeMs = System.currentTimeMillis();
-            Log.d(TAG, "Поездка начата. Начальное топливо: " + initialFuel);
-        }
-
-        // Запрос обновлений GPS
-        try {
-            locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    10000,
-                    10,
-                    this);
-            Log.d(TAG, "GPS updates requested.");
-        } catch (SecurityException e) {
-            Log.e(TAG, "Нет разрешения на GPS. Невозможно запустить сервис.", e);
-            stopSelf();
-        }
-
-        startDurationUpdateThread();
-
-        // Если пришла команда остановки
-        double receivedFinalFuel = intent.getDoubleExtra("FINAL_FUEL", -1.0);
-        if (receivedFinalFuel != -1.0) {
-            this.finalFuel = receivedFinalFuel;
-            Log.d(TAG, "Получен сигнал остановки с остатком топлива: " + finalFuel);
-            handleStopCommand();
-        }
+        // Запускаем как Foreground Service
+        startForeground(NOTIFICATION_ID, buildNotification(totalDistanceKm, calculateCurrentDurationMs()));
 
         return START_STICKY;
     }
 
-    private void handleStopCommand() {
-        if (finalFuel != -1.0) {
-            saveTripToDatabase();
-        } else {
-            Log.w(TAG, "Команда остановки без finalFuel.");
-        }
-
-        // ОТПРАВКА СИГНАЛА Activity, ЧТО СЕРВИС ОСТАНАВЛИВАЕТСЯ И ДАННЫЕ СБРОШЕНЫ
-        if (repository != null) {
-            repository.postReset();
-        }
-
-        stopSelf();
-    }
-
-    // --- ПОТОК ДЛЯ ОБНОВЛЕНИЯ ВРЕМЕНИ В LIVE DATA ---
-    private Thread durationUpdateThread;
-
-    private void startDurationUpdateThread() {
-        if (durationUpdateThread == null || !durationUpdateThread.isAlive()) {
-            durationUpdateThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (isServiceRunning) {
-                        try {
-                            Thread.sleep(1000);
-                            if (!isPaused) {
-                                // ОБЯЗАТЕЛЬНОЕ обновление LiveData для обновления времени в UI
-                                updateRepository();
-                            }
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            Log.d(TAG, "Поток обновления времени прерван.");
-                        }
-                    }
-                }
-            });
-            durationUpdateThread.start();
-            Log.d(TAG, "Поток обновления длительности запущен.");
-        }
-    }
-
-    // --- ЛОГИКА GPS ОБНОВЛЕНИЯ И РАСЧЕТА ДИСТАНЦИИ/ВРЕМЕНИ ---
-
-    @Override
-    public void onLocationChanged(Location location) {
-        if (isPaused || repository == null || location == null) return;
-
-        if (lastLocation != null) {
-            float distanceMeters = lastLocation.distanceTo(location);
-            totalDistanceKm += distanceMeters / 1000.0;
-        }
-        lastLocation = location;
-
-        updateRepository();
-    }
-
-    private void updateRepository() {
-        if (repository == null || startTimeMs == 0) return;
-
-        long totalDurationMs = calculateDurationMs();
-
-        TripRecordingData data = new TripRecordingData(
-                totalDistanceKm,
-                totalDurationMs,
-                fuelRecharged,
-                isPaused
-        );
-        repository.postUpdate(data);
-
-        updateNotification(totalDistanceKm, totalDurationMs);
-    }
-
-    /**
-     * Корректный расчет длительности с учетом всех пауз.
-     */
-    private long calculateDurationMs() {
-        if (startTimeMs == 0) return 0;
-
-        long currentTotalElapsed = System.currentTimeMillis() - startTimeMs;
-        long timePaused = pauseTimeOffsetMs;
-
-        if (isPaused) {
-            // Если сейчас на паузе, добавляем время текущей паузы к общему смещению
-            timePaused += (System.currentTimeMillis() - lastPauseStartMs);
-        }
-
-        return currentTotalElapsed - timePaused;
-    }
-
-    // --- ЛОГИКА ПАУЗЫ/ПРОДОЛЖЕНИЯ ---
-
-    private void togglePauseResume() {
-        isPaused = !isPaused;
-
-        if (isPaused) {
-            lastPauseStartMs = System.currentTimeMillis();
-            Log.d(TAG, "Запись приостановлена.");
-        } else {
-            if (lastPauseStartMs > 0) {
-                // Добавляем время текущей паузы к общему смещению
-                pauseTimeOffsetMs += (System.currentTimeMillis() - lastPauseStartMs);
-                lastPauseStartMs = 0;
-            }
-            Log.d(TAG, "Запись возобновлена.");
-        }
-        updateRepository(); // Обновление LiveData для кнопки/статуса
-    }
-
-    // --- ОСТАНОВКА СЕРВИСА И СОХРАНЕНИЕ ---
-
     @Override
     public void onDestroy() {
         super.onDestroy();
-        isServiceRunning = false;
+        stopLocationUpdates();
+        handler.removeCallbacks(timerRunnable);
+        unregisterReceiver(notificationActionReceiver);
 
-        if (durationUpdateThread != null) {
-            durationUpdateThread.interrupt();
-        }
-
-        if (locationManager != null) {
-            locationManager.removeUpdates(this);
-        }
-
-        // Отмена регистрации Receiver
-        unregisterReceiver(controlReceiver);
-
-        Log.d(TAG, "GpsRecordingService остановлен.");
+        // FIX: Убран вызов reset(), т.к. он уже вызывается из GpsRecordingActivity
+        // при сохранении/остановке. Если stopService() вызван не из Activity,
+        // Activity все равно не ждет сигнала, поэтому сброс здесь не нужен/дублирует.
+        // TripRecordingRepository.getInstance().reset();
     }
 
-    // ... (saveTripToDatabase, formatMsToISO8601, Notification methods без изменений) ...
+    // --- Локация и Расстояние ---
 
-    private void saveTripToDatabase() {
-        if (carId == -1 || dbHelper == null) {
-            Log.e(TAG, "Невозможно сохранить поездку: ID автомобиля или DatabaseHelper недействительны.");
-            return;
+    @SuppressLint("MissingPermission")
+    private void startLocationUpdates() {
+        try {
+            // Запрашиваем обновления каждую секунду или при смещении на 5 метров
+            // FIX: Проверка на isPaused
+            if (!isPaused) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 5, this);
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "Location permission missing: " + e.getMessage());
         }
+    }
 
-        long totalDurationMs = calculateDurationMs();
-        double distanceKm = totalDistanceKm;
+    private void stopLocationUpdates() {
+        locationManager.removeUpdates(this);
+    }
 
-        double fuelUsed = (initialFuel + fuelRecharged) - finalFuel;
-        if (fuelUsed < 0) {
-            fuelUsed = 0;
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        if (!isPaused) {
+            if (lastLocation != null) {
+                // Расстояние в метрах
+                float distanceMeters = lastLocation.distanceTo(location);
+                double distanceKm = distanceMeters / 1000.0;
+                totalDistanceKm += distanceKm;
+            }
+
+            lastLocation = location;
+
+            // Обновляем LiveData при получении новой локации (если таймер работает, это дополнительно)
+            long currentDuration = calculateCurrentDurationMs();
+            TripRecordingRepository.getInstance().updateTripUpdates(totalDistanceKm, currentDuration);
+            updateNotification(totalDistanceKm, currentDuration);
         }
+    }
 
-        double fuelConsumption = 0.0;
-        if (distanceKm > 0.1) { // Проверяем, чтобы избежать деления на ноль
-            fuelConsumption = (fuelUsed / distanceKm) * 100.0;
-        }
+    // --- Логика Паузы ---
 
-        String startDateTime = formatMsToISO8601(startTimeMs);
-        String endDateTime = formatMsToISO8601(System.currentTimeMillis());
+    private void togglePauseResume() {
+        // FIX: Проверка, что запись активна, прежде чем менять состояние
+        if (!TripRecordingRepository.getInstance().isRecording()) return;
 
-        Trip trip = new Trip(
-                carId,
-                tripName,
-                startDateTime,
-                endDateTime,
-                distanceKm,
-                fuelUsed,
-                fuelConsumption
-        );
+        isPaused = !isPaused;
 
-        long result = dbHelper.addTrip(trip);
-        if (result > 0) {
-            Log.d(TAG, "Поездка успешно сохранена в БД, ID: " + result);
+        if (isPaused) {
+            timePaused = SystemClock.elapsedRealtime();
+            stopLocationUpdates(); // Останавливаем GPS для экономии батареи
         } else {
-            Log.e(TAG, "Ошибка при сохранении поездки в БД.");
+            if (timePaused != 0) {
+                totalTimePaused += (SystemClock.elapsedRealtime() - timePaused);
+                timePaused = 0;
+            }
+            startLocationUpdates(); // Возобновляем GPS
         }
+
+        // Обновляем LiveData в репозитории, чтобы Activity обновило UI (статус и кнопки)
+        TripRecordingRepository.getInstance().setPaused(isPaused); // Используем метод репозитория
+        // Обновление уведомления
+        updateNotification(totalDistanceKm, calculateCurrentDurationMs());
     }
 
-    private String formatMsToISO8601(long timestampMs) {
-        return ISO_DATE_FORMAT.format(new Date(timestampMs));
+    // --- Логика Времени ---
+
+    /**
+     * Рассчитывает общую продолжительность поездки (в мс) за вычетом времени паузы.
+     */
+    private long calculateCurrentDurationMs() {
+        if (timeStarted == 0) return 0;
+
+        long totalElapsedTime = SystemClock.elapsedRealtime() - timeStarted;
+        long currentTotalTimePaused = totalTimePaused;
+
+        // Если сейчас на паузе, добавляем время текущей паузы
+        if (isPaused && timePaused != 0) {
+            currentTotalTimePaused += (SystemClock.elapsedRealtime() - timePaused);
+        }
+
+        return totalElapsedTime - currentTotalTimePaused;
     }
+
+
+    // --- Уведомление ---
 
     private Notification buildNotification(double distanceKm, long durationMs) {
-        String durationStr = formatDuration(durationMs);
-        String contentText = String.format(Locale.getDefault(),
-                "Пробег: %.2f км | Время: %s", distanceKm, durationStr);
-
+        // Создаем Intent для открытия Activity при клике на уведомление
         Intent notificationIntent = new Intent(this, GpsRecordingActivity.class);
-        notificationIntent.putExtra("CAR_ID", carId);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this,
-                0,
-                notificationIntent,
-                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
-        );
+        // Создаем Intent для действия Пауза/Возобновление
+        Intent pauseResumeIntent = new Intent(ACTION_PAUSE_RESUME);
+        PendingIntent pauseResumePendingIntent = PendingIntent.getBroadcast(this,
+                1, pauseResumeIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(tripName != null ? tripName : "Запись поездки...")
-                .setContentText(contentText)
-                .setSmallIcon(R.drawable.ic_car)
+        String buttonText = isPaused ? "ПРОДОЛЖИТЬ" : "ПАУЗА";
+        // Предполагается, что ic_car существует и используется как плейсхолдер
+        int buttonIcon = R.drawable.ic_car;
+
+        String title = isPaused ? "Пауза записи поездки" : "Идет запись поездки";
+
+        // Включаем заправленное топливо в уведомление
+        double fuelRecharged = TripRecordingRepository.getInstance().getTotalFuelRecharged();
+        String content = String.format(Locale.getDefault(),
+                "Пробег: %.1f км | Время: %s | Заправка: %.2f л",
+                distanceKm, formatDuration(durationMs), fuelRecharged);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setSmallIcon(R.drawable.ic_car) // Предполагается, что ic_car существует
                 .setContentIntent(pendingIntent)
-                .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .build();
+                // ДОБАВЛЕНО: делает уведомление "неубираемым"
+                .setOngoing(true)
+                .setLocalOnly(true)
+                .addAction(buttonIcon, buttonText, pauseResumePendingIntent);
+
+        return builder.build();
     }
 
     private void updateNotification(double distanceKm, long durationMs) {
@@ -385,6 +278,7 @@ public class GpsRecordingService extends Service implements LocationListener {
         long seconds = durationMs / 1000;
         long minutes = (seconds % 3600) / 60;
         long hours = seconds / 3600;
+        // Формат ЧЧ:ММ:СС
         return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds % 60);
     }
 
@@ -394,6 +288,7 @@ public class GpsRecordingService extends Service implements LocationListener {
     public void onProviderEnabled(String provider) {}
     @Override
     public void onProviderDisabled(String provider) {}
+
     @Override
     public IBinder onBind(Intent intent) {
         return null;
