@@ -1,6 +1,7 @@
 package com.example.cogcdat_2;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +26,14 @@ public class MainActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new TripsFragment())
                     .commit();
+        }
+
+        try {
+            // Инициализация TripRecordingRepository
+            // (Предполагается, что этот метод настраивает LiveData и сам синглтон)
+            TripRecordingRepository.initialize(this);
+        } catch (Exception e) {
+            // Здесь можно добавить код для обработки критической ошибки запуска
         }
     }
 

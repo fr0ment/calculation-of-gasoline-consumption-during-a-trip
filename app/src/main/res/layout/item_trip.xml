@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="#55586A"
+    app:cardCornerRadius="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tv_trip_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Рабочая поездка в офис"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_trip_date_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="25, Пн"
+                android:textColor="#CCCCCC"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#40FFFFFF"
+            android:layout_marginBottom="8dp"/>
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TableRow>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="Расстояние:"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/tv_trip_distance"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="15.5 км"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp" />
+            </TableRow>
+
+            <TableRow>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="Топливо (потрачено):"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/tv_trip_fuel_spent"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="1.8 л"
+                    android:textColor="#FF5722"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </TableRow>
+
+            <TableRow>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="Средний расход:"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/tv_trip_fuel_consumption"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="11.61 л/100км"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp" />
+            </TableRow>
+
+            <TableRow>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="Длительность:"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/tv_trip_duration"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="0 ч 45 мин"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp" />
+            </TableRow>
+        </TableLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

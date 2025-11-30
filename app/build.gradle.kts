@@ -50,6 +50,13 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment:2.7.0")
     implementation("androidx.navigation:navigation-ui:2.7.0")
 
+    // --- ДОБАВЛЕНЫ ОБЯЗАТЕЛЬНЫЕ ЗАВИСИМОСТИ ДЛЯ LIFECYCLE И LIVEDATA ---
+    // ВЕРСИЯ БИБЛИОТЕК ВСТАВЛЕНА НАПРЯМУЮ, ЧТОБЫ ИЗБЕЖАТЬ СИНТАКСИЧЕСКИХ ОШИБОК GROOVY.
+    implementation("androidx.lifecycle:lifecycle-livedata:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.2")
+    // Если требуется поддержка Java 8:
+    // implementation("androidx.lifecycle:lifecycle-common-java8:2.6.2")
+    // -------------------------------------------------------------------
 
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
@@ -58,5 +65,5 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.6.1")
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.0")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.0")
-
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 }

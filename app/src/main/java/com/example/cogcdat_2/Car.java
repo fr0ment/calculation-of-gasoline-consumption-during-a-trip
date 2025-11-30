@@ -19,6 +19,27 @@ public class Car {
 
     public Car() {}
 
+    public Car(int id, String name, String description, String imagePath, String distanceUnit, String fuelUnit,
+               String fuelConsumptionUnit, String fuelType, double tankVolume,
+               String brand, String model, String year, String licensePlate,
+               String vin, String insurancePolicy) {
+        this.id = id; // Добавляем id
+        this.name = name;
+        this.description = description;
+        this.imagePath = imagePath;
+        this.distanceUnit = distanceUnit;
+        this.fuelUnit = fuelUnit;
+        this.fuelConsumptionUnit = fuelConsumptionUnit;
+        this.fuelType = fuelType;
+        this.tankVolume = tankVolume;
+        this.brand = brand;
+        this.model = model;
+        this.year = year;
+        this.licensePlate = licensePlate;
+        this.vin = vin;
+        this.insurancePolicy = insurancePolicy;
+    }
+
     public Car(String name, String description, String imagePath, String distanceUnit, String fuelUnit,
                String fuelConsumptionUnit, String fuelType, double tankVolume,
                String brand, String model, String year, String licensePlate,
@@ -38,6 +59,8 @@ public class Car {
         this.vin = vin;
         this.insurancePolicy = insurancePolicy;
     }
+
+
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
