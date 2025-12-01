@@ -28,7 +28,6 @@
         <activity
             android:name=".GpsRecordingActivity"
             android:exported="false"
-            android:launchMode="singleTask"
             android:taskAffinity=""
             android:windowSoftInputMode="stateHidden|adjustResize"
             android:screenOrientation="portrait"/>

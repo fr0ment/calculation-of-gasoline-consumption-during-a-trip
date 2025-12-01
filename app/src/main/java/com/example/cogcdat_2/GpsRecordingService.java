@@ -69,6 +69,7 @@ public class GpsRecordingService extends Service implements LocationListener {
         }
     };
 
+
     // Ресивер для действий из уведомления и Activity
     private final BroadcastReceiver notificationActionReceiver = new BroadcastReceiver() {
         @Override
@@ -132,9 +133,7 @@ public class GpsRecordingService extends Service implements LocationListener {
         super.onDestroy();
         stopLocationUpdates();
         handler.removeCallbacks(timerRunnable);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            unregisterReceiver(notificationActionReceiver);
-        }
+        unregisterReceiver(notificationActionReceiver);
 
         // FIX: Убран вызов reset(), т.к. он уже вызывается из GpsRecordingActivity
         // при сохранении/остановке. Если stopService() вызван не из Activity,
@@ -163,7 +162,7 @@ public class GpsRecordingService extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        if (!isPaused && TripRecordingRepository.getInstance().isRecording()) { // FIX: Проверка isRecording
+        if (!isPaused) {
             if (lastLocation != null) {
                 // Расстояние в метрах
                 float distanceMeters = lastLocation.distanceTo(location);
@@ -224,6 +223,7 @@ public class GpsRecordingService extends Service implements LocationListener {
         return totalElapsedTime - currentTotalTimePaused;
     }
 
+
     // --- Уведомление ---
 
     private Notification buildNotification(double distanceKm, long durationMs) {
@@ -232,9 +232,6 @@ public class GpsRecordingService extends Service implements LocationListener {
 
         // ВАЖНО: Добавляем ID автомобиля, чтобы Activity могла корректно восстановиться
         notificationIntent.putExtra("car_id", carId);
-
-        // NEW: Флаги для singleTask: Новый task, но singleTop (bring to front если уже запущена)
-        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);

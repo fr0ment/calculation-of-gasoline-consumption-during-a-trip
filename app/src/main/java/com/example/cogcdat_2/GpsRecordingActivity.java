@@ -508,8 +508,6 @@ public class GpsRecordingActivity extends AppCompatActivity {
         }
     }
 
-    // ... (методы handlePauseResume — без изменений)
-    // Пример заглушки для handlePauseResume (если нужно, реализуй через Broadcast или репозиторий)
     private void handlePauseResume() {
         // Отправка broadcast для toggle в сервисе
         Intent intent = new Intent(GpsRecordingService.ACTION_PAUSE_RESUME);

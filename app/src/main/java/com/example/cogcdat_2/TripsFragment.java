@@ -2,18 +2,22 @@ package com.example.cogcdat_2;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,13 +52,18 @@ public class TripsFragment extends Fragment {
 
     private int selectedCarId = -1;
 
-    private Calendar startDateFilter = null;
-    private Calendar endDateFilter = null;
+    // NEW: Полные datetime фильтры (с временем)
+    private Calendar startDateTimeFilter = null;
+    private Calendar endDateTimeFilter = null;
 
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-    private static final SimpleDateFormat DISPLAY_DATE_TIME_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+    private static final SimpleDateFormat DISPLAY_DATE_TIME_FORMAT = new SimpleDateFormat("EEE, dd HH:mm", new Locale("ru", "RU"));  // "Пн, 01 19:22"
     private static final SimpleDateFormat HEADER_DATE_FORMAT = new SimpleDateFormat("LLLL yyyy", new Locale("ru", "RU"));
+    private static final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());  // Для отображения в диалоге
 
+    // NEW: Для поиска
+    private EditText etSearchQuery;
+    private String currentSearchQuery = "";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -67,13 +76,15 @@ public class TripsFragment extends Fragment {
         carSelectionSpinner = view.findViewById(R.id.spinner_car_selection);
         tvEmptyTrips = view.findViewById(R.id.tv_empty_trips);
         btnFilter = view.findViewById(R.id.btn_filter_date);
+        etSearchQuery = view.findViewById(R.id.et_search_query);  // Для поиска
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         fabAddTrip.setOnClickListener(v -> showAddTripOptionsDialog());
 
         setupCarSpinner();
-        setupFilterButton();
+        setupSearchListener();  // Listener для поиска
+        setupFilterButton();  // Улучшенный фильтр
 
         return view;
     }
@@ -87,337 +98,313 @@ public class TripsFragment extends Fragment {
     // --- Кастомный диалог выбора метода добавления поездки ---
     private void showAddTripOptionsDialog() {
         if (selectedCarId == -1) {
-            Toast.makeText(getContext(), "Пожалуйста, выберите автомобиль.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Сначала выберите автомобиль", Toast.LENGTH_SHORT).show();
             return;
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_add_trip_options, null);
-        builder.setView(dialogView);
-
-        final AlertDialog dialog = builder.create();
-        if (dialog.getWindow() != null) {
-            // Установка прозрачного фона для отображения закругленных углов в XML
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-
-        MaterialCardView cardRecordGps = dialogView.findViewById(R.id.card_record_gps);
-        MaterialCardView cardAddManual = dialogView.findViewById(R.id.card_add_manual);
-        ImageButton btnClose = dialogView.findViewById(R.id.btn_close_dialog);
-
-
-        cardRecordGps.setOnClickListener(v -> {
-            dialog.dismiss();
-            startGpsRecordingActivity();
+        builder.setTitle("Добавить поездку");
+        String[] options = {"Автоматическая (GPS)", "Ручная"};
+        builder.setItems(options, (dialog, which) -> {
+            if (which == 0) {
+                // GPS запись
+                Intent intent = new Intent(getContext(), GpsRecordingActivity.class);
+                intent.putExtra("car_id", selectedCarId);
+                startActivity(intent);
+            } else {
+                // Ручное добавление
+                Intent intent = new Intent(getContext(), AddTripManualActivity.class);
+                intent.putExtra("car_id", selectedCarId);
+                startActivity(intent);
+            }
         });
-
-        cardAddManual.setOnClickListener(v -> {
-            dialog.dismiss();
-            startManualTripActivity();
-        });
-
-        btnClose.setOnClickListener(v -> dialog.dismiss());
-
-        // Предотвращение закрытия по тапу вне диалога (хотя с кнопкой закрытия это менее критично)
-        dialog.setCanceledOnTouchOutside(true);
-
-        dialog.show();
+        builder.show();
     }
 
-    private void startGpsRecordingActivity() {
-        Intent intent = new Intent(getActivity(), GpsRecordingActivity.class);
-        intent.putExtra("car_id", selectedCarId);
-
-        // Передача единиц измерения для UI GPS Activity
-        Car car = carList.stream().filter(c -> c.getId() == selectedCarId).findFirst().orElse(null);
-        if (car != null) {
-            intent.putExtra("car_fuel_unit", car.getFuelUnit());
-            intent.putExtra("car_distance_unit", car.getDistanceUnit());
-        }
-        startActivity(intent);
-    }
-
-    private void startManualTripActivity() {
-        Intent intent = new Intent(getActivity(), AddTripManualActivity.class);
-        intent.putExtra("car_id", selectedCarId);
-        startActivityForResult(intent, 1); // Используем startActivityForResult, чтобы обновить список
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1 && resultCode == AppCompatActivity.RESULT_OK) {
-            loadCarsAndTrips(); // Обновляем список, если ручное добавление прошло успешно
-        }
-    }
-
-    // --- Методы setupCarSpinner, loadCarsAndTrips, filterTrips, showDateFilterDialog, showDeleteConfirmation, TripAdapter ---
-    // (Их содержимое должно быть в файле TripsFragment.java, код ниже для полноты)
-
+    // --- Настройка спиннера автомобилей ---
     private void setupCarSpinner() {
         carList = dbHelper.getAllCars();
+        CustomCarSpinnerAdapter spinnerAdapter = new CustomCarSpinnerAdapter(requireContext(), carList);
+        carSelectionSpinner.setAdapter(spinnerAdapter);
 
-        // Добавляем заглушку "Выберите автомобиль"
-        Car placeholderCar = new Car(-1, "Выберите автомобиль", "", null, "км", "л", "л/100км", "", 0);
-        List<Car> spinnerList = new ArrayList<>(carList);
-        if (carList.isEmpty()) {
-            spinnerList.add(placeholderCar);
-        } else {
-            spinnerList.add(0, placeholderCar);
-        }
-
-        CustomCarSpinnerAdapter adapter = new CustomCarSpinnerAdapter(requireContext(), spinnerList);
-        carSelectionSpinner.setAdapter(adapter);
-
+        // Выбор первого автомобиля по умолчанию
         if (!carList.isEmpty()) {
-            carSelectionSpinner.setSelection(1);
             selectedCarId = carList.get(0).getId();
-        } else {
             carSelectionSpinner.setSelection(0);
-            selectedCarId = -1;
         }
 
         carSelectionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0 && spinnerList.get(position).getId() == -1) {
-                    selectedCarId = -1;
-                    tripListItems.clear();
-                    if (adapter != null) adapter.notifyDataSetChanged();
-                    tvEmptyTrips.setVisibility(View.VISIBLE);
-                    fabAddTrip.setVisibility(View.GONE);
-                } else {
-                    Car selectedCar = spinnerList.get(position);
-                    selectedCarId = selectedCar.getId();
-                    loadTripsForSelectedCar();
-                    fabAddTrip.setVisibility(View.VISIBLE);
+                selectedCarId = carList.get(position).getId();
+                loadTripsForCar();  // Reload trips for selected car
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    // --- Listener для поиска по названию ---
+    private void setupSearchListener() {
+        etSearchQuery.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                currentSearchQuery = s.toString().toLowerCase();
+                // FIX: Вызываем reload для применения поиска
+                if (selectedCarId != -1) {
+                    loadTripsForCar();
                 }
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedCarId = -1;
-            }
+            public void afterTextChanged(Editable s) {}
         });
     }
 
+    // --- Загрузка автомобилей и поездок ---
+    private void loadCarsAndTrips() {
+        setupCarSpinner();  // Reload cars
+        if (selectedCarId != -1) {
+            loadTripsForCar();  // Load trips for default car
+        }
+    }
+
+    // --- Загрузка поездок для автомобиля (с применением всех фильтров) ---
+    private void loadTripsForCar() {
+        if (selectedCarId == -1) return;
+
+        List<Trip> allTrips = dbHelper.getTripsForCar(selectedCarId);
+        // FIX: Применяем все фильтры и группируем
+        applyFiltersAndGroup(allTrips);
+        // Рассчитываем статистику на основе нефильтрованных trips (или фильтрованных? — здесь нефильтрованных для общей статистики)
+        updateCarStats(allTrips);
+    }
+
+    // NEW/FIX: Применение всех фильтров (поиск + дата) и группировка
+    private void applyFiltersAndGroup(List<Trip> allTrips) {
+        List<Trip> filteredTrips = new ArrayList<>(allTrips);
+
+        // Фильтр по дате (полный datetime)
+        if (startDateTimeFilter != null) {
+            filteredTrips.removeIf(trip -> {
+                try {
+                    Date tripStart = DB_DATE_FORMAT.parse(trip.getStartDateTime());
+                    return tripStart.before(startDateTimeFilter.getTime());
+                } catch (ParseException e) {
+                    return true;  // Удаляем некорректные
+                }
+            });
+        }
+        if (endDateTimeFilter != null) {
+            filteredTrips.removeIf(trip -> {
+                try {
+                    Date tripStart = DB_DATE_FORMAT.parse(trip.getStartDateTime());
+                    return tripStart.after(endDateTimeFilter.getTime());
+                } catch (ParseException e) {
+                    return true;
+                }
+            });
+        }
+
+        // Фильтр по поиску
+        if (!currentSearchQuery.isEmpty()) {
+            filteredTrips.removeIf(trip -> !trip.getName().toLowerCase().contains(currentSearchQuery));
+        }
+
+        // Группировка по месяцам (сортировка по startDateTime DESC)
+        tripListItems.clear();
+        List<Trip> sortedTrips = filteredTrips.stream()
+                .sorted((t1, t2) -> {
+                    try {
+                        Date d1 = DB_DATE_FORMAT.parse(t1.getStartDateTime());
+                        Date d2 = DB_DATE_FORMAT.parse(t2.getStartDateTime());
+                        return d2.compareTo(d1);  // Новые сверху
+                    } catch (ParseException e) {
+                        return 0;
+                    }
+                })
+                .collect(Collectors.toList());
+
+        String currentMonth = "";
+        for (Trip trip : sortedTrips) {
+            try {
+                Date date = DB_DATE_FORMAT.parse(trip.getStartDateTime());
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(date);
+                String monthHeader = HEADER_DATE_FORMAT.format(date);
+
+                if (!monthHeader.equals(currentMonth)) {
+                    tripListItems.add(new TripListItem(monthHeader));
+                    currentMonth = monthHeader;
+                }
+                tripListItems.add(new TripListItem(trip));
+            } catch (ParseException e) {
+                // Пропускаем некорректные даты
+            }
+        }
+
+        // FIX: Recreate adapter для обновления (или notifyDataSetChanged())
+        adapter = new TripAdapter(tripListItems);
+        recyclerView.setAdapter(adapter);
+
+        // Empty state
+        boolean hasItems = !tripListItems.isEmpty();
+        tvEmptyTrips.setVisibility(hasItems ? View.GONE : View.VISIBLE);
+        recyclerView.setVisibility(hasItems ? View.VISIBLE : View.GONE);
+    }
+
+    // --- Рассчёт статистики для выбранного автомобиля (на основе всех trips, без фильтров) ---
+    private void updateCarStats(List<Trip> trips) {
+        TextView tvAvgConsumption = requireView().findViewById(R.id.tv_average_fuel_consumption);
+        TextView tvMonthlyMileage = requireView().findViewById(R.id.tv_monthly_mileage);
+
+        if (trips.isEmpty()) {
+            tvAvgConsumption.setText("Средний расход: -- л/100км");
+            tvMonthlyMileage.setText("Пробег за месяц: -- км");
+            return;
+        }
+
+        // Средний расход: среднее по всем trips
+        double avgConsumption = trips.stream()
+                .mapToDouble(Trip::getFuelConsumption)
+                .average()
+                .orElse(0.0);
+
+        // Пробег за месяц: сумма distance за последние 30 дней (сравнение по startDateTime)
+        Calendar monthAgo = Calendar.getInstance();
+        monthAgo.add(Calendar.DAY_OF_MONTH, -30);
+        Date monthAgoDate = monthAgo.getTime();
+
+        double monthlyMileage = trips.stream()
+                .filter(trip -> {
+                    try {
+                        Date start = DB_DATE_FORMAT.parse(trip.getStartDateTime());
+                        return !start.before(monthAgoDate);
+                    } catch (ParseException e) {
+                        return false;
+                    }
+                })
+                .mapToDouble(Trip::getDistance)
+                .sum();
+
+        tvAvgConsumption.setText(String.format(Locale.getDefault(), "Средний расход: %.2f л/100км", avgConsumption));
+        tvMonthlyMileage.setText(String.format(Locale.getDefault(), "Пробег за месяц: %.1f км", monthlyMileage));
+    }
+
+    // --- Настройка кнопки фильтра ---
     private void setupFilterButton() {
         btnFilter.setOnClickListener(v -> showDateFilterDialog());
     }
 
-    private void loadCarsAndTrips() {
-        carList = dbHelper.getAllCars();
-        // Обновляем спиннер, сохраняя текущий выбор
-        int oldCarId = selectedCarId;
-        setupCarSpinner();
-
-        // Попытка восстановить предыдущий выбор
-        int positionToSelect = -1;
-        for (int i = 0; i < carList.size(); i++) {
-            if (carList.get(i).getId() == oldCarId) {
-                positionToSelect = i + 1; // +1 из-за placeholder
-                break;
-            }
-        }
-
-        if (positionToSelect != -1) {
-            carSelectionSpinner.setSelection(positionToSelect);
-            selectedCarId = oldCarId;
-            loadTripsForSelectedCar();
-        } else if (!carList.isEmpty()) {
-            carSelectionSpinner.setSelection(1);
-            selectedCarId = carList.get(0).getId();
-            loadTripsForSelectedCar();
-        } else {
-            selectedCarId = -1;
-            loadTripsForSelectedCar();
-        }
-    }
-
-
-    private void loadTripsForSelectedCar() {
-        if (selectedCarId == -1) {
-            tripListItems.clear();
-            recyclerView.setVisibility(View.GONE);
-            tvEmptyTrips.setVisibility(View.VISIBLE);
-            return;
-        }
-
-        List<Trip> trips = dbHelper.getTripsForCar(selectedCarId);
-        List<Trip> filteredTrips = filterTrips(trips);
-
-        if (filteredTrips.isEmpty()) {
-            recyclerView.setVisibility(View.GONE);
-            tvEmptyTrips.setText("Для выбранного автомобиля нет поездок.");
-            tvEmptyTrips.setVisibility(View.VISIBLE);
-            tripListItems.clear();
-            if (adapter != null) {
-                adapter.notifyDataSetChanged();
-            }
-            return;
-        }
-
-        tvEmptyTrips.setVisibility(View.GONE);
-        recyclerView.setVisibility(View.VISIBLE);
-
-        // Формирование списка с заголовками
-        tripListItems.clear();
-        String currentHeader = "";
-        for (Trip trip : filteredTrips) {
-            try {
-                // Используем StartDateTime для группировки
-                Date tripDate = DB_DATE_FORMAT.parse(trip.getStartDateTime());
-                String header = HEADER_DATE_FORMAT.format(tripDate);
-
-                if (!header.equals(currentHeader)) {
-                    tripListItems.add(new TripListItem(header));
-                    currentHeader = header;
-                }
-                tripListItems.add(new TripListItem(trip));
-            } catch (ParseException e) {
-                tripListItems.add(new TripListItem(trip));
-            }
-        }
-
-        if (adapter == null) {
-            adapter = new TripAdapter(tripListItems);
-            recyclerView.setAdapter(adapter);
-        } else {
-            adapter.updateTrips(tripListItems);
-        }
-    }
-
-    private List<Trip> filterTrips(List<Trip> trips) {
-        if (startDateFilter == null && endDateFilter == null) {
-            return trips;
-        }
-
-        return trips.stream().filter(trip -> {
-            try {
-                Date tripDate = DB_DATE_FORMAT.parse(trip.getStartDateTime());
-                Calendar tripCal = Calendar.getInstance();
-                tripCal.setTime(tripDate);
-
-                boolean isAfterStart = true;
-                if (startDateFilter != null) {
-                    Calendar start = (Calendar) startDateFilter.clone();
-                    start.set(Calendar.HOUR_OF_DAY, 0);
-                    start.set(Calendar.MINUTE, 0);
-                    start.set(Calendar.SECOND, 0);
-                    start.set(Calendar.MILLISECOND, 0);
-                    isAfterStart = !tripCal.before(start);
-                }
-
-                boolean isBeforeEnd = true;
-                if (endDateFilter != null) {
-                    Calendar end = (Calendar) endDateFilter.clone();
-                    end.set(Calendar.HOUR_OF_DAY, 23);
-                    end.set(Calendar.MINUTE, 59);
-                    end.set(Calendar.SECOND, 59);
-                    end.set(Calendar.MILLISECOND, 999);
-                    isBeforeEnd = !tripCal.after(end);
-                }
-
-                return isAfterStart && isBeforeEnd;
-
-            } catch (ParseException e) {
-                return false;
-            }
-        }).collect(Collectors.toList());
-    }
-
+    // NEW/FIX: Полностью переработанный диалог фильтра по дате (с временем)
     private void showDateFilterDialog() {
-        // Логика отображения диалога фильтрации по дате (без изменений)
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_date_filter, null);
         builder.setView(dialogView);
 
-        final AlertDialog dialog = builder.create();
-
-        final TextView tvStartDate = dialogView.findViewById(R.id.tv_start_date);
-        final TextView tvEndDate = dialogView.findViewById(R.id.tv_end_date);
+        TextView tvStartDate = dialogView.findViewById(R.id.tv_start_date);
+        TextView tvEndDate = dialogView.findViewById(R.id.tv_end_date);
         Button btnApply = dialogView.findViewById(R.id.btn_apply_filter);
         Button btnClear = dialogView.findViewById(R.id.btn_clear_filter);
 
-        final SimpleDateFormat displayFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
-
-        // Установка начальных значений
-        if (startDateFilter != null) {
-            tvStartDate.setText(displayFormat.format(startDateFilter.getTime()));
+        // Инициализация отображения
+        if (startDateTimeFilter != null) {
+            tvStartDate.setText(DISPLAY_DATE_FORMAT.format(startDateTimeFilter.getTime()));
+        } else {
+            tvStartDate.setText("Выберите дату и время (от)");
         }
-        if (endDateFilter != null) {
-            tvEndDate.setText(displayFormat.format(endDateFilter.getTime()));
+        if (endDateTimeFilter != null) {
+            tvEndDate.setText(DISPLAY_DATE_FORMAT.format(endDateTimeFilter.getTime()));
+        } else {
+            tvEndDate.setText("Выберите дату и время (до)");
         }
 
-        // Слушатель для выбора начальной даты
-        tvStartDate.setOnClickListener(v -> {
-            Calendar initial = startDateFilter != null ? startDateFilter : Calendar.getInstance();
-            new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
-                Calendar newDate = Calendar.getInstance();
-                newDate.set(year, month, dayOfMonth);
-                startDateFilter = newDate;
-                tvStartDate.setText(displayFormat.format(startDateFilter.getTime()));
-            }, initial.get(Calendar.YEAR), initial.get(Calendar.MONTH), initial.get(Calendar.DAY_OF_MONTH)).show();
-        });
+        // Date + Time Picker для start
+        tvStartDate.setOnClickListener(v -> showDateTimePicker(true, tvStartDate));
 
-        // Слушатель для выбора конечной даты
-        tvEndDate.setOnClickListener(v -> {
-            Calendar initial = endDateFilter != null ? endDateFilter : Calendar.getInstance();
-            new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
-                Calendar newDate = Calendar.getInstance();
-                newDate.set(year, month, dayOfMonth);
-                endDateFilter = newDate;
-                tvEndDate.setText(displayFormat.format(endDateFilter.getTime()));
-            }, initial.get(Calendar.YEAR), initial.get(Calendar.MONTH), initial.get(Calendar.DAY_OF_MONTH)).show();
-        });
+        // Date + Time Picker для end
+        tvEndDate.setOnClickListener(v -> showDateTimePicker(false, tvEndDate));
 
-        // Применить фильтр
-        btnApply.setOnClickListener(v -> {
-            loadTripsForSelectedCar();
-            dialog.dismiss();
-        });
-
-        // Сбросить фильтр
-        btnClear.setOnClickListener(v -> {
-            startDateFilter = null;
-            endDateFilter = null;
-            loadTripsForSelectedCar();
-            dialog.dismiss();
-        });
-
+        AlertDialog dialog = builder.create();
         dialog.show();
+
+        btnApply.setOnClickListener(v -> {
+            if (startDateTimeFilter == null && endDateTimeFilter == null) {
+                Toast.makeText(getContext(), "Выберите хотя бы одну дату", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // FIX: Применяем фильтр через reload
+            loadTripsForCar();
+            dialog.dismiss();
+            Toast.makeText(getContext(), "Фильтр применён", Toast.LENGTH_SHORT).show();
+        });
+
+        btnClear.setOnClickListener(v -> {
+            startDateTimeFilter = null;
+            endDateTimeFilter = null;
+            tvStartDate.setText("Выберите дату и время (от)");
+            tvEndDate.setText("Выберите дату и время (до)");
+            loadTripsForCar();  // Reload без фильтров
+            dialog.dismiss();
+            Toast.makeText(getContext(), "Фильтр сброшен", Toast.LENGTH_SHORT).show();
+        });
     }
 
+    // NEW: Показ DatePicker + TimePicker
+    private void showDateTimePicker(boolean isStart, final TextView tvDate) {
+        Calendar current = Calendar.getInstance();
+        if ((isStart && startDateTimeFilter != null) || (!isStart && endDateTimeFilter != null)) {
+            current = isStart ? startDateTimeFilter : endDateTimeFilter;
+        }
 
-    private void showDeleteConfirmation(Trip trip) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Удалить поездку")
-                .setMessage("Вы уверены, что хотите удалить поездку \"" + trip.getName() + "\"?")
-                .setPositiveButton("Удалить", (dialog, which) -> {
-                    dbHelper.deleteTrip(trip.getId());
-                    Toast.makeText(getContext(), "Поездка удалена.", Toast.LENGTH_SHORT).show();
-                    loadTripsForSelectedCar();
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
+        Calendar finalCurrent = current;
+        DatePickerDialog datePicker = new DatePickerDialog(requireContext(),
+                (view, year, month, dayOfMonth) -> {
+                    Calendar selected = Calendar.getInstance();
+                    selected.set(year, month, dayOfMonth, finalCurrent.get(Calendar.HOUR_OF_DAY), finalCurrent.get(Calendar.MINUTE));
+                    showTimePicker(isStart, selected, tvDate);
+                },
+                current.get(Calendar.YEAR),
+                current.get(Calendar.MONTH),
+                current.get(Calendar.DAY_OF_MONTH)
+        );
+        datePicker.show();
     }
 
+    // NEW: TimePicker после DatePicker
+    private void showTimePicker(final boolean isStart, final Calendar selectedDate, final TextView tvDate) {
+        TimePickerDialog timePicker = new TimePickerDialog(requireContext(),
+                (view, hourOfDay, minute) -> {
+                    selectedDate.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                    selectedDate.set(Calendar.MINUTE, minute);
+                    selectedDate.set(Calendar.SECOND, 0);  // Секунды = 0
 
-    /**
-     * Адаптер для списка поездок с поддержкой заголовков.
-     */
+                    if (isStart) {
+                        startDateTimeFilter = selectedDate;
+                    } else {
+                        endDateTimeFilter = selectedDate;
+                    }
+                    tvDate.setText(DISPLAY_DATE_FORMAT.format(selectedDate.getTime()));
+                },
+                selectedDate.get(Calendar.HOUR_OF_DAY),
+                selectedDate.get(Calendar.MINUTE),
+                true  // 24-часовой формат
+        );
+        timePicker.show();
+    }
+
+    // --- Адаптер для RecyclerView (без изменений, формат даты уже фикс) ---
     private class TripAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
         private List<TripListItem> items;
 
         public TripAdapter(List<TripListItem> items) {
             this.items = items;
-        }
-
-        public void updateTrips(List<TripListItem> newItems) {
-            this.items = newItems;
-            notifyDataSetChanged();
         }
 
         @Override
@@ -447,21 +434,21 @@ public class TripsFragment extends Fragment {
             } else {
                 TripViewHolder tripHolder = (TripViewHolder) holder;
                 Trip trip = item.getTrip();
+
                 Car car = dbHelper.getCar(trip.getCarId());
                 String distanceUnit = car != null ? car.getDistanceUnit() : "км";
                 String fuelUnit = car != null ? car.getFuelUnit() : "л";
                 String consumptionUnit = car != null ? car.getFuelConsumptionUnit() : "л/100км";
 
-
                 tripHolder.tvName.setText(trip.getName());
-                tripHolder.tvDateTime.setText(String.format(Locale.getDefault(), "%s - %s",
-                        formatDateTime(trip.getStartDateTime()), formatTime(trip.getEndDateTime())));
+                // Формат даты — только начало, "Пн, 01 19:22"
+                tripHolder.tvDateTime.setText(formatDateTime(trip.getStartDateTime()));
                 tripHolder.tvDistance.setText(String.format(Locale.getDefault(), "%.1f %s", trip.getDistance(), distanceUnit));
-                tripHolder.tvDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));
                 tripHolder.tvFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelSpent(), fuelUnit));
                 tripHolder.tvFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelConsumption(), consumptionUnit));
+                tripHolder.tvDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));
 
-                // Добавление Long Click Listener для удаления
+                // Long Click Listener для удаления
                 tripHolder.itemView.setOnLongClickListener(v -> {
                     showDeleteConfirmation(trip);
                     return true;
@@ -474,11 +461,10 @@ public class TripsFragment extends Fragment {
             return items.size();
         }
 
-
         private String formatDateTime(String dbDateTime) {
             try {
                 Date date = DB_DATE_FORMAT.parse(dbDateTime);
-                return DISPLAY_DATE_TIME_FORMAT.format(date);
+                return DISPLAY_DATE_TIME_FORMAT.format(date);  // "EEE, dd HH:mm"
             } catch (ParseException e) {
                 return dbDateTime;
             }
@@ -518,7 +504,6 @@ public class TripsFragment extends Fragment {
 
             public HeaderViewHolder(@NonNull View itemView) {
                 super(itemView);
-                // Предполагается, что R.id.tv_header_title существует в item_trip_header.xml
                 tvHeader = itemView.findViewById(R.id.tv_header_title);
             }
         }
@@ -536,5 +521,20 @@ public class TripsFragment extends Fragment {
                 tvFuelConsumption = itemView.findViewById(R.id.tv_trip_fuel_consumption);
             }
         }
+    }
+
+    // --- Удаление поездки (FIX: Добавлен reload) ---
+    private void showDeleteConfirmation(Trip trip) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Удалить поездку?")
+                .setMessage("Эта операция необратима.")
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    dbHelper.deleteTrip(trip.getId());
+                    // FIX: Полный reload после удаления
+                    loadTripsForCar();
+                    Toast.makeText(getContext(), "Поездка удалена", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 }
