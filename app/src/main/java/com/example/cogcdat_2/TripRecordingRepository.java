@@ -8,7 +8,6 @@ import android.util.Log;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * Репозиторий, реализующий шаблон Singleton, для обмена данными (TripRecordingData)
@@ -32,12 +31,11 @@ public class TripRecordingRepository {
     private double totalFuelRecharged = 0.0;
     private boolean isPaused = false;
     private boolean isRecording = false; // Флаг активной записи
-    private double initialFuelLevel = 0.0;
+    private double initialFuelLevel = 0.0; // FIX: Сброс только в reset()
 
     // Хранение времени начала и текущего времени
     private String startDateTime = null;
     private String currentDateTime = null;
-
 
     private TripRecordingRepository(Context context) {
 
@@ -79,6 +77,7 @@ public class TripRecordingRepository {
 
     /**
      * Запускает запись поездки. (ИСПРАВЛЕНО: Раньше метод отсутствовал/был с другими параметрами)
+     * FIX: Убрали сброс initialFuelLevel — оно устанавливается из Activity заранее
      */
     public void startRecording() {
         if (isRecording) return;
@@ -87,9 +86,8 @@ public class TripRecordingRepository {
         currentDistanceKm = 0.0;
         currentDurationMs = 0;
         totalFuelRecharged = 0.0;
+        // initialFuelLevel НЕ сбрасываем — оно уже установлено
         // Установка времени начала
-        // FIX: Устанавливаем часовой пояс в UTC, если не указано, чтобы сохранить согласованность с ISO8601,
-        // но здесь используется Locale.getDefault(), поэтому оставляем без изменения формата.
         startDateTime = DB_DATE_FORMAT.format(new Date());
 
         // Публикация начальных данных
@@ -106,12 +104,17 @@ public class TripRecordingRepository {
      * ИСПРАВЛЕНО: Теперь принимает только 2 аргумента.
      * @param distanceKm Общая дистанция.
      * @param durationMs Общая длительность.
+     * FIX: currentDateTime обновляется только если !isPaused
      */
     public void updateTripUpdates(double distanceKm, long durationMs) {
-        if (!isRecording || isPaused) return;
+        if (!isRecording) return;
 
         currentDistanceKm = distanceKm;
         currentDurationMs = durationMs;
+
+        if (!isPaused) {
+            currentDateTime = DB_DATE_FORMAT.format(new Date());
+        }
 
         // Публикация обновленных данных
         tripUpdates.postValue(new TripRecordingData(
@@ -120,14 +123,13 @@ public class TripRecordingRepository {
                 totalFuelRecharged,
                 isPaused
         ));
-        // Обновление текущего времени (для времени окончания)
-        currentDateTime = DB_DATE_FORMAT.format(new Date());
     }
 
     /**
      * Устанавливает/снимает паузу.
      */
     public void setPaused(boolean paused) {
+        if (!isRecording) return;
         this.isPaused = paused;
         // Публикация обновления состояния
         tripUpdates.postValue(new TripRecordingData(
@@ -137,6 +139,7 @@ public class TripRecordingRepository {
                 isPaused
         ));
     }
+
     /**
      * Возвращает общее количество заправленного топлива. (НОВЫЙ ГЕТТЕР)
      */
@@ -155,6 +158,7 @@ public class TripRecordingRepository {
      * Добавляет заправленное топливо.
      */
     public void addRefuel(double amount) {
+        if (!isRecording) return;
         totalFuelRecharged += amount;
         // Публикация обновления
         tripUpdates.postValue(new TripRecordingData(
@@ -168,6 +172,7 @@ public class TripRecordingRepository {
     /**
      * Сбрасывает состояние и сигнализирует об остановке.
      * ИСПРАВЛЕНО: Название метода - reset().
+     * FIX: Добавлен сброс initialFuelLevel
      */
     public void reset() {
         isRecording = false;
@@ -182,6 +187,7 @@ public class TripRecordingRepository {
         isPaused = false;
         startDateTime = null;
         currentDateTime = null;
+        initialFuelLevel = 0.0; // FIX: Сброс для новой записи
     }
 
     /**
@@ -207,15 +213,16 @@ public class TripRecordingRepository {
     /**
      * Устанавливает начальный уровень топлива.
      * Вызывается из GpsRecordingActivity перед стартом записи.
+     * FIX: Убрали проверку !isRecording — всегда устанавливаем
      */
-    public void setInitialFuelLevel(double initialFuelLevel) { // <--- ДОБАВИТЬ ЭТОТ МЕТОД
+    public void setInitialFuelLevel(double initialFuelLevel) {
         this.initialFuelLevel = initialFuelLevel;
     }
 
     /**
      * Возвращает начальный уровень топлива. (Может понадобиться для расчетов при сохранении поездки)
      */
-    public double getInitialFuelLevel() { // <--- РЕКОМЕНДУЕТСЯ ДОБАВИТЬ
+    public double getInitialFuelLevel() {
         return initialFuelLevel;
     }
 }

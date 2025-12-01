@@ -28,13 +28,6 @@ public class MainActivity extends AppCompatActivity {
                     .commit();
         }
 
-        try {
-            // Инициализация TripRecordingRepository
-            // (Предполагается, что этот метод настраивает LiveData и сам синглтон)
-            TripRecordingRepository.initialize(this);
-        } catch (Exception e) {
-            // Здесь можно добавить код для обработки критической ошибки запуска
-        }
     }
 
     // 💡 Используем новый интерфейс OnItemSelectedListener

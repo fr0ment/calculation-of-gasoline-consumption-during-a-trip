@@ -1,5 +1,6 @@
 package com.example.cogcdat_2;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -7,13 +8,20 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -35,8 +43,8 @@ public class GpsRecordingActivity extends AppCompatActivity {
     private LinearLayout layoutPreStart, layoutRecording, layoutControls;
     private EditText etTripName, etInitialFuel;
     private TextView tvDistanceValue, tvDurationValue, tvFuelRechargedValue, tvUnitInfo;
-    private Button btnStart, btnPauseResume, btnRefuel, btnStop;
-    private TextView tvCurrentStatus; // ИСПРАВЛЕНО: Было tvStatus
+    private Button btnStart, btnPauseResume, btnRefuel, btnStop, btnCancel;
+    private TextView tvCurrentStatus;
 
     private DatabaseHelper dbHelper;
     private Car selectedCar;
@@ -47,14 +55,12 @@ public class GpsRecordingActivity extends AppCompatActivity {
     // Новое: Исходный уровень топлива, введенный пользователем перед стартом
     private double initialFuelLevel = 0.0;
 
-
     // --- Observer для LiveData ---
     private final Observer<TripRecordingData> tripUpdateObserver = tripData -> {
         if (tripData != null) {
-            // Специальный сигнал для закрытия
+            // Специальный сигнал для закрытия (убран, т.к. теперь finish() вызывается напрямую в stopRecordingService)
             if (tripData.getDistance() < 0) {
-                // Если мы здесь, значит, сервис был остановлен и репозиторий сброшен
-                finish();
+                // FIX: Только очистка, без finish() — чтобы избежать дублирования
                 return;
             }
 
@@ -62,7 +68,6 @@ public class GpsRecordingActivity extends AppCompatActivity {
             tvDistanceValue.setText(String.format(Locale.getDefault(), "%.1f", tripData.getDistance()));
             tvDurationValue.setText(formatDuration(tripData.getDurationMs()));
             tvFuelRechargedValue.setText(String.format(Locale.getDefault(), "%.1f", tripData.getFuelRecharged()));
-
 
             // Обновление кнопки Пауза/Возобновить
             if (tripData.isPaused()) {
@@ -79,6 +84,11 @@ public class GpsRecordingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gps_recording);
+
+        // NEW: Скрытие клавиатуры по умолчанию при запуске activity
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (etTripName != null) hideKeyboard(etTripName);
+        });
 
         // Получение ID автомобиля
         carId = getIntent().getIntExtra("car_id", -1);
@@ -104,10 +114,44 @@ public class GpsRecordingActivity extends AppCompatActivity {
         setupListeners();
         updateUnitInfo();
 
+        // Восстановление состояния, если запись уже идет
+        if (TripRecordingRepository.getInstance().isRecording()) {
+            isRecording = true;
+            layoutPreStart.setVisibility(View.GONE);
+            btnStart.setVisibility(View.GONE);
+            layoutRecording.setVisibility(View.VISIBLE);
+            layoutControls.setVisibility(View.VISIBLE);
+
+            // NEW: Обработка "Назад" во время записи — показ диалога отмены
+            getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+                @Override
+                public void handleOnBackPressed() {
+                    showCancelConfirmationDialog();
+                }
+            });
+        }
+
         // Подписка на LiveData
         TripRecordingRepository.getInstance().getTripUpdates().observe(this, tripUpdateObserver);
     }
 
+    // NEW: Для singleTask: Обработка повторного запуска (bring to front из уведомления)
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);  // Обновляем intent для extras (car_id)
+        carId = intent.getIntExtra("car_id", carId);  // Перезагружаем car_id если изменился
+        selectedCar = dbHelper.getCar(carId);
+        updateUnitInfo();  // Обновляем UI (единицы)
+        // Если запись активна, восстанавливаем состояние
+        if (TripRecordingRepository.getInstance().isRecording()) {
+            isRecording = true;
+            layoutPreStart.setVisibility(View.GONE);
+            btnStart.setVisibility(View.GONE);
+            layoutRecording.setVisibility(View.VISIBLE);
+            layoutControls.setVisibility(View.VISIBLE);
+        }
+    }
 
     private void initViews() {
         // Элементы Pre-Start
@@ -119,60 +163,72 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
         // Элементы Recording
         layoutRecording = findViewById(R.id.layout_recording);
-        tvCurrentStatus = findViewById(R.id.tv_current_status); // ИСПРАВЛЕНО
+        tvCurrentStatus = findViewById(R.id.tv_current_status);
 
         // Значения статистики (включая include: stat_distance, stat_duration, stat_fuel_recharged)
         tvDistanceValue = findViewById(R.id.tv_distance_value);
         tvDurationValue = findViewById(R.id.tv_duration_value);
         tvFuelRechargedValue = findViewById(R.id.tv_fuel_recharged_value);
 
-
         // Элементы Controls
         layoutControls = findViewById(R.id.layout_controls);
         btnPauseResume = findViewById(R.id.btn_pause_resume);
         btnRefuel = findViewById(R.id.btn_refuel);
         btnStop = findViewById(R.id.btn_stop_recording);
+        btnCancel = findViewById(R.id.btn_cancel_recording);
     }
 
     private void setupListeners() {
-        btnStart.setOnClickListener(v -> handleStartRecording());
-        btnPauseResume.setOnClickListener(v -> handlePauseResume());
+        // NEW: Для btnStart — inline скрытие клавиатуры в onClick
+        btnStart.setOnClickListener(v -> {
+            handleStartRecording();
+            hideKeyboard(v);  // Скрываем на View-клике (btnStart)
+        });
+        btnPauseResume.setOnClickListener(v -> {
+            handlePauseResume();
+            hideKeyboard(v);  // Опционально: скрываем при клике на другие кнопки
+        });
         btnRefuel.setOnClickListener(v -> {
-            if (isRecording) { // Проверяем, что запись активна перед показом диалога
-                showRefuelDialog(); // НОВЫЙ СЛУШАТЕЛЬ
-            } else {
-                Toast.makeText(this, "Сначала начните запись поездки.", Toast.LENGTH_SHORT).show();
+            if (isRecording) {
+                showRefuelDialog();
             }
+            hideKeyboard(v);
+        });
+        // NEW: Listener для отмены (был пропущен)
+        btnCancel.setOnClickListener(v -> {
+            showCancelConfirmationDialog();
+            hideKeyboard(v);
         });
         btnStop.setOnClickListener(v -> {
             if (isRecording) {
-                handleStopRecording();
-            } else {
-                Toast.makeText(this, "Запись не активна.", Toast.LENGTH_SHORT).show();
+                showSaveTripDialog();
             }
+            hideKeyboard(v);
         });
     }
 
-    private void updateUnitInfo() {
-        String info = String.format(Locale.getDefault(), "Единицы измерения: %s (топливо), %s (расстояние)",
-                selectedCar.getFuelUnit(), selectedCar.getDistanceUnit());
-        tvUnitInfo.setText(info);
+    // NEW: Диалог подтверждения отмены записи
+    private void showCancelConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Отменить запись?")
+                .setMessage("Запись будет остановлена без сохранения. Продолжить?")
+                .setPositiveButton("ОТМЕНИТЬ", (dialog, which) -> {
+                    // Остановка без сохранения
+                    stopRecordingService();
+                })
+                .setNegativeButton("ПРОДОЛЖИТЬ", null)
+                .show();
     }
 
     private void handleStartRecording() {
-        if (!checkLocationPermission()) {
-            requestLocationPermission();
-            return;
-        }
-
-        // 1. Проверка и сохранение начального уровня топлива
-        String fuelInput = etInitialFuel.getText().toString().trim();
-        if (fuelInput.isEmpty()) {
+        // NEW: Валидация initialFuel
+        String initialFuelStr = etInitialFuel.getText().toString().trim();
+        if (initialFuelStr.isEmpty()) {
             etInitialFuel.setError("Введите начальный уровень топлива.");
             return;
         }
         try {
-            initialFuelLevel = Double.parseDouble(fuelInput);
+            initialFuelLevel = Double.parseDouble(initialFuelStr);
             if (initialFuelLevel < 0) {
                 etInitialFuel.setError("Значение должно быть неотрицательным.");
                 return;
@@ -182,64 +238,83 @@ public class GpsRecordingActivity extends AppCompatActivity {
             return;
         }
 
-        // 2. Скрытие Pre-Start и отображение Recording/Controls
+        // Проверка разрешения на локацию
+        if (!checkLocationPermission()) {
+            requestLocationPermission();
+            return;
+        }
+
+        // Установка initialFuel в репозиторий
+        TripRecordingRepository.getInstance().setInitialFuelLevel(initialFuelLevel);
+
+        // Запуск сервиса
+        Intent serviceIntent = new Intent(this, GpsRecordingService.class);
+        serviceIntent.putExtra("car_id", carId);
+        startService(serviceIntent);
+
+        // Переход к UI записи
+        isRecording = true;
         layoutPreStart.setVisibility(View.GONE);
         btnStart.setVisibility(View.GONE);
         layoutRecording.setVisibility(View.VISIBLE);
         layoutControls.setVisibility(View.VISIBLE);
 
-        // ПЕРЕДАЧА НАЧАЛЬНОГО УРОВНЯ ТОПЛИВА В РЕПОЗИТОРИЙ (ВРЕМЕННОЕ РЕШЕНИЕ)
-        // Важно: нужно делать это до запуска сервиса, чтобы сервис при старте мог использовать startRecording()
-        TripRecordingRepository.getInstance().setInitialFuelLevel(initialFuelLevel);
+        // NEW: Скрытие клавиатуры и фокуса после начала записи (после изменения UI, с задержкой)
+        new Handler(Looper.getMainLooper()).postDelayed(() -> hideKeyboard(layoutRecording), 100);  // Задержка 100ms для layout
 
-        // 3. Запуск сервиса
-        Intent serviceIntent = new Intent(this, GpsRecordingService.class);
-        serviceIntent.putExtra("car_id", carId);
-        serviceIntent.putExtra("trip_name", etTripName.getText().toString().trim());
+        // NEW: Добавляем callback для "Назад" после старта записи
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                showCancelConfirmationDialog();
+            }
+        });
 
-        ContextCompat.startForegroundService(this, serviceIntent);
-        isRecording = true;
+        Toast.makeText(this, "Запись начата", Toast.LENGTH_SHORT).show();
     }
 
-    private void handlePauseResume() {
-        if (!isRecording) return; // Проверка, чтобы не отправлять, если запись не идет
-        Intent intent = new Intent(GpsRecordingService.ACTION_PAUSE_RESUME);
-        sendBroadcast(intent);
+    // NEW: Улучшенный метод для скрытия клавиатуры (принимает View для точного windowToken)
+    private void hideKeyboard(View view) {
+        if (view == null) return;
+
+        // Установка режима окна для скрытия клавиатуры
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+
+        // Снимаем фокус с EditText
+        if (etTripName != null) etTripName.clearFocus();
+        if (etInitialFuel != null) etInitialFuel.clearFocus();
+
+        // Явно скрываем клавиатуру на конкретном View
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
+        // Дополнительно: Скрываем фокус с всего окна
+        getWindow().getDecorView().clearFocus();
     }
 
-    private void handleStopRecording() {
-        // Показываем диалог для ввода конечного уровня топлива
-        showFinalFuelDialog();
-    }
-
-    /**
-     * Показывает диалог для добавления заправленного топлива.
-     */
+    // NEW: Полная реализация диалога заправки (на основе dialog_refuel.xml)
     private void showRefuelDialog() {
+        String fuelUnit = selectedCar.getFuelUnit();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = this.getLayoutInflater();
-        // Используем предоставленный XML-файл для диалога
+        LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_refuel, null);
         builder.setView(dialogView);
 
-        // Инициализация полей ввода и кнопок
-        EditText etRefuelAmount = dialogView.findViewById(R.id.et_refuel_amount);
         TextView tvRefuelUnit = dialogView.findViewById(R.id.tv_refuel_unit);
+        EditText etRefuelAmount = dialogView.findViewById(R.id.et_refuel_amount);
+        Button btnAddRefuel = dialogView.findViewById(R.id.btn_add_refuel);
+        Button btnCancelRefuel = dialogView.findViewById(R.id.btn_cancel_refuel);
 
-        // Установка единицы измерения
-        tvRefuelUnit.setText(selectedCar.getFuelUnit());
-
-        // Кнопки из запроса
-        Button btnAdd = dialogView.findViewById(R.id.btn_add_refuel);
-        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_refuel);
+        tvRefuelUnit.setText(String.format(Locale.getDefault(), "Единица измерения: %s", fuelUnit));
 
         AlertDialog dialog = builder.create();
         dialog.show();
 
-        btnAdd.setOnClickListener(v -> {
+        btnAddRefuel.setOnClickListener(v -> {
             String amountStr = etRefuelAmount.getText().toString().trim();
             if (amountStr.isEmpty()) {
-                etRefuelAmount.setError("Введите количество.");
+                etRefuelAmount.setError("Введите количество топлива.");
                 return;
             }
             try {
@@ -249,43 +324,35 @@ public class GpsRecordingActivity extends AppCompatActivity {
                     return;
                 }
 
-                // 1. Отправка команды в репозиторий/сервис для добавления топлива
+                // Добавляем в репозиторий (LiveData обновит UI автоматически)
                 TripRecordingRepository.getInstance().addRefuel(amount);
-                Toast.makeText(this, String.format(Locale.getDefault(), "Добавлено %.1f %s", amount, selectedCar.getFuelUnit()), Toast.LENGTH_SHORT).show();
 
+                Toast.makeText(this, String.format(Locale.getDefault(), "Заправлено: %.1f %s", amount, fuelUnit), Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             } catch (NumberFormatException e) {
                 etRefuelAmount.setError("Некорректное числовое значение.");
             }
         });
 
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnCancelRefuel.setOnClickListener(v -> dialog.dismiss());
     }
 
-
-    /**
-     * Показывает диалог для ввода остатка топлива перед сохранением.
-     */
-    private void showFinalFuelDialog() {
-        TripRecordingRepository repository = TripRecordingRepository.getInstance();
-        double initialFuel = repository.getInitialFuelLevel();
-        double totalFuelRecharged = repository.getTotalFuelRecharged();
-        double maxPossibleFuel = initialFuel + totalFuelRecharged;
+    private void showSaveTripDialog() {
+        String fuelUnit = selectedCar.getFuelUnit();
+        double maxPossibleFuel = initialFuelLevel + TripRecordingRepository.getInstance().getTotalFuelRecharged();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = this.getLayoutInflater();
+        LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_save_trip, null);
         builder.setView(dialogView);
 
-        EditText etFinalFuel = dialogView.findViewById(R.id.et_final_fuel);
-        TextView tvFinalFuelUnit = dialogView.findViewById(R.id.tv_final_fuel_unit);
         TextView tvSummary = dialogView.findViewById(R.id.tv_final_fuel_summary);
+        TextView tvUnit = dialogView.findViewById(R.id.tv_final_fuel_unit);
+        EditText etFinalFuel = dialogView.findViewById(R.id.et_final_fuel);
         Button btnSave = dialogView.findViewById(R.id.btn_save_trip);
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel_final_fuel);
 
-        // Обновление текста с единицами измерения
-        String fuelUnit = selectedCar.getFuelUnit();
-        tvFinalFuelUnit.setText(String.format(Locale.getDefault(), "Единица измерения: %s (Остаток топлива)", fuelUnit));
+        tvUnit.setText(String.format(Locale.getDefault(), "Единица измерения: %s (Остаток топлива)", fuelUnit));
         tvSummary.setText(String.format(Locale.getDefault(), "Пожалуйста, введите количество топлива, оставшееся в баке (%s). Макс. возможное: %.1f %s.", fuelUnit, maxPossibleFuel, fuelUnit));
 
         AlertDialog dialog = builder.create();
@@ -314,13 +381,10 @@ public class GpsRecordingActivity extends AppCompatActivity {
                 // 1. Расчет и сохранение поездки в БД
                 saveTripToDatabase(finalFuelLevel);
 
-                // 2. Остановка сервиса
+                // 2. Остановка сервиса (теперь с finish())
                 stopRecordingService();
 
                 dialog.dismiss();
-                // Закрытие активности происходит через Observer после reset() в stopRecordingService,
-                // чтобы гарантировать, что сервис остановлен и Activity получило финальное обновление.
-                // finish(); // Убрано, т.к. происходит через Observer
             } catch (NumberFormatException e) {
                 etFinalFuel.setError("Некорректное числовое значение.");
             }
@@ -342,6 +406,11 @@ public class GpsRecordingActivity extends AppCompatActivity {
         String name = etTripName.getText().toString().trim();
         String startDateTime = repository.getStartDateTime();
         String endDateTime = repository.getCurrentDateTime();
+
+        // FIX: Дебаж initialFuel (удали после теста)
+        if (initialFuel <= 0) {
+            Log.e(TAG, "Initial fuel not set correctly! Value: " + initialFuel);
+        }
 
         // Расчет потраченного топлива
         // Потраченное = (Начальное + Заправленное) - Конечное
@@ -377,14 +446,21 @@ public class GpsRecordingActivity extends AppCompatActivity {
     }
 
     private void stopRecordingService() {
-        isRecording = false;
-        Intent serviceIntent = new Intent(this, GpsRecordingService.class);
-        // Сброс состояния репозитория должен быть вызван до stopService,
-        // чтобы Activity успело получить сигнал-закрытие (-1.0)
+        // FIX: Сначала reset() (очистка репозитория и сигнал в observer),
+        // затем stopService, затем finish() (гарантированное закрытие activity)
         TripRecordingRepository.getInstance().reset();
+        Intent serviceIntent = new Intent(this, GpsRecordingService.class);
         stopService(serviceIntent);
+        isRecording = false;
+        finish();  // Явное закрытие activity — теперь всегда срабатывает
     }
 
+    // NEW: Скрытие клавиатуры при тапе вне полей (activity-wide)
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        hideKeyboard(getCurrentFocus());  // Если фокус на View
+        return super.onTouchEvent(event);
+    }
 
     // --- Жизненный цикл активности и разрешения ---
 
@@ -429,6 +505,21 @@ public class GpsRecordingActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Разрешение на GPS требуется для записи поездки.", Toast.LENGTH_LONG).show();
             }
+        }
+    }
+
+    // ... (методы handlePauseResume — без изменений)
+    // Пример заглушки для handlePauseResume (если нужно, реализуй через Broadcast или репозиторий)
+    private void handlePauseResume() {
+        // Отправка broadcast для toggle в сервисе
+        Intent intent = new Intent(GpsRecordingService.ACTION_PAUSE_RESUME);
+        sendBroadcast(intent);
+    }
+
+    private void updateUnitInfo() {
+        // Установка единиц из selectedCar
+        if (selectedCar != null) {
+            tvUnitInfo.setText(selectedCar.getDistanceUnit());
         }
     }
 }

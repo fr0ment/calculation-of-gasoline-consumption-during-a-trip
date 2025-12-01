@@ -45,6 +45,9 @@ public class GpsRecordingService extends Service implements LocationListener {
     private long totalTimePaused = 0;
     private boolean isPaused = false;
 
+    // ID автомобиля для восстановления Activity из уведомления
+    private int carId = -1;
+
     // Таймер для обновления LiveData и уведомления каждую секунду
     private final Handler handler = new Handler();
     private final long UPDATE_INTERVAL = 1000; // 1 секунда
@@ -65,7 +68,6 @@ public class GpsRecordingService extends Service implements LocationListener {
             handler.postDelayed(this, UPDATE_INTERVAL);
         }
     };
-
 
     // Ресивер для действий из уведомления и Activity
     private final BroadcastReceiver notificationActionReceiver = new BroadcastReceiver() {
@@ -90,11 +92,18 @@ public class GpsRecordingService extends Service implements LocationListener {
 
         // FIX: Использовать registerReceiver с IntentFilter, который создается всегда,
         // а не только для O и выше, хотя флаг экспорта актуален для более новых версий.
-        registerReceiver(notificationActionReceiver, new IntentFilter(ACTION_PAUSE_RESUME), flags);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(notificationActionReceiver, new IntentFilter(ACTION_PAUSE_RESUME), flags);
+        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        // Сохраняем ID автомобиля при старте сервиса
+        if (intent != null) {
+            carId = intent.getIntExtra("car_id", -1);
+        }
 
         // Инициализация при старте (если не была уже начата)
         if (!TripRecordingRepository.getInstance().isRecording()) {
@@ -123,7 +132,9 @@ public class GpsRecordingService extends Service implements LocationListener {
         super.onDestroy();
         stopLocationUpdates();
         handler.removeCallbacks(timerRunnable);
-        unregisterReceiver(notificationActionReceiver);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            unregisterReceiver(notificationActionReceiver);
+        }
 
         // FIX: Убран вызов reset(), т.к. он уже вызывается из GpsRecordingActivity
         // при сохранении/остановке. Если stopService() вызван не из Activity,
@@ -152,7 +163,7 @@ public class GpsRecordingService extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        if (!isPaused) {
+        if (!isPaused && TripRecordingRepository.getInstance().isRecording()) { // FIX: Проверка isRecording
             if (lastLocation != null) {
                 // Расстояние в метрах
                 float distanceMeters = lastLocation.distanceTo(location);
@@ -213,12 +224,18 @@ public class GpsRecordingService extends Service implements LocationListener {
         return totalElapsedTime - currentTotalTimePaused;
     }
 
-
     // --- Уведомление ---
 
     private Notification buildNotification(double distanceKm, long durationMs) {
         // Создаем Intent для открытия Activity при клике на уведомление
         Intent notificationIntent = new Intent(this, GpsRecordingActivity.class);
+
+        // ВАЖНО: Добавляем ID автомобиля, чтобы Activity могла корректно восстановиться
+        notificationIntent.putExtra("car_id", carId);
+
+        // NEW: Флаги для singleTask: Новый task, но singleTop (bring to front если уже запущена)
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
