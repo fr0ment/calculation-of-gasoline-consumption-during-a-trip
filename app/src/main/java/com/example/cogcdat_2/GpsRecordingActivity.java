@@ -58,9 +58,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
     // --- Observer для LiveData ---
     private final Observer<TripRecordingData> tripUpdateObserver = tripData -> {
         if (tripData != null) {
-            // Специальный сигнал для закрытия (убран, т.к. теперь finish() вызывается напрямую в stopRecordingService)
             if (tripData.getDistance() < 0) {
-                // FIX: Только очистка, без finish() — чтобы избежать дублирования
                 return;
             }
 
@@ -338,6 +336,11 @@ public class GpsRecordingActivity extends AppCompatActivity {
     }
 
     private void showSaveTripDialog() {
+        if (!TripRecordingRepository.getInstance().isRecording()) {
+            Toast.makeText(this, "Запись не активна. Закрытие...", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
         String fuelUnit = selectedCar.getFuelUnit();
         double maxPossibleFuel = initialFuelLevel + TripRecordingRepository.getInstance().getTotalFuelRecharged();
 

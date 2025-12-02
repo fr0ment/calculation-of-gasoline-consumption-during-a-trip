@@ -135,10 +135,13 @@ public class GpsRecordingService extends Service implements LocationListener {
         handler.removeCallbacks(timerRunnable);
         unregisterReceiver(notificationActionReceiver);
 
-        // FIX: Убран вызов reset(), т.к. он уже вызывается из GpsRecordingActivity
-        // при сохранении/остановке. Если stopService() вызван не из Activity,
-        // Activity все равно не ждет сигнала, поэтому сброс здесь не нужен/дублирует.
-        // TripRecordingRepository.getInstance().reset();
+        try {
+            unregisterReceiver(notificationActionReceiver);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "Receiver not registered", e);
+        }
+        // Добавьте: Уведомление о полном сбросе (опционально)
+        TripRecordingRepository.getInstance().reset();  // Если не вызван раньше
     }
 
     // --- Локация и Расстояние ---
