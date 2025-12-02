@@ -26,6 +26,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.card.MaterialCardView;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -65,11 +67,15 @@ public class TripsFragment extends Fragment {
     private EditText etSearchQuery;
     private String currentSearchQuery = "";
 
+    private SharedPreferences sharedPreferences;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_trips, container, false);
 
         dbHelper = new DatabaseHelper(getContext());
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         recyclerView = view.findViewById(R.id.recycler_view_trips);
         fabAddTrip = view.findViewById(R.id.fab_add_trip);
@@ -127,21 +133,41 @@ public class TripsFragment extends Fragment {
         CustomCarSpinnerAdapter spinnerAdapter = new CustomCarSpinnerAdapter(requireContext(), carList);
         carSelectionSpinner.setAdapter(spinnerAdapter);
 
-        // Выбор первого автомобиля по умолчанию
-        if (!carList.isEmpty()) {
-            selectedCarId = carList.get(0).getId();
+        // После установки адаптера, загрузите сохранённый ID и установите позицию в спиннере
+        int savedCarId = sharedPreferences.getInt("selected_car_id", -1);  // -1 как default, если ничего не сохранено
+        if (savedCarId != -1) {
+            for (int i = 0; i < carList.size(); i++) {
+                if (carList.get(i).getId() == savedCarId) {
+                    carSelectionSpinner.setSelection(i);  // Устанавливаем позицию
+                    selectedCarId = savedCarId;
+                    break;
+                }
+            }
+        } else if (!carList.isEmpty()) {
+            // Если ничего не сохранено, выбираем первый по умолчанию
             carSelectionSpinner.setSelection(0);
+            selectedCarId = carList.get(0).getId();
         }
+
+// Затем вызовите loadTripsForCar() для загрузки поездок с выбранным ID
 
         carSelectionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedCarId = carList.get(position).getId();
-                loadTripsForCar();  // Reload trips for selected car
+
+                // Сохраняем выбранный ID в SharedPreferences
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putInt("selected_car_id", selectedCarId);
+                editor.apply();  // Асинхронно сохраняем
+
+                loadTripsForCar();  // Обновляем список поездок
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Ничего не делаем
+            }
         });
     }
 
