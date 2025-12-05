@@ -36,20 +36,25 @@ public class CarDetailsActivity extends AppCompatActivity {
 
         carId = getIntent().getIntExtra("car_id", -1);
         if (carId != -1) {
-            car = dbHelper.getCar(carId);
-            if (car != null) {
-                setupViews();
-            } else {
-                Log.e("CarDetails", "Car not found with ID: " + carId);
-                finish();
-            }
+            initViews();
+            setupListeners();
+            loadCarData();
         } else {
             Log.e("CarDetails", "Invalid car ID provided.");
             finish();
         }
     }
 
-    private void setupViews() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Обновляем данные при возврате из редактирования
+        if (carId != -1) {
+            loadCarData();
+        }
+    }
+
+    private void initViews() {
         ivCarImage = findViewById(R.id.ivCarImage);
         tvName = findViewById(R.id.tvName);
         tvDescription = findViewById(R.id.tvDescription);
@@ -58,7 +63,20 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvUnits = findViewById(R.id.tvUnits);
         btnEdit = findViewById(R.id.btnEdit);
         btnDelete = findViewById(R.id.btnDelete);
+    }
 
+    private void loadCarData() {
+        car = dbHelper.getCar(carId);
+        if (car != null) {
+            updateUI();
+        } else {
+            Log.e("CarDetails", "Car not found with ID: " + carId);
+            Toast.makeText(this, "Автомобиль не найден", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+
+    private void updateUI() {
         tvName.setText(car.getName());
         tvDescription.setText(car.getDescription());
         tvFuelType.setText(car.getFuelType());
@@ -74,8 +92,9 @@ public class CarDetailsActivity extends AppCompatActivity {
 
         // Загрузка изображения
         loadImageSafe(ivCarImage, car.getImagePath());
+    }
 
-        // Обработчики кнопок
+    private void setupListeners() {
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,6 +114,8 @@ public class CarDetailsActivity extends AppCompatActivity {
         Intent intent = new Intent(CarDetailsActivity.this, EditCarActivity.class);
         intent.putExtra("car_id", carId);
         startActivity(intent);
+        // Используйте startActivityForResult, если хотите получить результат редактирования
+        // startActivityForResult(intent, 1);
     }
 
     private void deleteCar() {
