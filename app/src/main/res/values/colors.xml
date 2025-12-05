@@ -20,4 +20,9 @@
     <color name="colorOnSecondary">#000000</color>
     <color name="colorSurface">#303245</color>
     <color name="colorOnSurface">#FFFFFF</color>
+    <!-- Цвета для графика -->
+    <color name="chart_grid_color">#40FFFFFF</color> <!-- Полупрозрачный белый для сетки -->
+    <color name="chart_line_color">#FFBB86FC</color> <!-- Фиолетовый для линии графика -->
+    <color name="chart_text_color">#FFFFFF</color> <!-- Белый для текста на графике -->
+    <color name="chart_circle_color">#FFBB86FC</color> <!-- Фиолетовый для точек на графике -->
 </resources>

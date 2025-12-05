@@ -66,4 +66,5 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.0")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

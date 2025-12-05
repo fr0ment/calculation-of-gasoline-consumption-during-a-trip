@@ -11,6 +11,7 @@
         <item name="colorOnSurface">@color/white</item>
         <item name="android:windowBackground">@color/background</item>
         <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:navigationBarColor">@color/background</item>
     </style>
     <style name="TripDetailLabel">
         <item name="android:layout_width">wrap_content</item>
