@@ -8,11 +8,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import java.io.File;
 import java.util.Locale;
@@ -26,6 +28,7 @@ public class CarDetailsActivity extends AppCompatActivity {
     private TextView tvName, tvDescription, tvFuelType, tvTankVolume, tvUnits;
     private ImageView ivCarImage;
     private Button btnEdit, btnDelete;
+    private CardView btnBackCard; // Изменено с ImageButton на CardView
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +66,26 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvUnits = findViewById(R.id.tvUnits);
         btnEdit = findViewById(R.id.btnEdit);
         btnDelete = findViewById(R.id.btnDelete);
+        btnBackCard = findViewById(R.id.btnBackCard); // Инициализация CardView
+
+        // Находим ImageButton внутри CardView
+        ImageButton btnBack = btnBackCard.findViewById(R.id.btnBack);
+
+        // Устанавливаем обработчик для CardView
+        btnBackCard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+        // Или для ImageButton внутри CardView
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     private void loadCarData() {
@@ -95,6 +118,7 @@ public class CarDetailsActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
+        // Кнопка "Редактировать"
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,6 +126,7 @@ public class CarDetailsActivity extends AppCompatActivity {
             }
         });
 
+        // Кнопка "Удалить"
         btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,8 +139,6 @@ public class CarDetailsActivity extends AppCompatActivity {
         Intent intent = new Intent(CarDetailsActivity.this, EditCarActivity.class);
         intent.putExtra("car_id", carId);
         startActivity(intent);
-        // Используйте startActivityForResult, если хотите получить результат редактирования
-        // startActivityForResult(intent, 1);
     }
 
     private void deleteCar() {
