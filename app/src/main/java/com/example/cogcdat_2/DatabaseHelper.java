@@ -241,4 +241,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 new String[] { String.valueOf(tripId) });
         db.close();
     }
+    public boolean updateCar(Car car) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_NAME, car.getName());
+        values.put(COLUMN_DESCRIPTION, car.getDescription());
+        values.put(COLUMN_FUEL_TYPE, car.getFuelType());
+        values.put(COLUMN_TANK_VOLUME, car.getTankVolume());
+        values.put(COLUMN_DISTANCE_UNIT, car.getDistanceUnit());
+        values.put(COLUMN_FUEL_UNIT, car.getFuelUnit());
+        values.put(COLUMN_FUEL_CONSUMPTION_UNIT, car.getFuelConsumptionUnit());
+        values.put(COLUMN_IMAGE_PATH, car.getImagePath());
+
+        int rowsAffected = db.update(TABLE_CARS, values,
+                COLUMN_ID + " = ?", new String[]{String.valueOf(car.getId())});
+        db.close();
+
+        return rowsAffected > 0;
+    }
+
+    public boolean deleteCar(int carId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rowsAffected = db.delete(TABLE_CARS, COLUMN_ID + " = ?",
+                new String[]{String.valueOf(carId)});
+        db.close();
+
+        return rowsAffected > 0;
+    }
 }

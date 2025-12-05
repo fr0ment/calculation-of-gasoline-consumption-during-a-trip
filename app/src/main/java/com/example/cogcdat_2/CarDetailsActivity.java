@@ -1,26 +1,31 @@
 package com.example.cogcdat_2;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 public class CarDetailsActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private Car car;
+    private int carId;
 
-    // УДАЛЕНЫ: tvBrandModel, tvYearPlate, tvVin, tvInsurance
     private TextView tvName, tvDescription, tvFuelType, tvTankVolume, tvUnits;
     private ImageView ivCarImage;
-
+    private Button btnEdit, btnDelete;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +34,7 @@ public class CarDetailsActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
-        int carId = getIntent().getIntExtra("car_id", -1);
+        carId = getIntent().getIntExtra("car_id", -1);
         if (carId != -1) {
             car = dbHelper.getCar(carId);
             if (car != null) {
@@ -51,6 +56,8 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvFuelType = findViewById(R.id.tvFuelType);
         tvTankVolume = findViewById(R.id.tvTankVolume);
         tvUnits = findViewById(R.id.tvUnits);
+        btnEdit = findViewById(R.id.btnEdit);
+        btnDelete = findViewById(R.id.btnDelete);
 
         tvName.setText(car.getName());
         tvDescription.setText(car.getDescription());
@@ -65,9 +72,49 @@ public class CarDetailsActivity extends AppCompatActivity {
                 car.getDistanceUnit(), car.getFuelUnit(), car.getFuelConsumptionUnit());
         tvUnits.setText(unitsText);
 
-
         // Загрузка изображения
         loadImageSafe(ivCarImage, car.getImagePath());
+
+        // Обработчики кнопок
+        btnEdit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editCar();
+            }
+        });
+
+        btnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteCar();
+            }
+        });
+    }
+
+    private void editCar() {
+        Intent intent = new Intent(CarDetailsActivity.this, EditCarActivity.class);
+        intent.putExtra("car_id", carId);
+        startActivity(intent);
+    }
+
+    private void deleteCar() {
+        new AlertDialog.Builder(this)
+                .setTitle("Удаление автомобиля")
+                .setMessage("Вы уверены, что хотите удалить автомобиль \"" + car.getName() + "\"?")
+                .setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        boolean deleted = dbHelper.deleteCar(carId);
+                        if (deleted) {
+                            Toast.makeText(CarDetailsActivity.this, "Автомобиль удален", Toast.LENGTH_SHORT).show();
+                            finish();
+                        } else {
+                            Toast.makeText(CarDetailsActivity.this, "Ошибка при удалении", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 
     /**
@@ -114,12 +161,9 @@ public class CarDetailsActivity extends AppCompatActivity {
         }
     }
 
-
     private void setDefaultImage(ImageView imageView) {
-        // Убедитесь, что ic_car_outline существует
         imageView.setImageResource(R.drawable.ic_car_outline);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        // Предполагается, что dark_bg - это существующий цвет
         imageView.setBackgroundColor(getResources().getColor(R.color.background));
     }
 }

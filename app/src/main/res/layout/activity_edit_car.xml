@@ -12,12 +12,10 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Добавлен id tvTitle -->
         <TextView
-            android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Добавить автомобиль"
+            android:text="Редактировать"
             android:textSize="24sp"
             android:textColor="#FFFFFF"
             android:gravity="center"
@@ -29,10 +27,10 @@
             android:layout_height="200dp"
             android:layout_marginBottom="8dp"
             android:background="#2A2D3E"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_car_outline"
+            android:contentDescription="Фото автомобиля"
             android:padding="30dp"
-            android:contentDescription="Фото автомобиля"/>
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_car_outline" />
 
         <Button
             android:id="@+id/btnAddPhoto"
@@ -100,8 +98,7 @@
                 android:id="@+id/etTankVolume"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal|numberSigned"
-                android:digits="0123456789."
+                android:inputType="numberDecimal"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#CCCCCC" />
         </com.google.android.material.textfield.TextInputLayout>
