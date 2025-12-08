@@ -22,39 +22,22 @@
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
 
-        <Spinner
-            android:id="@+id/spinner_car_selection"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="#FFFFFF"
-            android:popupBackground="#41445A"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="16dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-        <LinearLayout
-            android:id="@+id/layout_car_stats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:id="@+id/tv_average_fuel_consumption"
-                android:layout_width="wrap_content"
+            <AutoCompleteTextView
+                android:id="@+id/spinner_car_selection"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Средний расход: -- л/100км"
+                android:inputType="none"
+                android:focusable="false"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp" />
+                android:hint="Выберите автомобиль" />
 
-            <TextView
-                android:id="@+id/tv_monthly_mileage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Пробег за месяц: -- км"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:layout_marginTop="4dp"/>
-        </LinearLayout>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -64,28 +47,32 @@
             android:gravity="center_vertical">
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_search"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="Поиск по названию"
-                app:hintTextColor="#CCCCCC"
-                android:textColorHint="#CCCCCC"
-                app:boxStrokeColor="#CCCCCC"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                app:startIconTint="#FF5722"
+                android:layout_marginEnd="8dp">
+
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_search_query"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textCapSentences"
                     android:imeOptions="actionSearch"
-                    android:textColor="#FFFFFF" />
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#CCCCCC"
+                    android:imeActionLabel="Поиск" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <ImageButton
                 android:id="@+id/btn_filter_date"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:src="@drawable/ic_add"
+                android:src="@drawable/ic_calendar"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="8dp"
                 android:layout_marginStart="8dp"
@@ -120,6 +107,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contentDescription="Добавить поездку"
-        app:backgroundTint="#FF5722" />
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/colorPrimary" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -11,6 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -67,22 +69,19 @@ public class TripsFragment extends Fragment {
     private EditText etSearchQuery;
     private String currentSearchQuery = "";
 
-    private SharedPreferences sharedPreferences;
+    private View rootView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_trips, container, false);
+        rootView = inflater.inflate(R.layout.fragment_trips, container, false);
 
         dbHelper = new DatabaseHelper(getContext());
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-        recyclerView = view.findViewById(R.id.recycler_view_trips);
-        fabAddTrip = view.findViewById(R.id.fab_add_trip);
-        carSelectionSpinner = view.findViewById(R.id.spinner_car_selection);
-        tvEmptyTrips = view.findViewById(R.id.tv_empty_trips);
-        btnFilter = view.findViewById(R.id.btn_filter_date);
-        etSearchQuery = view.findViewById(R.id.et_search_query);  // Для поиска
+        recyclerView = rootView.findViewById(R.id.recycler_view_trips);
+        fabAddTrip = rootView.findViewById(R.id.fab_add_trip);
+        tvEmptyTrips = rootView.findViewById(R.id.tv_empty_trips);
+        btnFilter = rootView.findViewById(R.id.btn_filter_date);
+        etSearchQuery = rootView.findViewById(R.id.et_search_query);  // Для поиска
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -92,7 +91,7 @@ public class TripsFragment extends Fragment {
         setupSearchListener();  // Listener для поиска
         setupFilterButton();  // Улучшенный фильтр
 
-        return view;
+        return rootView;
     }
 
     @Override
@@ -129,45 +128,43 @@ public class TripsFragment extends Fragment {
 
     // --- Настройка спиннера автомобилей ---
     private void setupCarSpinner() {
-        carList = dbHelper.getAllCars();
-        CustomCarSpinnerAdapter spinnerAdapter = new CustomCarSpinnerAdapter(requireContext(), carList);
-        carSelectionSpinner.setAdapter(spinnerAdapter);
+        List<Car> cars = dbHelper.getAllCars();
 
-        // После установки адаптера, загрузите сохранённый ID и установите позицию в спиннере
-        int savedCarId = sharedPreferences.getInt("selected_car_id", -1);  // -1 как default, если ничего не сохранено
-        if (savedCarId != -1) {
-            for (int i = 0; i < carList.size(); i++) {
-                if (carList.get(i).getId() == savedCarId) {
-                    carSelectionSpinner.setSelection(i);  // Устанавливаем позицию
-                    selectedCarId = savedCarId;
-                    break;
-                }
+        // Добавляем "Все автомобили" только если нужно (для аналитики)
+        // В TripsFragment — только реальные авто
+        ArrayAdapter<Car> adapter = new CarSpinnerAdapter(requireContext(), cars, true);
+
+        AutoCompleteTextView autoComplete = rootView.findViewById(R.id.spinner_car_selection);
+        autoComplete.setAdapter(adapter);
+
+        // Восстанавливаем выбор
+        int savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
+        Car selectedCar = null;
+        int position = 0;
+
+        for (int i = 0; i < cars.size(); i++) {
+            if (cars.get(i).getId() == savedCarId) {
+                selectedCar = cars.get(i);
+                position = i;
+                break;
             }
-        } else if (!carList.isEmpty()) {
-            // Если ничего не сохранено, выбираем первый по умолчанию
-            carSelectionSpinner.setSelection(0);
-            selectedCarId = carList.get(0).getId();
         }
 
-// Затем вызовите loadTripsForCar() для загрузки поездок с выбранным ID
+        if (selectedCar != null) {
+            autoComplete.setText(selectedCar.getName(), false);
+            selectedCarId = savedCarId;
+        } else if (!cars.isEmpty()) {
+            selectedCar = cars.get(0);
+            autoComplete.setText(selectedCar.getName(), false);
+            selectedCarId = selectedCar.getId();
+            SelectedCarManager.setSelectedCarId(requireContext(), selectedCarId);
+        }
 
-        carSelectionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedCarId = carList.get(position).getId();
-
-                // Сохраняем выбранный ID в SharedPreferences
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putInt("selected_car_id", selectedCarId);
-                editor.apply();  // Асинхронно сохраняем
-
-                loadTripsForCar();  // Обновляем список поездок
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Ничего не делаем
-            }
+        autoComplete.setOnItemClickListener((parent, view1, pos, id) -> {
+            Car car = (Car) parent.getItemAtPosition(pos);
+            selectedCarId = car.getId();
+            SelectedCarManager.setSelectedCarId(requireContext(), selectedCarId);
+            loadTripsForCar();
         });
     }
 
@@ -206,8 +203,6 @@ public class TripsFragment extends Fragment {
         List<Trip> allTrips = dbHelper.getTripsForCar(selectedCarId);
         // FIX: Применяем все фильтры и группируем
         applyFiltersAndGroup(allTrips);
-        // Рассчитываем статистику на основе нефильтрованных trips (или фильтрованных? — здесь нефильтрованных для общей статистики)
-        updateCarStats(allTrips);
     }
 
     // NEW/FIX: Применение всех фильтров (поиск + дата) и группировка
@@ -283,50 +278,10 @@ public class TripsFragment extends Fragment {
         recyclerView.setVisibility(hasItems ? View.VISIBLE : View.GONE);
     }
 
-    // --- Рассчёт статистики для выбранного автомобиля (на основе всех trips, без фильтров) ---
-    private void updateCarStats(List<Trip> trips) {
-        TextView tvAvgConsumption = requireView().findViewById(R.id.tv_average_fuel_consumption);
-        TextView tvMonthlyMileage = requireView().findViewById(R.id.tv_monthly_mileage);
-
-        if (trips.isEmpty()) {
-            tvAvgConsumption.setText("Средний расход: -- л/100км");
-            tvMonthlyMileage.setText("Пробег за месяц: -- км");
-            return;
-        }
-
-        // Средний расход: среднее по всем trips
-        double avgConsumption = trips.stream()
-                .mapToDouble(Trip::getFuelConsumption)
-                .average()
-                .orElse(0.0);
-
-        // Пробег за месяц: сумма distance за последние 30 дней (сравнение по startDateTime)
-        Calendar monthAgo = Calendar.getInstance();
-        monthAgo.add(Calendar.DAY_OF_MONTH, -30);
-        Date monthAgoDate = monthAgo.getTime();
-
-        double monthlyMileage = trips.stream()
-                .filter(trip -> {
-                    try {
-                        Date start = DB_DATE_FORMAT.parse(trip.getStartDateTime());
-                        return !start.before(monthAgoDate);
-                    } catch (ParseException e) {
-                        return false;
-                    }
-                })
-                .mapToDouble(Trip::getDistance)
-                .sum();
-
-        tvAvgConsumption.setText(String.format(Locale.getDefault(), "Средний расход: %.2f л/100км", avgConsumption));
-        tvMonthlyMileage.setText(String.format(Locale.getDefault(), "Пробег за месяц: %.1f км", monthlyMileage));
-    }
-
-    // --- Настройка кнопки фильтра ---
     private void setupFilterButton() {
         btnFilter.setOnClickListener(v -> showDateFilterDialog());
     }
 
-    // NEW/FIX: Полностью переработанный диалог фильтра по дате (с временем)
     private void showDateFilterDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         LayoutInflater inflater = getLayoutInflater();

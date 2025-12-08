@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -37,7 +38,6 @@ public class AnalyticsFragment extends Fragment {
     private DatabaseHelper dbHelper;
 
     // UI элементы
-    private Spinner spinnerCars;
     private TextView tvTotalDistance, tvTotalFuel, tvAvgConsumption;
     private TextView tvNoData, tvWarningTitle, tvWarningDetails;
     private LineChart chartFuelConsumption;
@@ -69,32 +69,31 @@ public class AnalyticsFragment extends Fragment {
     // Для хранения предупреждений по автомобилям
     private Map<Integer, String> carWarnings = new HashMap<>();
     private List<Car> carsWithAnomalies = new ArrayList<>();
+    private View rootView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_analytics, container, false);
+        rootView = inflater.inflate(R.layout.fragment_analytics, container, false);
 
         dbHelper = new DatabaseHelper(getContext());
 
         // Инициализация UI элементов
-        initViews(view);
+        initViews(rootView);
 
         // Настройка Spinner с автомобилями
         setupCarSpinner();
 
-        return view;
+        return rootView;
     }
 
     @Override
     public void onResume() {
         super.onResume();
         // Обновляем данные при возвращении на фрагмент
-        refreshCarSpinner();
         loadAnalyticsData();
     }
 
     private void initViews(View view) {
-        spinnerCars = view.findViewById(R.id.spinner_cars);
         tvTotalDistance = view.findViewById(R.id.tv_total_distance);
         tvTotalFuel = view.findViewById(R.id.tv_total_fuel);
         tvAvgConsumption = view.findViewById(R.id.tv_avg_consumption);
@@ -106,80 +105,54 @@ public class AnalyticsFragment extends Fragment {
     }
 
     private void setupCarSpinner() {
-        // Получаем список всех автомобилей
-        allCarsList = dbHelper.getAllCars();
+        List<Car> cars = dbHelper.getAllCars();
 
-        // Создаем список для Spinner: сначала фиктивный автомобиль "Все", затем все реальные
-        spinnerCarsList.clear();
-
-        // Создаем фиктивный автомобиль для отображения "Все автомобили"
-        Car allCarsDummy = new Car();
-        allCarsDummy.setId(-1); // Специальный ID для "всех автомобилей"
-        allCarsDummy.setName("Все автомобили");
-        allCarsDummy.setDistanceUnit("км");
-        allCarsDummy.setFuelUnit("л");
-        allCarsDummy.setFuelConsumptionUnit("л/100км");
-
-        spinnerCarsList.add(allCarsDummy);
-        spinnerCarsList.addAll(allCarsList);
-
-        // Создаем кастомный адаптер для Spinner (теперь передаем только список Car)
-        CarSpinnerAdapter adapter = new CarSpinnerAdapter(
-                requireContext(),
-                spinnerCarsList
-        );
-
-        spinnerCars.setAdapter(adapter);
-
-        // Устанавливаем обработчик выбора
-        spinnerCars.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Теперь здесь получаем Car, а не String
-                Car selected = adapter.getItem(position);
-
-                if (selected.getId() == -1) {
-                    // Выбраны все автомобили
-                    selectedCar = null;
-                } else {
-                    // Выбран конкретный автомобиль
-                    selectedCar = selected;
-                }
-
-                // Перезагружаем данные с учетом выбранного автомобиля
-                loadAnalyticsData();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedCar = null;
-                loadAnalyticsData();
-            }
-        });
-    }
-
-    private void refreshCarSpinner() {
-        // Обновляем список автомобилей
-        allCarsList = dbHelper.getAllCars();
-
-        // Обновляем список для Spinner
-        spinnerCarsList.clear();
-
-        // Фиктивный автомобиль "Все"
-        Car allCarsDummy = new Car();
-        allCarsDummy.setId(-1);
-        allCarsDummy.setName("Все автомобили");
-        allCarsDummy.setDistanceUnit("км");
-        allCarsDummy.setFuelUnit("л");
-        allCarsDummy.setFuelConsumptionUnit("л/100км");
-
-        spinnerCarsList.add(allCarsDummy);
-        spinnerCarsList.addAll(allCarsList);
-
-        // Уведомляем адаптер об изменении данных
-        if (spinnerCars.getAdapter() != null) {
-            ((CarSpinnerAdapter) spinnerCars.getAdapter()).notifyDataSetChanged();
+        if (cars.isEmpty()) {
+            // Если машин нет — показываем заглушку
+            rootView.findViewById(R.id.spinner_cars).setVisibility(View.GONE);
+            tvNoData.setText("Нет добавленных автомобилей");
+            tvNoData.setVisibility(View.VISIBLE);
+            return;
         }
+
+        CarSpinnerAdapter adapter = new CarSpinnerAdapter(requireContext(), cars, true);
+
+        AutoCompleteTextView autoComplete = rootView.findViewById(R.id.spinner_cars);
+        autoComplete.setAdapter(adapter);
+
+        // Восстанавливаем сохранённый выбор
+        int savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
+        Car savedCar = null;
+        int savedPosition = 0;
+
+        for (int i = 0; i < cars.size(); i++) {
+            if (cars.get(i).getId() == savedCarId) {
+                savedCar = cars.get(i);
+                savedPosition = i;
+                break;
+            }
+        }
+
+        if (savedCar != null) {
+            autoComplete.setText(savedCar.getName(), false);
+            selectedCar = savedCar;
+        } else if (!cars.isEmpty()) {
+            // Если сохранённого нет — выбираем первую машину
+            Car firstCar = cars.get(0);
+            autoComplete.setText(firstCar.getName(), false);
+            selectedCar = firstCar;
+            SelectedCarManager.setSelectedCarId(requireContext(), firstCar.getId());
+        }
+
+        autoComplete.setOnItemClickListener((parent, view, position, id) -> {
+            Car car = (Car) parent.getItemAtPosition(position);
+            selectedCar = car;
+            SelectedCarManager.setSelectedCarId(requireContext(), car.getId());
+            loadAnalyticsData();  // Перезагружаем аналитику под выбранную машину
+        });
+
+        // Принудительно запускаем загрузку данных после настройки
+        loadAnalyticsData();
     }
 
     private void loadAnalyticsData() {

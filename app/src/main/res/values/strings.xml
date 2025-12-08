@@ -13,14 +13,7 @@
     <string name="fuel_type_title">Тип топлива</string>
     <string name="fuel_type">Бензин</string>
     <string name="tank_volume_title">Объем бака</string>
-    <string name="tank_volume">Объем бака (л)</string>
-    <string name="specs_title">Характеристика</string>
-    <string name="brand">Марка</string>
-    <string name="model">Модель</string>
-    <string name="year">Год</string>
-    <string name="license_plate">Номерные знаки</string>
-    <string name="vin">VIN</string>
-    <string name="insurance_policy">Страховой полис</string>
+    <string name="tank_volume">Объем  (л)</string>>
     <string name="save">Сохранить</string>
     <string name="back">Назад</string>
 
@@ -33,14 +26,14 @@
 
     <!-- Arrays for spinners -->
     <string-array name="distance_units">
-        <item>Километры</item>
-        <item>Мили</item>
+        <item>км</item>
+        <item>мили</item>
     </string-array>
 
     <string-array name="fuel_units">
-        <item>Литры</item>
-        <item>Галлоны (США)</item>
-        <item>Галлоны (Великобритания)</item>
+        <item>л</item>
+        <item>галлоны (США)</item>
+        <item>галлоны (Великобритания)</item>
         <item>кВтч</item>
         <item>кг</item>
         <item>м^3</item>

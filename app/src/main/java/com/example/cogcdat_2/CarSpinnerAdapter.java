@@ -1,97 +1,72 @@
 package com.example.cogcdat_2;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.bumptech.glide.Glide; // Добавить эту строку
-
+import com.bumptech.glide.Glide;
 import java.io.File;
 import java.util.List;
 
 public class CarSpinnerAdapter extends ArrayAdapter<Car> {
 
-    private final Context context;
-    private final List<Car> cars;
+    private final LayoutInflater inflater;
+    private final int resourceId;
 
-    public CarSpinnerAdapter(@NonNull Context context, List<Car> cars) {
-        super(context, R.layout.spinner_item_car, cars);
-        this.context = context;
-        this.cars = cars;
+    public CarSpinnerAdapter(Context context, List<Car> cars, boolean isDropdown) {
+        super(context, R.layout.spinner_car_dropdown, cars);
+        this.inflater = LayoutInflater.from(context);
+        this.resourceId = R.layout.spinner_car_dropdown;
     }
 
-    @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup parent) {
         return createView(position, convertView, parent);
     }
 
     @Override
-    public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public View getDropDownView(int position, View convertView, ViewGroup parent) {
         return createView(position, convertView, parent);
     }
 
-    private View createView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    private View createView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
 
         if (convertView == null) {
-            convertView = LayoutInflater.from(context).inflate(R.layout.spinner_item_car, parent, false);
+            convertView = inflater.inflate(resourceId, parent, false);
             holder = new ViewHolder();
-            holder.carIcon = convertView.findViewById(R.id.iv_car_icon);
-            holder.carName = convertView.findViewById(R.id.tv_car_name);
+            holder.icon = convertView.findViewById(R.id.iv_car_icon);
+            holder.name = convertView.findViewById(R.id.tv_car_name);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        Car car = cars.get(position);
+        Car car = getItem(position);
+        if (car != null) {
+            holder.name.setText(car.getName());
 
-        // Устанавливаем данные
-        holder.carName.setText(car.getName());
-
-        // Загрузка изображения с использованием Glide
-        if (car.getId() == -1) {
-            // Для "Все автомобили" используем стандартную иконку
-            holder.carIcon.setImageResource(R.drawable.ic_car_outline);
-        } else {
-            // Для конкретного автомобиля загружаем изображение
-            loadCarImage(holder.carIcon, car.getImagePath());
+            String imagePath = car.getImagePath();
+            if (imagePath != null && !imagePath.isEmpty() && new File(imagePath).exists()) {
+                Glide.with(getContext())
+                        .load(new File(imagePath))
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_car_outline)
+                        .error(R.drawable.ic_car_outline)
+                        .into(holder.icon);
+            } else {
+                holder.icon.setImageResource(R.drawable.ic_car_outline);
+            }
         }
 
         return convertView;
     }
 
-    private void loadCarImage(ImageView imageView, String imagePath) {
-        if (imagePath != null && !imagePath.isEmpty()) {
-            File imageFile = new File(imagePath);
-            if (imageFile.exists()) {
-                // Используем Glide для загрузки изображения
-                Glide.with(context)
-                        .load(imageFile)
-                        .placeholder(R.drawable.ic_car_outline) // Заглушка на время загрузки
-                        .error(R.drawable.ic_car_outline)       // Заглушка при ошибке
-                        .centerCrop()                           // Обрезка по центру
-                        .into(imageView);
-            } else {
-                // Файл не существует - используем стандартную иконку
-                imageView.setImageResource(R.drawable.ic_car_outline);
-            }
-        } else {
-            // Нет пути к изображению - используем стандартную иконку
-            imageView.setImageResource(R.drawable.ic_car_outline);
-        }
-    }
-
     private static class ViewHolder {
-        ImageView carIcon;
-        TextView carName;
+        ImageView icon;
+        TextView name;
     }
 }

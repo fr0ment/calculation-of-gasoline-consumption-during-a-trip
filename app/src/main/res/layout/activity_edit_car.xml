@@ -127,7 +127,7 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
                 android:backgroundTint="#FFFFFF"
-                android:popupBackground="#41445A"/>
+                android:popupBackground="#41445A" />
 
             <Spinner
                 android:id="@+id/spinnerFuelUnit"

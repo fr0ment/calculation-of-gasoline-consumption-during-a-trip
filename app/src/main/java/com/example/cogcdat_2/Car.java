@@ -62,4 +62,9 @@ public class Car {
 
     public double getTankVolume() { return tankVolume; }
     public void setTankVolume(double tankVolume) { this.tankVolume = tankVolume; }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

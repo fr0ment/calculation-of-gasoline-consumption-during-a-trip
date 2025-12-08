@@ -20,25 +20,23 @@
             android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
-        <!-- Выбор автомобиля -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Выберите автомобиль:"
-            android:textSize="14sp"
-            android:textColor="#CCCCCC"
-            android:layout_marginBottom="8dp" />
 
-        <Spinner
-            android:id="@+id/spinner_cars"
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="#55586A"
-            android:popupBackground="#55586A"
-            android:dropDownVerticalOffset="4dp"
-            android:dropDownWidth="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:spinnerMode="dropdown" />
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+            <AutoCompleteTextView
+                android:id="@+id/spinner_cars"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:textColor="#FFFFFF"
+                android:hint="Выберите автомобиль" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
         <!-- 1. КАРТОЧКИ ОБЩЕЙ СТАТИСТИКИ -->
         <TextView
