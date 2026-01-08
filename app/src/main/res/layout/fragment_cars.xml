@@ -6,83 +6,60 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- Основной прокручиваемый контент -->
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:orientation="vertical"
+        android:paddingTop="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:text="Ваши Автомобили"
+            android:textSize="24sp"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
 
-            <!-- Заголовок -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ваши Автомобили"
-                android:textSize="24sp"
-                android:textColor="@color/text_primary"
-                android:textStyle="bold"
-                android:layout_marginBottom="24dp" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewCars"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="88dp" /> </LinearLayout>
 
-            <!-- Empty State (показывается, когда список пуст) -->
-            <LinearLayout
-                android:id="@+id/emptyState"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="32dp"
-                android:visibility="gone">
+    <LinearLayout
+        android:id="@+id/emptyState"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
 
-                <ImageView
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:src="@drawable/ic_car_outline"
-                    app:tint="@color/icon_color"
-                    android:layout_marginBottom="24dp" />
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_car_outline"
+            app:tint="@color/icon_color" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Нет добавленных автомобилей"
-                    android:textSize="18sp"
-                    android:textColor="@color/text_primary"
-                    android:gravity="center"
-                    android:layout_marginBottom="8dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Нет добавленных автомобилей"
+            android:textSize="18sp"
+            android:layout_marginTop="24dp"
+            android:textColor="@color/text_primary" />
+    </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Нажмите кнопку «+», чтобы добавить первый автомобиль"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_hint"
-                    android:gravity="center" />
-            </LinearLayout>
-
-            <!-- Список автомобилей -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerViewCars"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:clipToPadding="false"
-                android:paddingBottom="80dp" /> <!-- отступ под FAB -->
-
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- FAB — всегда поверх и внизу справа -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_add"
+        app:srcCompat="@drawable/ic_add"
         app:backgroundTint="@color/primary"
         app:tint="@color/white" />
 

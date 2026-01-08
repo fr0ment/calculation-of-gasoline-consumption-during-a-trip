@@ -65,6 +65,8 @@ public class AnalyticsFragment extends Fragment {
     private List<Car> carList = new ArrayList<>();
 
     private View rootView;
+    private View layoutMonitoringSection;
+    private View layoutChart;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -90,6 +92,8 @@ public class AnalyticsFragment extends Fragment {
         tvAvgConsumption = view.findViewById(R.id.tv_avg_consumption);
         chartFuelConsumption = view.findViewById(R.id.chart_fuel_consumption);
         cardWarnings = view.findViewById(R.id.card_warnings);
+        layoutMonitoringSection = view.findViewById(R.id.layout_monitoring_section);
+        layoutChart = view.findViewById(R.id.layout_chart);
         tvNoData = view.findViewById(R.id.tv_no_data);
         tvWarningTitle = view.findViewById(R.id.tv_warning_title);
         tvWarningDetails = view.findViewById(R.id.tv_warning_details);
@@ -161,7 +165,7 @@ public class AnalyticsFragment extends Fragment {
         checkAnomalies();
 
         tvNoData.setVisibility(View.GONE);
-        chartFuelConsumption.setVisibility(View.VISIBLE);
+        layoutChart.setVisibility(View.VISIBLE);
         cardWarnings.setVisibility(View.GONE); // пока скрываем, можно включить позже
     }
 
@@ -269,8 +273,8 @@ public class AnalyticsFragment extends Fragment {
     }
 
     private void hideAllDataViews() {
-        chartFuelConsumption.setVisibility(View.GONE);
-        cardWarnings.setVisibility(View.GONE);
+        layoutChart.setVisibility(View.GONE);
+        layoutMonitoringSection.setVisibility(View.GONE); // Скрываем весь блок
     }
 
     private void updateSelectedCarDisplay(Car car) {
@@ -311,7 +315,7 @@ public class AnalyticsFragment extends Fragment {
             loadAnalyticsData(); // Перезагружаем аналитику для нового авто
             dialog.dismiss();
         });
-        
+
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         // Подсвечиваем текущий выбранный

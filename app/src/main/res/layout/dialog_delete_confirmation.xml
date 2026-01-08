@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Завершение поездки"
+            android:text="Удалить поездку?"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -24,36 +24,11 @@
     </RelativeLayout>
 
     <TextView
-        android:id="@+id/tv_final_fuel_summary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Пожалуйста, введите количество топлива, оставшееся в баке."
+        android:text="Эта операция необратима. Запись будет удалена навсегда."
         android:textColor="@color/dialog_text_secondary"
-        android:layout_marginBottom="16dp"/>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Остаток топлива"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_final_fuel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:autofillHints="no"
-            android:textColor="@color/dialog_text"/>
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <TextView
-        android:id="@+id/tv_final_fuel_unit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Единица измерения: Литры (Остаток топлива)"
-        android:textColor="@color/dialog_text_secondary"
-        android:textSize="12sp"
-        android:layout_marginTop="4dp"
+        android:textSize="20dp"
         android:layout_marginBottom="24dp"/>
 
     <LinearLayout
@@ -64,22 +39,20 @@
         android:gravity="end">
 
         <Button
-            android:id="@+id/btn_cancel_final_fuel"
+            android:id="@+id/btn_cancel_delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Отмена"
-            android:layout_weight="1"
+            android:text="Отмена" android:layout_weight="1"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
             style="@style/Widget.Material3.Button.OutlinedButton"/>
-
         <Button
-            android:id="@+id/btn_save_trip"
+            android:id="@+id/btn_confirm_delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Сохранить поездку"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"/>
+            android:text="Удалить"
+            android:backgroundTint="@color/error"/>
     </LinearLayout>
-
 </LinearLayout>

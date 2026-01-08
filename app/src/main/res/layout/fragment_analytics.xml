@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     android:background="@color/background"
     android:padding="16dp"
-    android:clipToPadding="false">
+    android:clipToPadding="false"
+    android:scrollbarSize="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -197,26 +198,42 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- 2. ГРАФИК РАСХОДА ТОПЛИВА -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="График расхода топлива"
-            android:textSize="18sp"
-            android:textColor="@color/accent"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
-
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/chart_fuel_consumption"
+        <LinearLayout
+            android:id="@+id/layout_chart"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginBottom="24dp"
-            android:background="@color/stat_card_background"
-            android:padding="4dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="График расхода топлива"
+                android:textSize="18sp"
+                android:textColor="@color/accent"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/chart_fuel_consumption"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_marginBottom="24dp"
+                android:background="@color/stat_card_background"
+                android:padding="4dp" />
+        </LinearLayout>
+
+        <!-- 2. ГРАФИК РАСХОДА ТОПЛИВА -->
+
 
         <!-- 3. МОНИТОРИНГ АВТО (ПРЕДУПРЕЖДЕНИЯ) -->
-        <TextView
+        <LinearLayout
+            android:id="@+id/layout_monitoring_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Мониторинг авто"
@@ -225,58 +242,58 @@
             android:textStyle="bold"
             android:layout_marginBottom="12dp" />
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_warnings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_marginBottom="32dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="@color/warning"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="0dp">
-
-            <LinearLayout
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_warnings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_warning"
-                    app:tint="@color/white"
-                    android:layout_marginEnd="16dp" />
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_marginBottom="32dp"
+                app:cardBackgroundColor="@color/warning"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp">
 
                 <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:gravity="center_vertical">
 
-                    <TextView
-                        android:id="@+id/tv_warning_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Повышенный расход!"
-                        android:textSize="16sp"
-                        android:textColor="@color/white"
-                        android:textStyle="bold" />
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_warning"
+                        app:tint="@color/white"
+                        android:layout_marginEnd="16dp" />
 
-                    <TextView
-                        android:id="@+id/tv_warning_details"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Последние поездки показывают расход выше среднего на 15%"
-                        android:textSize="12sp"
-                        android:textColor="@color/white"
-                        android:layout_marginTop="4dp" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_warning_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Повышенный расход!"
+                            android:textSize="16sp"
+                            android:textColor="@color/white"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_warning_details"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Последние поездки показывают расход выше среднего на 15%"
+                            android:textSize="12sp"
+                            android:textColor="@color/white"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
                 </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
         <!-- Сообщение, если нет данных -->
         <TextView

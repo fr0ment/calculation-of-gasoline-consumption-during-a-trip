@@ -106,6 +106,8 @@ public class CarsFragment extends Fragment {
                 setDefaultImage(holder.ivCarImage);
             }
 
+
+
             // Обработчик клика по карточке
             holder.itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(getActivity(), CarDetailsActivity.class);

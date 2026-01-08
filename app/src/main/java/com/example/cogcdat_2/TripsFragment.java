@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -56,13 +57,14 @@ public class TripsFragment extends Fragment {
     private EditText etSearchQuery;
     private String currentSearchQuery = "";
 
-    // Фильтры по дате (если используешь)
-    private Calendar startDateTimeFilter = null;
-    private Calendar endDateTimeFilter = null;
+    // Фильтры по дате
+    private Calendar startDateFilter = null;
+    private Calendar endDateFilter = null;
 
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
     private static final SimpleDateFormat DISPLAY_DATE_TIME_FORMAT = new SimpleDateFormat("EEE, dd HH:mm", new Locale("ru", "RU"));
     private static final SimpleDateFormat HEADER_DATE_FORMAT = new SimpleDateFormat("LLLL yyyy", new Locale("ru", "RU"));
+    private static final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
 
     private View rootView;
 
@@ -209,18 +211,22 @@ public class TripsFragment extends Fragment {
 
         List<Trip> allTrips = dbHelper.getTripsForCar(selectedCarId);
 
-        // Применяем поиск
+        // Применяем поиск по названию
         if (!currentSearchQuery.isEmpty()) {
             String query = currentSearchQuery.toLowerCase();
-            allTrips = new ArrayList<>();
-            for (Trip trip : dbHelper.getTripsForCar(selectedCarId)) {
+            List<Trip> filteredByName = new ArrayList<>();
+            for (Trip trip : allTrips) {
                 if (trip.getName() != null && trip.getName().toLowerCase().contains(query)) {
-                    allTrips.add(trip);
+                    filteredByName.add(trip);
                 }
             }
+            allTrips = filteredByName;
         }
 
-        // Здесь ты уже имел свою логику фильтрации и группировки
+        // Применяем фильтр по дате (после поиска по названию)
+        allTrips = applyDateFilter(allTrips);
+
+        // Группируем и сортируем
         applyFiltersAndGroup(allTrips);
 
         if (adapter == null) {
@@ -238,11 +244,55 @@ public class TripsFragment extends Fragment {
         }
     }
 
-    private void applyFiltersAndGroup(List<Trip> trips) {
-        // Здесь твоя оригинальная логика группировки по месяцам и создания TripListItem
-        // Я оставляю её как есть — ты её не прислал полностью, но предполагаю, что она у тебя есть
-        // Пример (если нужно восстановить типичную реализацию):
+    private List<Trip> applyDateFilter(List<Trip> trips) {
+        if (startDateFilter == null && endDateFilter == null) {
+            return trips;
+        }
 
+        List<Trip> filtered = new ArrayList<>();
+
+        Calendar startCal = startDateFilter != null ? (Calendar) startDateFilter.clone() : null;
+        if (startCal != null) {
+            startCal.set(Calendar.HOUR_OF_DAY, 0);
+            startCal.set(Calendar.MINUTE, 0);
+            startCal.set(Calendar.SECOND, 0);
+        }
+
+        Calendar endCal = endDateFilter != null ? (Calendar) endDateFilter.clone() : null;
+        if (endCal != null) {
+            endCal.set(Calendar.HOUR_OF_DAY, 23);
+            endCal.set(Calendar.MINUTE, 59);
+            endCal.set(Calendar.SECOND, 59);
+        }
+
+        for (Trip trip : trips) {
+            try {
+                Date tripDate = DB_DATE_FORMAT.parse(trip.getStartDateTime());
+                Calendar tripCal = Calendar.getInstance();
+                tripCal.setTime(tripDate);
+
+                boolean matches = true;
+
+                if (startCal != null && tripCal.before(startCal)) {
+                    matches = false;
+                }
+
+                if (endCal != null && tripCal.after(endCal)) {
+                    matches = false;
+                }
+
+                if (matches) {
+                    filtered.add(trip);
+                }
+            } catch (ParseException e) {
+                // Пропускаем битые даты
+            }
+        }
+
+        return filtered;
+    }
+
+    private void applyFiltersAndGroup(List<Trip> trips) {
         tripListItems.clear();
 
         if (trips.isEmpty()) {
@@ -298,10 +348,109 @@ public class TripsFragment extends Fragment {
     }
 
     private void setupFilterButton() {
-        btnFilterDate.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "Фильтр по дате (можно реализовать)", Toast.LENGTH_SHORT).show();
-            // Здесь можно открыть DatePicker и применить фильтр
+        btnFilterDate.setOnClickListener(v -> showDateFilterDialog());
+    }
+
+    private void showDateFilterDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_date_range_filter, null);
+
+        Button btnSelectStartDate = dialogView.findViewById(R.id.btn_select_start_date);
+        Button btnSelectEndDate = dialogView.findViewById(R.id.btn_select_end_date);
+        Button btnReset = dialogView.findViewById(R.id.btn_reset);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+        Button btnApply = dialogView.findViewById(R.id.btn_apply);
+
+        final Calendar[] tempStart = new Calendar[1];
+        final Calendar[] tempEnd = new Calendar[1];
+
+        if (startDateFilter != null) {
+            tempStart[0] = (Calendar) startDateFilter.clone();
+        } else {
+            tempStart[0] = null; // Или Calendar.getInstance(), если нужно по умолчанию
+        }
+
+        if (endDateFilter != null) {
+            tempEnd[0] = (Calendar) endDateFilter.clone();
+        } else {
+            tempEnd[0] = null;
+        }
+
+        // Обновляем текст кнопок
+        updateFilterDateButtons(btnSelectStartDate, btnSelectEndDate, tempStart[0], tempEnd[0]);
+
+        btnSelectStartDate.setOnClickListener(v -> showDatePickerForFilter(tempStart, true, btnSelectStartDate, btnSelectEndDate, tempEnd));
+
+        btnSelectEndDate.setOnClickListener(v -> showDatePickerForFilter(tempEnd, false, btnSelectStartDate, btnSelectEndDate, tempStart));
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        btnReset.setOnClickListener(v -> {
+            tempStart[0] = null;
+            tempEnd[0] = null;
+            btnSelectStartDate.setText("Дата");
+            btnSelectEndDate.setText("Дата");
         });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnApply.setOnClickListener(v -> {
+            startDateFilter = tempStart[0] != null ? (Calendar) tempStart[0].clone() : null;
+            endDateFilter = tempEnd[0] != null ? (Calendar) tempEnd[0].clone() : null;
+            loadTripsForCar();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+
+    private void showDatePickerForFilter(Calendar[] targetWrapper, boolean isStart, Button btnStart, Button btnEnd, Calendar[] otherWrapper) {
+        // Если в массиве null, берем текущую дату для открытия календаря
+        long selection = (targetWrapper[0] != null) ? targetWrapper[0].getTimeInMillis() : MaterialDatePicker.todayInUtcMilliseconds();
+
+        MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder
+                .datePicker()
+                .setTitleText(isStart ? "Дата от" : "Дата до")
+                .setSelection(selection)
+                .build();
+
+        datePicker.addOnPositiveButtonClickListener(selectionMillis -> {
+            // Инициализируем календарь в массиве, если там был null
+            if (targetWrapper[0] == null) {
+                targetWrapper[0] = Calendar.getInstance();
+            }
+
+            targetWrapper[0].setTimeInMillis(selectionMillis);
+            targetWrapper[0].set(Calendar.HOUR_OF_DAY, isStart ? 0 : 23);
+            targetWrapper[0].set(Calendar.MINUTE, isStart ? 0 : 59);
+            targetWrapper[0].set(Calendar.SECOND, isStart ? 0 : 59);
+
+            // Проверка логики между Start и End
+            if (otherWrapper[0] != null) {
+                if (!isStart && targetWrapper[0].before(otherWrapper[0])) {
+                    Toast.makeText(requireContext(), "Дата до не может быть раньше даты от", Toast.LENGTH_SHORT).show();
+                    targetWrapper[0].setTime(otherWrapper[0].getTime());
+                } else if (isStart && targetWrapper[0].after(otherWrapper[0])) {
+                    Toast.makeText(requireContext(), "Дата от не может быть позже даты до", Toast.LENGTH_SHORT).show();
+                    targetWrapper[0].setTime(otherWrapper[0].getTime());
+                }
+            }
+
+            // Обновляем текст на кнопках, доставая значения из массивов
+            updateFilterDateButtons(btnStart, btnEnd,
+                    isStart ? targetWrapper[0] : otherWrapper[0],
+                    isStart ? otherWrapper[0] : targetWrapper[0]);
+        });
+
+        datePicker.show(getParentFragmentManager(), "DATE_PICKER_FILTER");
+    }
+    private void updateFilterDateButtons(Button btnStart, Button btnEnd, Calendar start, Calendar end) {
+        btnStart.setText(start != null ? DISPLAY_DATE_FORMAT.format(start.getTime()) : "Дата");
+        btnEnd.setText(end != null ? DISPLAY_DATE_FORMAT.format(end.getTime()) : "Дата");
     }
 
     private void showAddTripOptionsDialog() {
@@ -458,15 +607,29 @@ public class TripsFragment extends Fragment {
     }
 
     private void showDeleteConfirmation(Trip trip) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Удалить поездку?")
-                .setMessage("Эта операция необратима.")
-                .setPositiveButton("Удалить", (dialog, which) -> {
-                    dbHelper.deleteTrip(trip.getId());
-                    loadTripsForCar();
-                    Toast.makeText(getContext(), "Поездка удалена", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_delete_confirmation, null);
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_delete);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_delete);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            dbHelper.deleteTrip(trip.getId());
+            loadTripsForCar();
+            Toast.makeText(getContext(), "Поездка удалена", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+
+        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
     }
 }

@@ -4,11 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
     app:cardBackgroundColor="@color/card_background"
     app:cardCornerRadius="12dp"
     app:cardElevation="0dp"
-    android:clickable="true"
-    android:focusable="true">
+    app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,11 +20,11 @@
             android:id="@+id/ivCarImage"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_car_outline"
             android:background="@color/card_background_secondary"
+            android:contentDescription="Фото автомобиля"
             android:padding="20dp"
-            android:contentDescription="Фото автомобиля"/>
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_car_outline" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -36,27 +37,27 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Название"
-                android:textSize="18sp"
                 android:textColor="@color/text_primary"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:text="Описание"
-                android:textSize="12sp"
                 android:textColor="@color/text_hint"
-                android:layout_marginTop="8dp" />
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/tvSpecs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:text="Тип топлива • Объем бака"
-                android:textSize="12sp"
                 android:textColor="@color/primary"
-                android:layout_marginTop="8dp" />
+                android:textSize="12sp" />
 
         </LinearLayout>
 

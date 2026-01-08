@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/dialog_background_rounded"> <!-- Добавьте drawable для закруглённых углов -->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Фильтрация по дате"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Дата от:"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp" />
+    <Button
+        android:id="@+id/btn_select_start_date"
+        android:backgroundTint="@color/card_background_secondary"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginEnd="8dp"
+        android:text="Дата"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Дата до:"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp" />
+    <Button
+        android:id="@+id/btn_select_end_date"
+        android:backgroundTint="@color/card_background_secondary"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginEnd="8dp"
+        android:text="Дата"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp" />
+    <Button
+        android:id="@+id/btn_reset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Сбросить"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/accent"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Отмена"
+            android:layout_marginEnd="8dp"
+            android:textColor="@color/text_primary"
+            android:backgroundTint="@color/card_background_secondary"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+        <Button
+            android:id="@+id/btn_apply"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Применить" />
+    </LinearLayout>
+</LinearLayout>

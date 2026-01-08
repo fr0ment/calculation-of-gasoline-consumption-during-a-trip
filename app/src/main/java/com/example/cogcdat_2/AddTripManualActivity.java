@@ -8,6 +8,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -80,36 +84,58 @@ public class AddTripManualActivity extends AppCompatActivity {
     // --- ВЫБОР ДАТЫ/ВРЕМЕНИ ---
 
     private void showDatePicker(Calendar calendar, boolean isStart) {
-        new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-            calendar.set(Calendar.YEAR, year);
-            calendar.set(Calendar.MONTH, month);
-            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        long selection = calendar.getTimeInMillis();
+
+        MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder
+                .datePicker()
+                .setTitleText(isStart ? "Дата начала" : "Дата окончания")
+                .setSelection(selection)
+                .build();
+
+        datePicker.addOnPositiveButtonClickListener(selectionMillis -> {
+            calendar.setTimeInMillis(selectionMillis);
+            // Приводим к началу дня (очень рекомендуется!)
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+
             updateDateTimeButtons();
 
-            // Проверка, что конечная дата не раньше начальной
+            // Проверка логики начала/окончания
             if (!isStart && endDateTime.before(startDateTime)) {
-                Toast.makeText(this, "Дата конца не может быть раньше даты начала.", Toast.LENGTH_SHORT).show();
-                endDateTime.setTime(startDateTime.getTime()); // Сбрасываем до даты начала
+                Toast.makeText(this, "Дата конца не может быть раньше начала", Toast.LENGTH_SHORT).show();
+                endDateTime.setTime(startDateTime.getTime());
                 updateDateTimeButtons();
             }
+        });
 
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
+        datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
     }
 
     private void showTimePicker(Calendar calendar, boolean isStart) {
-        new TimePickerDialog(this, (view, hourOfDay, minute) -> {
-            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-            calendar.set(Calendar.MINUTE, minute);
+        MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_24H)           // или CLOCK_12H
+                .setHour(calendar.get(Calendar.HOUR_OF_DAY))
+                .setMinute(calendar.get(Calendar.MINUTE))
+                .setTitleText(isStart ? "Время начала" : "Время окончания")
+                .build();
+
+        timePicker.addOnPositiveButtonClickListener(v -> {
+            calendar.set(Calendar.HOUR_OF_DAY, timePicker.getHour());
+            calendar.set(Calendar.MINUTE, timePicker.getMinute());
+
             updateDateTimeButtons();
 
-            // Проверка, что конечное время не раньше начального
+            // Проверка конца ≥ начала
             if (!isStart && endDateTime.before(startDateTime)) {
-                Toast.makeText(this, "Время конца не может быть раньше времени начала.", Toast.LENGTH_SHORT).show();
-                endDateTime.setTime(startDateTime.getTime()); // Сбрасываем до времени начала
+                Toast.makeText(this, "Время конца не может быть раньше начала", Toast.LENGTH_SHORT).show();
+                endDateTime.setTime(startDateTime.getTime());
                 updateDateTimeButtons();
             }
+        });
 
-        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show();
+        timePicker.show(getSupportFragmentManager(), "TIME_PICKER");
     }
 
     private void updateDateTimeButtons() {
