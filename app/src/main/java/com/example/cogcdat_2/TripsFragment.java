@@ -310,19 +310,41 @@ public class TripsFragment extends Fragment {
             return;
         }
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Добавить поездку")
-                .setItems(new String[]{"Автоматическая (GPS)", "Ручная"}, (dialog, which) -> {
-                    Intent intent;
-                    if (which == 0) {
-                        intent = new Intent(getContext(), GpsRecordingActivity.class);
-                    } else {
-                        intent = new Intent(getContext(), AddTripManualActivity.class);
-                    }
-                    intent.putExtra("car_id", selectedCarId);
-                    startActivity(intent);
-                })
-                .show();
+        // Инфлейтим кастомный layout
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_trip_options, null);
+
+        // Находим карточки
+        View cardRecordGps = dialogView.findViewById(R.id.card_record_gps);
+        View cardAddManual = dialogView.findViewById(R.id.card_add_manual);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_refuel); // ID из твоего XML
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        // Обработчики кликов
+        cardRecordGps.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), GpsRecordingActivity.class);
+            intent.putExtra("car_id", selectedCarId);
+            startActivity(intent);
+            dialog.dismiss();
+        });
+
+        cardAddManual.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), AddTripManualActivity.class);
+            intent.putExtra("car_id", selectedCarId);
+            startActivity(intent);
+            dialog.dismiss();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+
+        // Важно: делаем фон прозрачным, чтобы были закруглённые углы (как в выборе авто)
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
     }
 
     // Адаптер остаётся без изменений — использует TripListItem

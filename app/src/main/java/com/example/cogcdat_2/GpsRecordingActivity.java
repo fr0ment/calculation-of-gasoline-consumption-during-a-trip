@@ -207,15 +207,29 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
     // NEW: Диалог подтверждения отмены записи
     private void showCancelConfirmationDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Отменить запись?")
-                .setMessage("Запись будет остановлена без сохранения. Продолжить?")
-                .setPositiveButton("ОТМЕНИТЬ", (dialog, which) -> {
-                    // Остановка без сохранения
-                    stopRecordingService();
-                })
-                .setNegativeButton("ПРОДОЛЖИТЬ", null)
-                .show();
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_cancel_gps_recording, null);
+
+        Button btnNo = dialogView.findViewById(R.id.btn_cancel_final_fuel);  // "Нет"
+        Button btnYes = dialogView.findViewById(R.id.btn_save_trip);        // "Да" (но по смыслу — Отменить)
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        btnNo.setOnClickListener(v -> dialog.dismiss());
+
+        btnYes.setOnClickListener(v -> {
+            // Останавливаем запись без сохранения
+            stopRecordingService();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+
+        // Прозрачный фон для закруглённых углов
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
     }
 
     private void handleStartRecording() {
@@ -308,6 +322,9 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
         dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         btnAddRefuel.setOnClickListener(v -> {
             String amountStr = etRefuelAmount.getText().toString().trim();
@@ -360,6 +377,9 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
         dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
 
         btnSave.setOnClickListener(v -> {
             String finalFuelStr = etFinalFuel.getText().toString().trim();

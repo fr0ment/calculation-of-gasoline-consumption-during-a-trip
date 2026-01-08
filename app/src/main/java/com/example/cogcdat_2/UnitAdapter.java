@@ -66,7 +66,7 @@ public class UnitAdapter extends RecyclerView.Adapter<UnitAdapter.UnitViewHolder
         // Применяем primary обводку для выбранного элемента
         boolean isSelected = position == selectedPosition;
         if (isSelected) {
-            holder.cardView.setStrokeWidth(3);
+            holder.cardView.setStrokeWidth(5);
             holder.cardView.setStrokeColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.primary));
         } else {
             holder.cardView.setStrokeWidth(0);

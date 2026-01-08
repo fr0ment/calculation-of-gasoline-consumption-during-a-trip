@@ -81,7 +81,7 @@ public class CarSelectionAdapter extends RecyclerView.Adapter<CarSelectionAdapte
 
         boolean isSelected = position == selectedPosition;
         if (isSelected) {
-            holder.cardView.setStrokeWidth(3);
+            holder.cardView.setStrokeWidth(5);
             holder.cardView.setStrokeColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.primary));
         } else {
             holder.cardView.setStrokeWidth(0);
