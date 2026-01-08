@@ -68,18 +68,8 @@ public class CarDetailsActivity extends AppCompatActivity {
         btnDelete = findViewById(R.id.btnDelete);
         btnBack = findViewById(R.id.btnBack); // Инициализация CardView
 
-        // Находим ImageButton внутри CardView
         btnBack = findViewById(R.id.btnBack);
 
-        // Устанавливаем обработчик для CardView
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-
-        // Или для ImageButton внутри CardView
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

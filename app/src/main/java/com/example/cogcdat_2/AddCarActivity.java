@@ -91,14 +91,6 @@ public class AddCarActivity extends AppCompatActivity {
         btnAddPhoto = findViewById(R.id.btnAddPhoto);
         ivCarPhoto = findViewById(R.id.ivCarPhoto);
         
-        // Разрешаем многострочный текст для кнопок единиц измерения
-        btnDistanceUnit.setMaxLines(2);
-        btnDistanceUnit.setSingleLine(false);
-        btnFuelUnit.setMaxLines(2);
-        btnFuelUnit.setSingleLine(false);
-        btnFuelConsumption.setMaxLines(2);
-        btnFuelConsumption.setSingleLine(false);
-        
         // Устанавливаем начальные значения на кнопках
         btnDistanceUnit.setText(selectedDistanceUnit);
         btnFuelUnit.setText(selectedFuelUnit);

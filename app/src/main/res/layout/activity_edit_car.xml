@@ -13,24 +13,26 @@
         android:padding="16dp">
 
         <TextView
+            android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Редактировать"
+            android:text="Редактировать автомобиль"
             android:textSize="24sp"
             android:textColor="@color/text_primary"
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
+        <!-- Остальная часть полностью идентична activity_add_car.xml -->
         <ImageView
             android:id="@+id/ivCarPhoto"
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginBottom="8dp"
             android:background="@color/card_background_secondary"
-            android:contentDescription="Фото автомобиля"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_car_outline"
             android:padding="30dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_car_outline" />
+            android:contentDescription="Фото автомобиля"/>
 
         <Button
             android:id="@+id/btnAddPhoto"
@@ -98,11 +100,11 @@
                 android:id="@+id/etTankVolume"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
+                android:inputType="numberDecimal|numberSigned"
+                android:digits="0123456789."
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -117,45 +119,63 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="3"
             android:layout_marginBottom="16dp">
 
-            <Spinner
-                android:id="@+id/spinnerDistanceUnit"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDistanceUnit"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
-                android:backgroundTint="@color/icon_color"
-                android:popupBackground="@color/dialog_background" />
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="16dp"
+                android:text="км"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:maxLines="5"
+                android:gravity="center"
+                android:backgroundTint="@color/card_background_secondary"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="12dp" />
 
-            <Spinner
-                android:id="@+id/spinnerFuelUnit"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFuelUnit"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="4dp"
-                android:backgroundTint="#FFFFFF"
-                android:popupBackground="@color/dialog_background"/>
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="16dp"
+                android:text="л"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:maxLines="5"
+                android:gravity="center"
+                android:backgroundTint="@color/card_background_secondary"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="12dp" />
 
-            <Spinner
-                android:id="@+id/spinnerFuelConsumption"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFuelConsumption"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
-                android:backgroundTint="#FFFFFF"
-                android:popupBackground="@color/dialog_background"/>
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="16dp"
+                android:text="л/100км"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:maxLines="5"
+                android:gravity="center"
+                android:backgroundTint="@color/card_background_secondary"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="12dp" />
         </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="* - обязательные поля"
-            android:textSize="12sp"
-            android:textColor="@color/text_hint"
-            android:layout_marginBottom="24dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -171,7 +191,8 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:text="Назад"
-                android:backgroundTint="#6C757D"
+                android:textColor="@color/text_primary"
+                android:backgroundTint="@color/card_background_secondary"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
             <Button
@@ -184,5 +205,6 @@
                 android:backgroundTint="@color/primary"
                 style="@style/Widget.Material3.Button" />
         </LinearLayout>
+
     </LinearLayout>
 </ScrollView>
