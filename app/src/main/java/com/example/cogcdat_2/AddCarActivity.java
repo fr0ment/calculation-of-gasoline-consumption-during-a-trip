@@ -172,7 +172,7 @@ public class AddCarActivity extends AppCompatActivity {
         });
         
         dialog.show();
-        
+
         // Настройка стиля диалога
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
@@ -229,10 +229,6 @@ public class AddCarActivity extends AppCompatActivity {
             Toast.makeText(this, "Ошибка сохранения в БД", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // ... (Методы для работы с фото checkPermissionAndOpenPicker, openImagePicker,
-    //      onRequestPermissionsResult, onActivityResult, saveImageLocally,
-    //      loadBitmapToImageView, setDefaultImage - без изменений)
 
     private void checkPermissionAndOpenPicker() {
         if (checkAndRequestPermissions()) launchImagePicker();

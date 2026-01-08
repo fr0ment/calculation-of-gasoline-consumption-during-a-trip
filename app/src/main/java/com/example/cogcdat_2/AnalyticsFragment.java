@@ -5,28 +5,29 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AutoCompleteTextView;
-import android.widget.Spinner;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -42,33 +43,27 @@ public class AnalyticsFragment extends Fragment {
     private TextView tvNoData, tvWarningTitle, tvWarningDetails;
     private LineChart chartFuelConsumption;
     private View cardWarnings;
+    private View carSelectionView;
+    private ImageView ivSelectedCarIcon;
+    private TextView tvSelectedCarName;
 
     // Форматы дат
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
     private static final SimpleDateFormat CHART_DATE_FORMAT = new SimpleDateFormat("dd.MM", Locale.getDefault());
 
-    // Для хранения данных аналитики
+    // Данные аналитики
     private List<Trip> allTrips = new ArrayList<>();
     private Map<String, Float> dailyConsumption = new HashMap<>();
     private double totalDistance = 0.0;
     private double totalFuel = 0.0;
     private double avgConsumption = 0.0;
 
-    // Настройки для определения аномалий
-    private static final double CONSUMPTION_THRESHOLD_MULTIPLIER = 1.15; // 15% выше среднего
-    private static final int MIN_TRIPS_FOR_ANALYSIS = 5;
-    private static final int RECENT_TRIPS_COUNT = 5;
-
-    // Текущий выбранный автомобиль
+    // Выбранный автомобиль
     private Car selectedCar = null;
 
-    // Списки для адаптера
-    private List<Car> allCarsList = new ArrayList<>();
-    private List<Car> spinnerCarsList = new ArrayList<>();
+    // Список всех автомобилей (только реальные)
+    private List<Car> carList = new ArrayList<>();
 
-    // Для хранения предупреждений по автомобилям
-    private Map<Integer, String> carWarnings = new HashMap<>();
-    private List<Car> carsWithAnomalies = new ArrayList<>();
     private View rootView;
 
     @Override
@@ -77,11 +72,8 @@ public class AnalyticsFragment extends Fragment {
 
         dbHelper = new DatabaseHelper(getContext());
 
-        // Инициализация UI элементов
         initViews(rootView);
-
-        // Настройка Spinner с автомобилями
-        setupCarSpinner();
+        setupCarSelection();
 
         return rootView;
     }
@@ -89,7 +81,6 @@ public class AnalyticsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Обновляем данные при возвращении на фрагмент
         loadAnalyticsData();
     }
 
@@ -102,116 +93,54 @@ public class AnalyticsFragment extends Fragment {
         tvNoData = view.findViewById(R.id.tv_no_data);
         tvWarningTitle = view.findViewById(R.id.tv_warning_title);
         tvWarningDetails = view.findViewById(R.id.tv_warning_details);
+
+        carSelectionView = view.findViewById(R.id.car_selection_view);
+        ivSelectedCarIcon = view.findViewById(R.id.iv_selected_car_icon);
+        tvSelectedCarName = view.findViewById(R.id.tv_selected_car_name);
     }
 
-    private void setupCarSpinner() {
-        List<Car> cars = dbHelper.getAllCars();
+    private void setupCarSelection() {
+        carSelectionView.setOnClickListener(v -> showCarSelectionDialog());
+    }
 
-        if (cars.isEmpty()) {
-            // Если машин нет — показываем заглушку
-            rootView.findViewById(R.id.spinner_cars).setVisibility(View.GONE);
+    private void loadAnalyticsData() {
+        carList = dbHelper.getAllCars();
+
+        if (carList.isEmpty()) {
+            carSelectionView.setVisibility(View.GONE);
             tvNoData.setText("Нет добавленных автомобилей");
             tvNoData.setVisibility(View.VISIBLE);
+            hideAllDataViews();
             return;
         }
 
-        CarSpinnerAdapter adapter = new CarSpinnerAdapter(requireContext(), cars, true);
+        carSelectionView.setVisibility(View.VISIBLE);
 
-        AutoCompleteTextView autoComplete = rootView.findViewById(R.id.spinner_cars);
-        autoComplete.setAdapter(adapter);
-
-        // Восстанавливаем сохранённый выбор
+        // Восстанавливаем выбранный автомобиль
         int savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
-        Car savedCar = null;
-        int savedPosition = 0;
+        selectedCar = null;
 
-        for (int i = 0; i < cars.size(); i++) {
-            if (cars.get(i).getId() == savedCarId) {
-                savedCar = cars.get(i);
-                savedPosition = i;
+        for (Car car : carList) {
+            if (car.getId() == savedCarId) {
+                selectedCar = car;
                 break;
             }
         }
 
-        if (savedCar != null) {
-            autoComplete.setText(savedCar.getName(), false);
-            selectedCar = savedCar;
-        } else if (!cars.isEmpty()) {
-            // Если сохранённого нет — выбираем первую машину
-            Car firstCar = cars.get(0);
-            autoComplete.setText(firstCar.getName(), false);
-            selectedCar = firstCar;
-            SelectedCarManager.setSelectedCarId(requireContext(), firstCar.getId());
+        // Если сохранённого нет — выбираем первый автомобиль
+        if (selectedCar == null) {
+            selectedCar = carList.get(0);
+            SelectedCarManager.setSelectedCarId(requireContext(), selectedCar.getId());
         }
 
-        autoComplete.setOnItemClickListener((parent, view, position, id) -> {
-            Car car = (Car) parent.getItemAtPosition(position);
-            selectedCar = car;
-            SelectedCarManager.setSelectedCarId(requireContext(), car.getId());
-            loadAnalyticsData();  // Перезагружаем аналитику под выбранную машину
-        });
+        updateSelectedCarDisplay(selectedCar);
 
-        // Принудительно запускаем загрузку данных после настройки
-        loadAnalyticsData();
-    }
-
-    private void loadAnalyticsData() {
-        // Получаем поездки в зависимости от выбранного автомобиля
-        allTrips = getTripsForSelectedCar();
+        // Загружаем поездки только для выбранного автомобиля
+        allTrips = dbHelper.getTripsForCar(selectedCar.getId());
 
         if (allTrips.isEmpty()) {
             showNoDataState();
             return;
-        }
-
-        // Скрываем сообщение "нет данных"
-        tvNoData.setVisibility(View.GONE);
-
-        // Рассчитываем статистику
-        calculateStatistics();
-
-        // Обновляем карточки статистики
-        updateStatsCards();
-
-        // Строим график
-        buildConsumptionChart();
-
-        // Проверяем на аномалии и отображаем предупреждения
-        checkForConsumptionAnomalies();
-    }
-
-    private List<Trip> getTripsForSelectedCar() {
-        List<Trip> trips = new ArrayList<>();
-
-        if (selectedCar == null || selectedCar.getId() == -1) {
-            // Если автомобиль не выбран или выбраны все авто, берем все поездки
-            trips = getAllTripsFromAllCars();
-        } else {
-            // Берем поездки только для выбранного автомобиля
-            trips = dbHelper.getTripsForCar(selectedCar.getId());
-
-            // Сортируем по дате (от старых к новым)
-            trips.sort((t1, t2) -> {
-                try {
-                    Date d1 = DB_DATE_FORMAT.parse(t1.getStartDateTime());
-                    Date d2 = DB_DATE_FORMAT.parse(t2.getStartDateTime());
-                    return d1.compareTo(d2);
-                } catch (ParseException e) {
-                    return 0;
-                }
-            });
-        }
-
-        return trips;
-    }
-
-    private List<Trip> getAllTripsFromAllCars() {
-        List<Trip> allTrips = new ArrayList<>();
-        List<Car> allCars = dbHelper.getAllCars();
-
-        for (Car car : allCars) {
-            List<Trip> carTrips = dbHelper.getTripsForCar(car.getId());
-            allTrips.addAll(carTrips);
         }
 
         // Сортируем по дате (от старых к новым для графика)
@@ -225,117 +154,87 @@ public class AnalyticsFragment extends Fragment {
             }
         });
 
-        return allTrips;
+        calculateTotals();
+        calculateDailyConsumption();
+        updateStatistics();
+        updateChart();
+        checkAnomalies();
+
+        tvNoData.setVisibility(View.GONE);
+        chartFuelConsumption.setVisibility(View.VISIBLE);
+        cardWarnings.setVisibility(View.GONE); // пока скрываем, можно включить позже
     }
 
-    private void calculateStatistics() {
+    private void calculateTotals() {
         totalDistance = 0.0;
         totalFuel = 0.0;
-        dailyConsumption.clear();
-
         for (Trip trip : allTrips) {
             totalDistance += trip.getDistance();
             totalFuel += trip.getFuelSpent();
+        }
+        avgConsumption = totalDistance > 0 ? (totalFuel / totalDistance) * 100 : 0.0;
+    }
 
-            // Группируем по дням для графика
+    private void calculateDailyConsumption() {
+        Map<String, Double> dailyDist = new HashMap<>();
+        Map<String, Double> dailyFuel = new HashMap<>();
+
+        for (Trip trip : allTrips) {
             try {
-                Date tripDate = DB_DATE_FORMAT.parse(trip.getStartDateTime());
-                String dayKey = CHART_DATE_FORMAT.format(tripDate);
+                Date date = DB_DATE_FORMAT.parse(trip.getStartDateTime());
+                String key = CHART_DATE_FORMAT.format(date);
 
-                // Если для этого дня уже есть запись, обновляем среднее значение
-                if (dailyConsumption.containsKey(dayKey)) {
-                    float currentAvg = dailyConsumption.get(dayKey);
-                    float newAvg = (currentAvg + (float) trip.getFuelConsumption()) / 2;
-                    dailyConsumption.put(dayKey, newAvg);
-                } else {
-                    dailyConsumption.put(dayKey, (float) trip.getFuelConsumption());
-                }
+                dailyDist.put(key, dailyDist.getOrDefault(key, 0.0) + trip.getDistance());
+                dailyFuel.put(key, dailyFuel.getOrDefault(key, 0.0) + trip.getFuelSpent());
             } catch (ParseException e) {
-                // Пропускаем некорректные даты
+                Log.e("Analytics", "Ошибка парсинга даты", e);
             }
         }
 
-        // Рассчитываем средний расход
-        if (totalDistance > 0 && totalFuel > 0) {
-            avgConsumption = (totalFuel / totalDistance) * 100;
-        } else {
-            avgConsumption = 0.0;
-        }
-    }
-
-    private void updateStatsCards() {
-        // Определяем единицы измерения
-        String distanceUnit = "км";
-        String fuelUnit = "л";
-        String consumptionUnit = "л/100км";
-
-        if (!allTrips.isEmpty()) {
-            // Если выбран конкретный автомобиль, берем его единицы
-            if (selectedCar != null && selectedCar.getId() != -1) {
-                distanceUnit = selectedCar.getDistanceUnit();
-                fuelUnit = selectedCar.getFuelUnit();
-                consumptionUnit = selectedCar.getFuelConsumptionUnit();
-            } else {
-                // Для "всех автомобилей" берем единицы из первой поездки
-                Car firstCar = dbHelper.getCar(allTrips.get(0).getCarId());
-                if (firstCar != null) {
-                    distanceUnit = firstCar.getDistanceUnit();
-                    fuelUnit = firstCar.getFuelUnit();
-                    consumptionUnit = firstCar.getFuelConsumptionUnit();
-                }
+        dailyConsumption.clear();
+        for (String key : dailyFuel.keySet()) {
+            double dist = dailyDist.getOrDefault(key, 0.0);
+            if (dist > 0) {
+                dailyConsumption.put(key, (float) ((dailyFuel.get(key) / dist) * 100));
             }
         }
-
-        // Общий пробег
-        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.1f %s", totalDistance, distanceUnit));
-
-        // Всего топлива
-        tvTotalFuel.setText(String.format(Locale.getDefault(), "%.1f %s", totalFuel, fuelUnit));
-
-        // Средний расход
-        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", avgConsumption, consumptionUnit));
     }
 
-    private void buildConsumptionChart() {
+    private void updateStatistics() {
+        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.0f км", totalDistance));
+        tvTotalFuel.setText(String.format(Locale.getDefault(), "%.1f л", totalFuel));
+        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.1f л/100км", avgConsumption));
+    }
+
+    private void updateChart() {
         if (dailyConsumption.isEmpty()) {
-            chartFuelConsumption.setVisibility(View.GONE);
+            chartFuelConsumption.clear();
+            chartFuelConsumption.setNoDataText("Нет данных для графика");
             return;
         }
 
-        // Получаем метки для оси X
-        final List<String> labels = getChartLabels();
+        List<String> labels = new ArrayList<>(dailyConsumption.keySet());
+        Collections.sort(labels);
 
-        // Подготовка данных для графика
-        ArrayList<Entry> entries = new ArrayList<>();
-
+        List<Entry> entries = new ArrayList<>();
         for (int i = 0; i < labels.size(); i++) {
-            String day = labels.get(i);
-            if (dailyConsumption.containsKey(day)) {
-                entries.add(new Entry(i, dailyConsumption.get(day)));
-            }
+            entries.add(new Entry(i, dailyConsumption.get(labels.get(i))));
         }
 
-        if (entries.isEmpty()) {
-            chartFuelConsumption.setVisibility(View.GONE);
-            return;
-        }
+        LineDataSet dataSet = new LineDataSet(entries, "Расход топлива");
+        dataSet.setColor(getResources().getColor(R.color.primary, null));
+        dataSet.setCircleColor(getResources().getColor(R.color.primary, null));
+        dataSet.setValueTextColor(getResources().getColor(R.color.text_primary, null));
+        dataSet.setLineWidth(2.5f);
+        dataSet.setCircleRadius(4f);
 
-        // Настройка внешнего вида графика
+        LineData lineData = new LineData(dataSet);
+        chartFuelConsumption.setData(lineData);
         chartFuelConsumption.getDescription().setEnabled(false);
-        chartFuelConsumption.setDragEnabled(true);
-        chartFuelConsumption.setScaleEnabled(true);
-        chartFuelConsumption.setPinchZoom(true);
-        chartFuelConsumption.setDrawGridBackground(false);
-
-        // Убираем легенду
         chartFuelConsumption.getLegend().setEnabled(false);
 
-        // Настройка оси X
         XAxis xAxis = chartFuelConsumption.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setDrawGridLines(false);
-        xAxis.setGranularity(1f);
-        xAxis.setLabelCount(Math.min(labels.size(), 7));
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
@@ -346,305 +245,90 @@ public class AnalyticsFragment extends Fragment {
                 return "";
             }
         });
-        xAxis.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
 
-        // Настройка оси Y
-        YAxis leftAxis = chartFuelConsumption.getAxisLeft();
-        leftAxis.setDrawGridLines(true);
-        leftAxis.setGridColor(ContextCompat.getColor(requireContext(), R.color.chart_grid_color));
-        leftAxis.setAxisMinimum(0f);
-        leftAxis.setGranularity(1f);
-        leftAxis.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
-
-        YAxis rightAxis = chartFuelConsumption.getAxisRight();
-        rightAxis.setEnabled(false);
-
-        // Создание набора данных
-        LineDataSet dataSet = new LineDataSet(entries, "Расход топлива");
-
-        // Настройка стиля линии
-        dataSet.setColor(ContextCompat.getColor(requireContext(), R.color.chart_line_color));
-        dataSet.setValueTextColor(ContextCompat.getColor(requireContext(), R.color.chart_text_color));
-        dataSet.setValueTextSize(10f);
-        dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(4f);
-        dataSet.setCircleColor(ContextCompat.getColor(requireContext(), R.color.chart_circle_color));
-        dataSet.setDrawCircleHole(false);
-        dataSet.setMode(LineDataSet.Mode.LINEAR);
-
-        // Форматирование значений на графике
-        String consumptionUnit = "л/100км";
-        if (selectedCar != null && selectedCar.getId() != -1) {
-            consumptionUnit = selectedCar.getFuelConsumptionUnit();
-        } else if (!allTrips.isEmpty()) {
-            Car firstCar = dbHelper.getCar(allTrips.get(0).getCarId());
-            if (firstCar != null) {
-                consumptionUnit = firstCar.getFuelConsumptionUnit();
-            }
-        }
-
-        final String finalUnit = consumptionUnit;
-        dataSet.setValueFormatter(new ValueFormatter() {
-            @Override
-            public String getFormattedValue(float value) {
-                return String.format(Locale.getDefault(), "%.1f %s", value, finalUnit);
-            }
-        });
-
-        // Создание данных для графика
-        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(dataSet);
-
-        LineData lineData = new LineData(dataSets);
-        chartFuelConsumption.setData(lineData);
-
-        // Обновление графика
+        chartFuelConsumption.getAxisRight().setEnabled(false);
+        chartFuelConsumption.getAxisLeft().setAxisMinimum(0f);
         chartFuelConsumption.invalidate();
-        chartFuelConsumption.setVisibility(View.VISIBLE);
     }
 
-    private List<String> getChartLabels() {
-        // Получаем список дат для оси X
-        List<String> labels = new ArrayList<>(dailyConsumption.keySet());
-
-        // Сортируем даты (старые -> новые)
-        labels.sort((d1, d2) -> {
-            try {
-                Date date1 = CHART_DATE_FORMAT.parse(d1);
-                Date date2 = CHART_DATE_FORMAT.parse(d2);
-                return date1.compareTo(date2);
-            } catch (ParseException e) {
-                return 0;
-            }
-        });
-
-        // Ограничиваем до последних 7 записей для лучшей читаемости
-        if (labels.size() > 7) {
-            labels = labels.subList(labels.size() - 7, labels.size());
-        }
-
-        return labels;
-    }
-
-    private void checkForConsumptionAnomalies() {
-        // Очищаем предыдущие предупреждения
-        carWarnings.clear();
-        carsWithAnomalies.clear();
+    private void checkAnomalies() {
+        // Можно включить позже — пока просто скрываем карточку
         cardWarnings.setVisibility(View.GONE);
-
-        if (selectedCar == null || selectedCar.getId() == -1) {
-            // РЕЖИМ "ВСЕ АВТОМОБИЛИ" - проверяем КАЖДЫЙ автомобиль отдельно
-            checkAnomaliesForAllCars();
-        } else {
-            // РЕЖИМ КОНКРЕТНОГО АВТОМОБИЛЯ - проверяем только выбранный
-            checkAnomaliesForSelectedCar();
-        }
-    }
-
-    private void checkAnomaliesForSelectedCar() {
-        if (selectedCar == null || selectedCar.getId() == -1) {
-            return;
-        }
-
-        AnomalyResult anomaly = checkCarForAnomaly(selectedCar);
-
-        if (anomaly != null) {
-            // Найдена аномалия
-            tvWarningTitle.setText("Повышенный расход топлива!");
-            tvWarningDetails.setText(anomaly.getWarningMessage());
-            cardWarnings.setVisibility(View.VISIBLE);
-
-            // Сохраняем для отладки
-            Log.d("Analytics", "Обнаружена аномалия для " + selectedCar.getName() +
-                    ": увеличение на " + anomaly.increasePercent + "%");
-        } else {
-            // Нет аномалий - скрываем карточку
-            cardWarnings.setVisibility(View.GONE);
-            Log.d("Analytics", "Для автомобиля " + selectedCar.getName() + " аномалий не обнаружено");
-        }
-    }
-
-    private void checkAnomaliesForAllCars() {
-        List<Car> allCars = dbHelper.getAllCars();
-        carsWithAnomalies.clear();
-        carWarnings.clear();
-
-        boolean hasAnyAnomaly = false;
-        StringBuilder allWarningsText = new StringBuilder();
-        int anomalyCount = 0;
-
-        for (Car car : allCars) {
-            AnomalyResult anomaly = checkCarForAnomaly(car);
-
-            if (anomaly != null) {
-                carsWithAnomalies.add(car);
-                carWarnings.put(car.getId(), anomaly.getWarningMessage());
-                hasAnyAnomaly = true;
-                anomalyCount++;
-
-                // Форматируем сообщение для каждого автомобиля
-                allWarningsText.append("• ")
-                        .append(anomaly.getWarningMessage())
-                        .append("\n\n");
-            }
-        }
-
-        // Показываем или скрываем карточку
-        if (hasAnyAnomaly) {
-            // Убираем последние два переноса строки
-            if (allWarningsText.length() > 2) {
-                allWarningsText.setLength(allWarningsText.length() - 2);
-            }
-
-            if (anomalyCount == 1) {
-                tvWarningTitle.setText("Повышенный расход топлива!");
-            } else {
-                tvWarningTitle.setText(String.format("Повышенный расход топлива! (%d авто)", anomalyCount));
-            }
-            tvWarningDetails.setText(allWarningsText.toString());
-            cardWarnings.setVisibility(View.VISIBLE);
-
-            Log.d("Analytics", "Найдено автомобилей с аномалиями: " + anomalyCount);
-        } else {
-            cardWarnings.setVisibility(View.GONE);
-            Log.d("Analytics", "Автомобилей с аномалиями не найдено");
-        }
-    }
-
-    private List<Trip> getRecentTripsForCar(int carId, int count) {
-        // Получаем все поездки для автомобиля
-        List<Trip> allCarTrips = dbHelper.getTripsForCar(carId);
-
-        if (allCarTrips.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // Сортируем по дате (от новых к старым)
-        allCarTrips.sort((t1, t2) -> {
-            try {
-                Date d1 = DB_DATE_FORMAT.parse(t1.getStartDateTime());
-                Date d2 = DB_DATE_FORMAT.parse(t2.getStartDateTime());
-                return d2.compareTo(d1); // Новые сверху
-            } catch (ParseException e) {
-                return 0;
-            }
-        });
-
-        // Берем первые N поездок (самые последние)
-        int endIndex = Math.min(count, allCarTrips.size());
-        return new ArrayList<>(allCarTrips.subList(0, endIndex));
     }
 
     private void showNoDataState() {
         tvNoData.setVisibility(View.VISIBLE);
-
-        // Формируем текст в зависимости от выбора
-        if (selectedCar != null && selectedCar.getId() != -1) {
-            tvNoData.setText(String.format("Нет данных для автомобиля %s. Добавьте поездки, чтобы увидеть статистику.",
-                    selectedCar.getName()));
-        } else {
-            tvNoData.setText("Нет данных для анализа. Добавьте поездки, чтобы увидеть статистику.");
-        }
+        tvNoData.setText(String.format("Нет данных для автомобиля %s. Добавьте поездки, чтобы увидеть статистику.",
+                selectedCar.getName()));
 
         tvTotalDistance.setText("0 км");
         tvTotalFuel.setText("0 л");
         tvAvgConsumption.setText("0.0 л/100км");
+
+        hideAllDataViews();
+    }
+
+    private void hideAllDataViews() {
         chartFuelConsumption.setVisibility(View.GONE);
         cardWarnings.setVisibility(View.GONE);
     }
-    /**
-     * Проверяет автомобиль на аномалии по расходу топлива
-     * Сравнивает последние 5 поездок с предыдущими поездками (не включая последние 5)
-     */
-    private AnomalyResult checkCarForAnomaly(Car car) {
-        if (car == null) return null;
 
-        // Получаем все поездки автомобиля (уже отсортированы от новых к старым из DatabaseHelper)
-        List<Trip> allTrips = dbHelper.getTripsForCar(car.getId());
+    private void updateSelectedCarDisplay(Car car) {
+        if (car == null) {
+            tvSelectedCarName.setText("Выберите автомобиль");
+            ivSelectedCarIcon.setImageResource(R.drawable.ic_car_outline);
+        } else {
+            tvSelectedCarName.setText(car.getName());
 
-        // Нужно минимум 6 поездок: 5 последних + хотя бы 1 старая для сравнения
-        if (allTrips.size() < 6) {
-            Log.d("Analytics", "Для автомобиля " + car.getName() + " недостаточно поездок: " + allTrips.size());
-            return null;
-        }
-
-        // Берем последние 5 поездок (первые 5 в списке, так как список отсортирован от новых к старым)
-        List<Trip> recentTrips = allTrips.subList(0, 5);
-
-        // Берем все остальные поездки (старые) для расчета общего среднего
-        // Это все поездки, начиная с 6-й и до конца
-        List<Trip> previousTrips = allTrips.subList(5, allTrips.size());
-
-        // Рассчитываем средний расход для последних 5 поездок
-        double recentAvgConsumption = calculateAverageConsumption(recentTrips);
-
-        // Рассчитываем средний расход для всех старых поездок
-        double previousAvgConsumption = calculateAverageConsumption(previousTrips);
-
-        if (previousAvgConsumption == 0) {
-            Log.d("Analytics", "Предыдущий средний расход равен 0 для " + car.getName());
-            return null;
-        }
-
-        // Проверяем разницу
-        double increasePercent = ((recentAvgConsumption - previousAvgConsumption) / previousAvgConsumption) * 100;
-
-        Log.d("Analytics", String.format(Locale.getDefault(),
-                "Автомобиль %s: общий средний = %.2f л/100км, последние 5 = %.2f л/100км, разница = %.1f%%",
-                car.getName(), previousAvgConsumption, recentAvgConsumption, increasePercent));
-
-        // Если расход вырос более чем на 15%
-        if (increasePercent >= 15.0) {
-            return new AnomalyResult(car, increasePercent, recentAvgConsumption, previousAvgConsumption);
-        }
-
-        return null;
-    }
-
-    /**
-     * Вспомогательный класс для хранения результата проверки аномалии
-     */
-    private static class AnomalyResult {
-        Car car;
-        double increasePercent;
-        double recentConsumption;
-        double previousConsumption;
-
-        AnomalyResult(Car car, double increasePercent, double recentConsumption, double previousConsumption) {
-            this.car = car;
-            this.increasePercent = increasePercent;
-            this.recentConsumption = recentConsumption;
-            this.previousConsumption = previousConsumption;
-        }
-
-        String getWarningMessage() {
-            return String.format(Locale.getDefault(),
-                    "Последние 5 поездок на автомобиле \"%s\" показывают расход на %.1f%% выше среднего " +
-                            "(было: %.1f л/100км, стало: %.1f л/100км).",
-                    car.getName(), increasePercent, previousConsumption, recentConsumption);
+            String imagePath = car.getImagePath();
+            if (imagePath != null && !imagePath.isEmpty() && new File(imagePath).exists()) {
+                Glide.with(requireContext())
+                        .load(new File(imagePath))
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_car_outline)
+                        .error(R.drawable.ic_car_outline)
+                        .into(ivSelectedCarIcon);
+            } else {
+                ivSelectedCarIcon.setImageResource(R.drawable.ic_car_outline);
+            }
         }
     }
 
-    /**
-     * Рассчитывает средний расход топлива для списка поездок
-     */
-    private double calculateAverageConsumption(List<Trip> trips) {
-        if (trips == null || trips.isEmpty()) {
-            return 0.0;
+    private void showCarSelectionDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_car_selection, null);
+        RecyclerView recyclerView = dialogView.findViewById(R.id.recycler_view_cars);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        CarSelectionAdapter adapter = new CarSelectionAdapter(carList, car -> {
+            selectedCar = car;
+            SelectedCarManager.setSelectedCarId(requireContext(), car.getId());
+            updateSelectedCarDisplay(car);
+            loadAnalyticsData(); // Перезагружаем аналитику для нового авто
+            dialog.dismiss();
+        });
+        
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        // Подсвечиваем текущий выбранный
+        int selectedPos = -1;
+        for (int i = 0; i < carList.size(); i++) {
+            if (carList.get(i).getId() == selectedCar.getId()) {
+                selectedPos = i;
+                break;
+            }
         }
+        adapter.setSelectedPosition(selectedPos);
 
-        double totalDistance = 0.0;
-        double totalFuel = 0.0;
+        recyclerView.setAdapter(adapter);
 
-        for (Trip trip : trips) {
-            totalDistance += trip.getDistance();
-            totalFuel += trip.getFuelSpent();
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
-
-        if (totalDistance == 0) {
-            return 0.0;
-        }
-
-        return (totalFuel / totalDistance) * 100;
     }
 }

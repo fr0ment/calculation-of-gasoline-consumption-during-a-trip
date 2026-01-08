@@ -1,63 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/dialog_background_rounded"
-    android:padding="24dp">
-
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="vertical"
+android:background="@drawable/dialog_background_rounded"
+android:paddingTop="24dp"
+    android:paddingHorizontal="24dp">
     <TextView
         android:id="@+id/tv_dialog_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Выберите единицу измерения"
+        android:text="Выберите автомобиль"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/dialog_text"
         android:gravity="center"
         android:layout_marginBottom="20dp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_units"
+    <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/recycler_view_cars"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="400dp"
-        android:clipToPadding="false"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" />
-
+        android:clipToPadding="false"/>
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/divider"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end">
-
+        android:gravity="center">
         <Button
-            android:id="@+id/btn_cancel_unit"
+            android:id="@+id/btn_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Отмена"
-
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
-        <Button
-            android:id="@+id/btn_confirm_unit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ВЫБРАТЬ"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/white" />
     </LinearLayout>
-
 </LinearLayout>

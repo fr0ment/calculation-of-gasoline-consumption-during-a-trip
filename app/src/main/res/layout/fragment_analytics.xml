@@ -21,25 +21,39 @@
             android:textSize="24sp"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="16dp" />
 
 
-        <com.google.android.material.textfield.TextInputLayout
+        <LinearLayout
+            android:id="@+id/car_selection_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
             android:layout_marginBottom="24dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-            <AutoCompleteTextView
-                android:id="@+id/spinner_cars"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="none"
-                android:textColor="@color/text_primary"
-                android:hint="Выберите автомобиль" />
+            android:background="@drawable/car_selection_background">>
 
-        </com.google.android.material.textfield.TextInputLayout>
+        <ImageView
+            android:id="@+id/iv_selected_car_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="12dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_car_outline" />
 
+        <TextView
+            android:id="@+id/tv_selected_car_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Выберите автомобиль"
+            android:textSize="16sp"
+            android:textColor="@color/text_primary" />
+
+    </LinearLayout>
         <!-- 1. КАРТОЧКИ ОБЩЕЙ СТАТИСТИКИ -->
         <TextView
             android:layout_width="wrap_content"

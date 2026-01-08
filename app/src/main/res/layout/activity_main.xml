@@ -12,13 +12,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/bottom_nav_background"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:menu="@menu/bottom_navigation_menu"
+        app:itemBackground="@android:color/transparent"
+        app:itemGravity="center"
         app:itemIconTint="@color/bottom_nav_colors"
+        app:itemPaddingBottom="0dp"
+        app:itemPaddingTop="0dp"
         app:itemTextColor="@color/bottom_nav_colors"
-        app:itemBackground="@android:color/transparent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:menu="@menu/bottom_navigation_menu"
+        app:layout_constraintHeight="60dp"/>
 
     <FrameLayout
         android:id="@+id/fragment_container"
