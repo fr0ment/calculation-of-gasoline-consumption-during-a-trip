@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#303245">
+    android:background="@color/background">
 
     <!-- Основной прокручиваемый контент -->
     <ScrollView
@@ -24,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:text="Ваши Автомобили"
                 android:textSize="24sp"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="24dp" />
 
@@ -42,7 +42,7 @@
                     android:layout_width="120dp"
                     android:layout_height="120dp"
                     android:src="@drawable/ic_car_outline"
-                    app:tint="#666666"
+                    app:tint="@color/icon_color"
                     android:layout_marginBottom="24dp" />
 
                 <TextView
@@ -50,7 +50,7 @@
                     android:layout_height="wrap_content"
                     android:text="Нет добавленных автомобилей"
                     android:textSize="18sp"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:gravity="center"
                     android:layout_marginBottom="8dp" />
 
@@ -59,7 +59,7 @@
                     android:layout_height="wrap_content"
                     android:text="Нажмите кнопку «+», чтобы добавить первый автомобиль"
                     android:textSize="14sp"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/text_hint"
                     android:gravity="center" />
             </LinearLayout>
 
@@ -83,7 +83,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_add"
-        app:backgroundTint="#4A6EFF"
-        app:tint="#FFFFFF" />
+        app:backgroundTint="@color/primary"
+        app:tint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

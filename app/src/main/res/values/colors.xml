@@ -3,26 +3,57 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Основные цвета приложения -->
-    <color name="background">#303245</color>
-    <color name="card_background">#3A3E52</color>
+    <!-- Основные цвета приложения - Светлая тема (серовато-белая) -->
+    <color name="background">#F5F5F7</color> <!-- Серовато-белый фон -->
+    <color name="card_background">#FFFFFF</color> <!-- Белый для карточек -->
+    <color name="card_background_secondary">#F0F0F2</color> <!-- Светло-серый для вторичных карточек -->
     <color name="primary">#4A6EFF</color>
     <color name="primary_dark">#3A5AFF</color>
     <color name="secondary">#03DAC6</color>
     <color name="secondary_dark">#00BFA5</color>
 
-    <!-- Material 3 colors -->
+    <!-- Material 3 colors - Светлая тема -->
     <color name="colorPrimary">#4A6EFF</color>
     <color name="colorOnPrimary">#FFFFFF</color>
     <color name="colorPrimaryContainer">#4A6EFF</color>
     <color name="colorOnPrimaryContainer">#FFFFFF</color>
     <color name="colorSecondary">#03DAC6</color>
     <color name="colorOnSecondary">#000000</color>
-    <color name="colorSurface">#303245</color>
-    <color name="colorOnSurface">#FFFFFF</color>
-    <!-- Цвета для графика -->
-    <color name="chart_grid_color">#40FFFFFF</color> <!-- Полупрозрачный белый для сетки -->
-    <color name="chart_line_color">#FFBB86FC</color> <!-- Фиолетовый для линии графика -->
-    <color name="chart_text_color">#FFFFFF</color> <!-- Белый для текста на графике -->
-    <color name="chart_circle_color">#FFBB86FC</color> <!-- Фиолетовый для точек на графике -->
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#1A1A1A</color> <!-- Темный текст на светлом фоне -->
+    
+    <!-- Текстовые цвета для светлой темы -->
+    <color name="text_primary">#1A1A1A</color> <!-- Основной текст -->
+    <color name="text_secondary">#666666</color> <!-- Вторичный текст -->
+    <color name="text_hint">#999999</color> <!-- Подсказки -->
+    <color name="text_disabled">#CCCCCC</color> <!-- Отключенный текст -->
+    
+    <!-- Цвета для элементов интерфейса -->
+    <color name="divider">#E0E0E0</color> <!-- Разделители -->
+    <color name="icon_color">#666666</color> <!-- Иконки -->
+    <color name="icon_color_primary">#4A6EFF</color> <!-- Основные иконки -->
+    <color name="accent">#FF5722</color> <!-- Акцентный цвет -->
+    <color name="warning">#FF5252</color> <!-- Предупреждения -->
+    <color name="error">#FF3B30</color> <!-- Ошибки -->
+    
+    <!-- Цвета для диалогов -->
+    <color name="dialog_background">#FFFFFF</color>
+    <color name="dialog_text">#1A1A1A</color>
+    <color name="dialog_text_secondary">#666666</color>
+    
+    <!-- Цвета для графика - Светлая тема -->
+    <color name="chart_grid_color">#40000000</color> <!-- Полупрозрачный черный для сетки -->
+    <color name="chart_line_color">#4A6EFF</color> <!-- Синий для линии графика -->
+    <color name="chart_text_color">#1A1A1A</color> <!-- Темный для текста на графике -->
+    <color name="chart_circle_color">#4A6EFF</color> <!-- Синий для точек на графике -->
+    
+    <!-- Цвета для статистики -->
+    <color name="stat_card_background">#F0F0F2</color>
+    <color name="stat_value_color">#1A1A1A</color>
+    <color name="stat_label_color">#666666</color>
+    
+    <!-- Цвета для навигации -->
+    <color name="bottom_nav_background">#FFFFFF</color>
+    <color name="bottom_nav_selected">#4A6EFF</color>
+    <color name="bottom_nav_unselected">#999999</color>
 </resources>

@@ -3,42 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#303245"
+    android:background="@color/background"
     android:fitsSystemWindows="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Кнопка назад с белым круговым фоном -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/btnBackCard"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_margin="16dp"
-            app:cardBackgroundColor="#80000000"
-            app:cardCornerRadius="28dp"
-            app:cardElevation="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent"
-                android:padding="14dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_back"
-                android:contentDescription="Назад"/>
-
-        </androidx.cardview.widget.CardView>
-
         <ImageView
             android:id="@+id/ivCarImage"
             android:layout_width="0dp"
             android:layout_height="250dp"
-            android:background="#2A2D3E"
+            android:background="@color/card_background_secondary"
             android:padding="40dp"
             android:scaleType="centerCrop"
             app:layout_constraintEnd_toEndOf="parent"
@@ -61,7 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Название автомобиля"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp"/>
@@ -71,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Описание"
-                android:textColor="#AAAAAA"
+                android:textColor="@color/text_hint"
                 android:textSize="16sp"
                 android:layout_marginBottom="16dp"/>
 
@@ -85,7 +61,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Топливо:"
-                    android:textColor="#CCCCCC"
+                    android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginEnd="8dp"/>
@@ -94,7 +70,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="АИ-95"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"/>
             </LinearLayout>
 
@@ -108,7 +84,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Объем бака:"
-                    android:textColor="#CCCCCC"
+                    android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginEnd="8dp"/>
@@ -117,21 +93,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="50 л"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"/>
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#41445A"
+                android:background="@color/divider"
                 android:layout_marginVertical="16dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Единицы измерения"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp"/>
@@ -142,7 +118,7 @@
                 android:layout_height="wrap_content"
                 android:lineSpacingExtra="8dp"
                 android:text="Расстояние: км\nТопливо: л\nРасход: л/100км"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="16sp" />
 
             <!-- Кнопки удаления и редактирования -->
@@ -152,7 +128,7 @@
                 android:orientation="horizontal"
                 android:gravity="center"
                 android:layout_marginTop="24dp"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="12dp">
 
                 <Button
                     android:id="@+id/btnEdit"
@@ -161,7 +137,7 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
                     android:text="Редактировать"
-                    android:backgroundTint="#4A6EFF"
+                    android:backgroundTint="@color/primary"
                     style="@style/Widget.Material3.Button" />
 
                 <Button
@@ -171,11 +147,26 @@
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     android:text="Удалить"
-                    android:backgroundTint="#FF3B30"
+                    android:backgroundTint="@color/error"
                     style="@style/Widget.Material3.Button" />
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBack"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/card_background_secondary"
+                android:text="Назад"
+                android:textColor="@color/text_primary"
+                app:icon="@drawable/ic_back"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="@color/text_primary"/>
         </LinearLayout>
+
+        <!-- Кнопка назад снизу -->
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

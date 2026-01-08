@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#303245"
+    android:background="@color/background"
     android:fitsSystemWindows="true">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:text="Ваши Поездки"
             android:textSize="24sp"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
 
@@ -34,7 +34,7 @@
                 android:layout_height="wrap_content"
                 android:inputType="none"
                 android:focusable="false"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:hint="Выберите автомобиль" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -53,7 +53,7 @@
                 android:layout_weight="1"
                 android:hint="Поиск по названию"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                app:startIconTint="#FF5722"
+                app:startIconTint="@color/accent"
                 android:layout_marginEnd="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -62,8 +62,8 @@
                     android:layout_height="wrap_content"
                     android:inputType="textCapSentences"
                     android:imeOptions="actionSearch"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#CCCCCC"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
                     android:imeActionLabel="Поиск" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -77,7 +77,7 @@
                 android:padding="8dp"
                 android:layout_marginStart="8dp"
                 android:contentDescription="Фильтр по дате"
-                app:tint="#FF5722" />
+                app:tint="@color/accent" />
 
         </LinearLayout>
         <androidx.recyclerview.widget.RecyclerView
@@ -94,7 +94,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="Для выбранного автомобиля нет поездок."
-            android:textColor="#AAAAAA"
+            android:textColor="@color/text_hint"
             android:textSize="16sp"
             android:visibility="gone"/>
 

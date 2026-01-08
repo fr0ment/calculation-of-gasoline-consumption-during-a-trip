@@ -28,7 +28,7 @@ public class CarDetailsActivity extends AppCompatActivity {
     private TextView tvName, tvDescription, tvFuelType, tvTankVolume, tvUnits;
     private ImageView ivCarImage;
     private Button btnEdit, btnDelete;
-    private CardView btnBackCard; // Изменено с ImageButton на CardView
+    private Button btnBack; // Изменено с ImageButton на CardView
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,13 +66,13 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvUnits = findViewById(R.id.tvUnits);
         btnEdit = findViewById(R.id.btnEdit);
         btnDelete = findViewById(R.id.btnDelete);
-        btnBackCard = findViewById(R.id.btnBackCard); // Инициализация CardView
+        btnBack = findViewById(R.id.btnBack); // Инициализация CardView
 
         // Находим ImageButton внутри CardView
-        ImageButton btnBack = btnBackCard.findViewById(R.id.btnBack);
+        btnBack = findViewById(R.id.btnBack);
 
         // Устанавливаем обработчик для CardView
-        btnBackCard.setOnClickListener(new View.OnClickListener() {
+        btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();

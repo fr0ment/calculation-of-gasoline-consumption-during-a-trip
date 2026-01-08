@@ -18,7 +18,7 @@
             android:text="Добавить Поездку"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"/>
 
@@ -30,7 +30,7 @@
             android:src="@drawable/ic_car"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Закрыть"
-            app:tint="#FFFFFF"
+            app:tint="@color/icon_color"
             android:padding="8dp"/>
     </RelativeLayout>
 
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:focusable="true"
-        app:cardBackgroundColor="#4A6EFF"
+        app:cardBackgroundColor="@color/primary"
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp"
         android:layout_marginBottom="12dp">
@@ -58,7 +58,7 @@
                 android:layout_height="32dp"
                 android:src="@drawable/ic_car"
                 android:contentDescription="Запись GPS"
-                app:tint="#FFFFFF"
+                app:tint="@color/white"
                 android:layout_marginEnd="16dp"/>
 
             <TextView
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Записать GPS"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold"/>
 
@@ -74,7 +74,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_chevron_right"
-                app:tint="#FFFFFF"
+                app:tint="@color/white"
                 android:contentDescription=""/>
 
         </LinearLayout>
@@ -86,7 +86,7 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:focusable="true"
-        app:cardBackgroundColor="#41445A"
+        app:cardBackgroundColor="@color/dialog_background"
         app:cardCornerRadius="12dp"
         app:cardElevation="4dp">
 
@@ -102,7 +102,7 @@
                 android:layout_height="32dp"
                 android:src="@drawable/ic_car"
                 android:contentDescription="Добавить вручную"
-                app:tint="#64B5F6"
+                app:tint="@color/primary"
                 android:layout_marginEnd="16dp"/>
 
             <TextView
@@ -110,7 +110,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Ручной ввод"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold"/>
 
@@ -118,7 +118,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_chevron_right"
-                app:tint="#FFFFFF"
+                app:tint="@color/icon_color"
                 android:contentDescription=""/>
 
         </LinearLayout>

@@ -1,7 +1,6 @@
 package com.example.cogcdat_2;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -10,12 +9,12 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.app.Dialog;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +23,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,19 +43,24 @@ public class AddCarActivity extends AppCompatActivity {
 
     // УДАЛЕНЫ: etBrand, etModel, etYear, etLicensePlate, etVin, etInsurancePolicy
     private EditText etName, etDescription, etFuelType, etTankVolume;
-    private Spinner spinnerDistanceUnit, spinnerFuelUnit, spinnerFuelConsumption;
+    private MaterialButton btnDistanceUnit, btnFuelUnit, btnFuelConsumption;
     private Button btnSave, btnBack, btnAddPhoto;
     private ImageView ivCarPhoto;
 
     private DatabaseHelper dbHelper;
     private String selectedImagePath = null;
     private boolean isFirstLaunch = false;
+    
+    // Выбранные единицы измерения
+    private String selectedDistanceUnit = "км";
+    private String selectedFuelUnit = "л";
+    private String selectedFuelConsumptionUnit = "л/100км";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Используем более простой макет
-        setContentView(R.layout.activity_add_car_simple);
+        setContentView(R.layout.activity_add_car);
 
         dbHelper = new DatabaseHelper(this);
 
@@ -56,7 +68,7 @@ public class AddCarActivity extends AppCompatActivity {
 
         initViews();
         setupListeners();
-        setupSpinners();
+        setupUnitButtons();
 
         if (isFirstLaunch) {
             btnBack.setVisibility(View.GONE);
@@ -71,39 +83,108 @@ public class AddCarActivity extends AppCompatActivity {
         etFuelType = findViewById(R.id.etFuelType);
         etTankVolume = findViewById(R.id.etTankVolume);
 
-        spinnerDistanceUnit = findViewById(R.id.spinnerDistanceUnit);
-        spinnerFuelUnit = findViewById(R.id.spinnerFuelUnit);
-        spinnerFuelConsumption = findViewById(R.id.spinnerFuelConsumption);
+        btnDistanceUnit = findViewById(R.id.btnDistanceUnit);
+        btnFuelUnit = findViewById(R.id.btnFuelUnit);
+        btnFuelConsumption = findViewById(R.id.btnFuelConsumption);
         btnSave = findViewById(R.id.btnSave);
         btnBack = findViewById(R.id.btnBack);
         btnAddPhoto = findViewById(R.id.btnAddPhoto);
         ivCarPhoto = findViewById(R.id.ivCarPhoto);
+        
+        // Разрешаем многострочный текст для кнопок единиц измерения
+        btnDistanceUnit.setMaxLines(2);
+        btnDistanceUnit.setSingleLine(false);
+        btnFuelUnit.setMaxLines(2);
+        btnFuelUnit.setSingleLine(false);
+        btnFuelConsumption.setMaxLines(2);
+        btnFuelConsumption.setSingleLine(false);
+        
+        // Устанавливаем начальные значения на кнопках
+        btnDistanceUnit.setText(selectedDistanceUnit);
+        btnFuelUnit.setText(selectedFuelUnit);
+        btnFuelConsumption.setText(selectedFuelConsumptionUnit);
     }
 
     private void setupListeners() {
         btnSave.setOnClickListener(v -> saveCar());
         btnBack.setOnClickListener(v -> finish());
         btnAddPhoto.setOnClickListener(v -> checkPermissionAndOpenPicker());
+        btnDistanceUnit.setOnClickListener(v -> showUnitSelectorDialog(
+                getResources().getStringArray(R.array.distance_units),
+                "Выберите единицу расстояния",
+                selectedDistanceUnit,
+                unit -> {
+                    selectedDistanceUnit = unit;
+                    btnDistanceUnit.setText(unit);
+                }));
+        btnFuelUnit.setOnClickListener(v -> showUnitSelectorDialog(
+                getResources().getStringArray(R.array.fuel_units),
+                "Выберите единицу топлива",
+                selectedFuelUnit,
+                unit -> {
+                    selectedFuelUnit = unit;
+                    btnFuelUnit.setText(unit);
+                }));
+        btnFuelConsumption.setOnClickListener(v -> showUnitSelectorDialog(
+                getResources().getStringArray(R.array.fuel_consumption_units),
+                "Выберите единицу расхода топлива",
+                selectedFuelConsumptionUnit,
+                unit -> {
+                    selectedFuelConsumptionUnit = unit;
+                    btnFuelConsumption.setText(unit);
+                }));
     }
 
-    private void setupSpinners() {
-        // Настройка спиннера для единиц расстояния
-        ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(this,
-                R.array.distance_units, android.R.layout.simple_spinner_item);
-        distanceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerDistanceUnit.setAdapter(distanceAdapter);
-
-        // Настройка спиннера для единиц топлива
-        ArrayAdapter<CharSequence> fuelAdapter = ArrayAdapter.createFromResource(this,
-                R.array.fuel_units, android.R.layout.simple_spinner_item);
-        fuelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerFuelUnit.setAdapter(fuelAdapter);
-
-        // Настройка спиннера для единиц расхода топлива
-        ArrayAdapter<CharSequence> consumptionAdapter = ArrayAdapter.createFromResource(this,
-                R.array.fuel_consumption_units, android.R.layout.simple_spinner_item);
-        consumptionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerFuelConsumption.setAdapter(consumptionAdapter);
+    private void setupUnitButtons() {
+        // Метод оставлен для совместимости, но больше не используется
+    }
+    
+    private void showUnitSelectorDialog(String[] units, String title, String currentSelection, UnitAdapter.OnUnitSelectedListener listener) {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_unit_selector, null);
+        
+        TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
+        RecyclerView rvUnits = dialogView.findViewById(R.id.rv_units);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_unit);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_unit);
+        
+        tvTitle.setText(title);
+        
+        List<String> unitsList = new ArrayList<>(Arrays.asList(units));
+        // Создаем адаптер без listener, чтобы выбор не применялся сразу
+        UnitAdapter adapter = new UnitAdapter(unitsList, null);
+        
+        // Находим позицию текущего выбора
+        int currentPosition = unitsList.indexOf(currentSelection);
+        if (currentPosition >= 0) {
+            adapter.setSelectedPosition(currentPosition);
+        }
+        
+        rvUnits.setLayoutManager(new LinearLayoutManager(this));
+        rvUnits.setAdapter(adapter);
+        
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+        
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnConfirm.setOnClickListener(v -> {
+            String selectedUnit = adapter.getSelectedUnit();
+            // Если ничего не выбрано, используем текущий выбор
+            if (selectedUnit == null) {
+                selectedUnit = currentSelection;
+            }
+            if (selectedUnit != null && listener != null) {
+                listener.onUnitSelected(selectedUnit);
+            }
+            dialog.dismiss();
+        });
+        
+        dialog.show();
+        
+        // Настройка стиля диалога
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
     }
 
     private void saveCar() {
@@ -132,9 +213,9 @@ public class AddCarActivity extends AppCompatActivity {
                 name,
                 etDescription.getText().toString().trim(),
                 selectedImagePath,
-                spinnerDistanceUnit.getSelectedItem().toString(),
-                spinnerFuelUnit.getSelectedItem().toString(),
-                spinnerFuelConsumption.getSelectedItem().toString(),
+                selectedDistanceUnit,
+                selectedFuelUnit,
+                selectedFuelConsumptionUnit,
                 etFuelType.getText().toString().trim(),
                 tankVolume
         );

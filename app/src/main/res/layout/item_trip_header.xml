@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:text="Ноябрь 2025"
         android:textSize="18sp"
-        android:textColor="#FF5722"
+        android:textColor="@color/accent"
         android:textStyle="bold" />
 
 </LinearLayout>

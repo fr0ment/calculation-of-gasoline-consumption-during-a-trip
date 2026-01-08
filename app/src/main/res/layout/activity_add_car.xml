@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="#303245">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -12,12 +12,14 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Добавлен id tvTitle -->
         <TextView
+            android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Добавить автомобиль"
             android:textSize="24sp"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
@@ -26,11 +28,11 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginBottom="8dp"
-            android:background="#2A2D3E"
-            android:contentDescription="Фото автомобиля"
+            android:background="@color/card_background_secondary"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_car_outline"
             android:padding="30dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_car_outline" />
+            android:contentDescription="Фото автомобиля"/>
 
         <Button
             android:id="@+id/btnAddPhoto"
@@ -51,8 +53,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapSentences"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -69,8 +71,8 @@
                 android:lines="3"
                 android:maxLines="5"
                 android:gravity="top|start"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -84,8 +86,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapCharacters"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -98,16 +100,17 @@
                 android:id="@+id/etTankVolume"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:inputType="numberDecimal|numberSigned"
+                android:digits="0123456789."
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Единицы измерения"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="8dp"
@@ -120,33 +123,42 @@
             android:weightSum="3"
             android:layout_marginBottom="16dp">
 
-            <Spinner
-                android:id="@+id/spinnerDistanceUnit"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDistanceUnit"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="72dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
-                android:backgroundTint="#FFFFFF"
-                android:popupBackground="#41445A"/>
+                android:text="км"
+                android:textColor="@color/text_primary"
+                android:backgroundTint="@color/card_background_secondary"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="12dp" />
 
-            <Spinner
-                android:id="@+id/spinnerFuelUnit"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFuelUnit"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="72dp"
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="4dp"
-                android:backgroundTint="#FFFFFF"
-                android:popupBackground="#41445A"/>
+                android:text="л"
+                android:textColor="@color/text_primary"
+                android:backgroundTint="@color/card_background_secondary"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="12dp" />
 
-            <Spinner
-                android:id="@+id/spinnerFuelConsumption"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFuelConsumption"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="72dp"
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
-                android:backgroundTint="#FFFFFF"
-                android:popupBackground="#41445A"/>
+                android:text="л/100км"
+                android:textColor="@color/text_primary"
+                android:backgroundTint="@color/card_background_secondary"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="12dp" />
         </LinearLayout>
 
         <TextView
@@ -154,7 +166,7 @@
             android:layout_height="wrap_content"
             android:text="* - обязательные поля"
             android:textSize="12sp"
-            android:textColor="#AAAAAA"
+            android:textColor="@color/text_hint"
             android:layout_marginBottom="24dp" />
 
         <LinearLayout
@@ -171,7 +183,8 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:text="Назад"
-                android:backgroundTint="#6C757D"
+                android:textColor="@color/text_primary"
+                android:backgroundTint="@color/card_background_secondary"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
             <Button
@@ -181,7 +194,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="Сохранить"
-                android:backgroundTint="#4A6EFF"
+                android:backgroundTint="@color/primary"
                 style="@style/Widget.Material3.Button" />
         </LinearLayout>
     </LinearLayout>

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="#303245">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:text="Редактировать"
             android:textSize="24sp"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginBottom="8dp"
-            android:background="#2A2D3E"
+            android:background="@color/card_background_secondary"
             android:contentDescription="Фото автомобиля"
             android:padding="30dp"
             android:scaleType="fitCenter"
@@ -51,8 +51,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapSentences"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -69,8 +69,8 @@
                 android:lines="3"
                 android:maxLines="5"
                 android:gravity="top|start"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -84,8 +84,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textCapCharacters"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -99,15 +99,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#CCCCCC" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Единицы измерения"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="8dp"
@@ -126,8 +126,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
-                android:backgroundTint="#FFFFFF"
-                android:popupBackground="#41445A" />
+                android:backgroundTint="@color/icon_color"
+                android:popupBackground="@color/dialog_background" />
 
             <Spinner
                 android:id="@+id/spinnerFuelUnit"
@@ -137,7 +137,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_marginEnd="4dp"
                 android:backgroundTint="#FFFFFF"
-                android:popupBackground="#41445A"/>
+                android:popupBackground="@color/dialog_background"/>
 
             <Spinner
                 android:id="@+id/spinnerFuelConsumption"
@@ -146,7 +146,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="4dp"
                 android:backgroundTint="#FFFFFF"
-                android:popupBackground="#41445A"/>
+                android:popupBackground="@color/dialog_background"/>
         </LinearLayout>
 
         <TextView
@@ -154,7 +154,7 @@
             android:layout_height="wrap_content"
             android:text="* - обязательные поля"
             android:textSize="12sp"
-            android:textColor="#AAAAAA"
+            android:textColor="@color/text_hint"
             android:layout_marginBottom="24dp" />
 
         <LinearLayout
@@ -181,7 +181,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="Сохранить"
-                android:backgroundTint="#4A6EFF"
+                android:backgroundTint="@color/primary"
                 style="@style/Widget.Material3.Button" />
         </LinearLayout>
     </LinearLayout>
