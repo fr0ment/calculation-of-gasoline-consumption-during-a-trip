@@ -544,7 +544,7 @@ public class TripsFragment extends Fragment {
 
                 tripHolder.tvName.setText(trip.getName());
                 tripHolder.tvDateTime.setText(formatDateTime(trip.getStartDateTime()));
-                tripHolder.tvDistance.setText(String.format(Locale.getDefault(), "%.1f %s", trip.getDistance(), distanceUnit));
+                tripHolder.tvDistance.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getDistance(), distanceUnit));
                 tripHolder.tvFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelSpent(), fuelUnit));
                 tripHolder.tvFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelConsumption(), consumptionUnit));
                 tripHolder.tvDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));

@@ -96,7 +96,7 @@ public class TripDetailsActivity extends AppCompatActivity {
         String fuelUnit = car != null ? car.getFuelUnit() : "л";
         String consumptionUnit = car != null ? car.getFuelConsumptionUnit() : "л/100км";
 
-        tvTripDistance.setText(String.format(Locale.getDefault(), "%.1f %s", trip.getDistance(), distanceUnit));
+        tvTripDistance.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getDistance(), distanceUnit));
         tvTripFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelSpent(), fuelUnit));
         tvTripFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelConsumption(), consumptionUnit));
         tvTripDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));

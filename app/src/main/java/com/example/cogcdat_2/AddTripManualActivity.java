@@ -149,6 +149,17 @@ public class AddTripManualActivity extends AppCompatActivity {
         btnSelectEndTime.setText(DISPLAY_TIME_FORMAT.format(endDateTime.getTime()));
     }
 
+    // --- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
+
+    private double parseDoubleWithComma(String input) throws NumberFormatException {
+        if (input == null || input.trim().isEmpty()) {
+            return 0.0;
+        }
+        // Заменяем запятую на точку для корректного парсинга
+        String normalized = input.trim().replace(',', '.');
+        return Double.parseDouble(normalized);
+    }
+
     // --- СОХРАНЕНИЕ И ВАЛИДАЦИЯ ---
 
     private void saveTrip() {
@@ -167,7 +178,7 @@ public class AddTripManualActivity extends AppCompatActivity {
         try {
             String distanceStr = etDistance.getText().toString();
             if (!distanceStr.isEmpty()) {
-                distance = Double.parseDouble(distanceStr);
+                distance = parseDoubleWithComma(distanceStr);
             }
         } catch (NumberFormatException e) {
             etDistance.setError("Некорректное значение расстояния.");
@@ -177,7 +188,7 @@ public class AddTripManualActivity extends AppCompatActivity {
         try {
             String fuelSpentStr = etFuelSpent.getText().toString();
             if (!fuelSpentStr.isEmpty()) {
-                fuelSpent = Double.parseDouble(fuelSpentStr);
+                fuelSpent = parseDoubleWithComma(fuelSpentStr);
             }
         } catch (NumberFormatException e) {
             etFuelSpent.setError("Некорректное значение топлива.");

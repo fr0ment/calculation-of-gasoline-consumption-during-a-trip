@@ -217,9 +217,9 @@ public class AnalyticsFragment extends Fragment {
             consumptionUnit = selectedCar.getFuelConsumptionUnit();
         }
 
-        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.0f %s", totalDistance, distanceUnit));
-        tvTotalFuel.setText(String.format(Locale.getDefault(), "%.1f %s", totalFuel, fuelUnit));
-        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.1f %s", avgConsumption, consumptionUnit));
+        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.2f %s", totalDistance, distanceUnit));
+        tvTotalFuel.setText(String.format(Locale.getDefault(), "%.2f %s", totalFuel, fuelUnit));
+        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", avgConsumption, consumptionUnit));
     }
 
     private void updateChart() {
