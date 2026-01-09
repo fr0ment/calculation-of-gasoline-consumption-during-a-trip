@@ -46,7 +46,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_car"
+                android:src="@drawable/gps_fixed"
                 android:contentDescription="Запись GPS"
                 app:tint="@color/white"
                 android:layout_marginEnd="16dp"/>
@@ -91,10 +91,10 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_car"
+                android:src="@drawable/pencil_fill"
                 android:contentDescription="Добавить вручную"
                 android:layout_marginEnd="16dp"
-                android:tint="@color/colorOnPrimary"/>
+                app:tint="@color/colorOnPrimary"/>
 
             <TextView
                 android:layout_width="0dp"
