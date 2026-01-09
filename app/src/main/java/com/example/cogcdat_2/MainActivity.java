@@ -1,11 +1,13 @@
 package com.example.cogcdat_2;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -19,6 +21,51 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Проверяем, есть ли машины
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        boolean hasCars = !dbHelper.getAllCars().isEmpty();
+
+        if (hasCars) {
+            // Если машины есть, показываем основной интерфейс
+            initializeMainUI(savedInstanceState);
+        } else {
+            // Если машин нет, показываем приветственный экран в этой же активности
+            showWelcomeScreen();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Проверяем, есть ли машины при возвращении в активность
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        boolean hasCars = !dbHelper.getAllCars().isEmpty();
+
+        if (hasCars) {
+            // Если машины появились, переключаемся на основной интерфейс
+            initializeMainUI(null);
+        }
+        // Если машин нет, остаемся на приветственном экране
+    }
+
+    private void showWelcomeScreen() {
+        setContentView(R.layout.activity_welcome);
+
+        Button btnContinue = findViewById(R.id.btn_continue);
+        btnContinue.setOnClickListener(v -> {
+            // Отмечаем, что первый запуск завершен
+            SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+            prefs.edit().putBoolean("is_first_launch", false).apply();
+
+            // Переходим к добавлению автомобиля
+            Intent intent = new Intent(MainActivity.this, AddCarActivity.class);
+            startActivity(intent);
+        });
+    }
+
+    private void initializeMainUI(Bundle savedInstanceState) {
         setContentView(R.layout.activity_main);
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -34,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         requestNotificationPermission();
-
     }
 
     private void requestNotificationPermission() {

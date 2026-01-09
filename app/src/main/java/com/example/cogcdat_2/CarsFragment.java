@@ -247,6 +247,15 @@ public class CarsFragment extends Fragment {
             if (deleted) {
                 loadCars();
                 Toast.makeText(getContext(), "Автомобиль удален", Toast.LENGTH_SHORT).show();
+
+                // Проверяем, остались ли автомобили
+                if (dbHelper.getAllCars().isEmpty()) {
+                    // Если автомобилей нет, перезапускаем MainActivity для показа приветственного экрана
+                    Intent intent = new Intent(getActivity(), MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    getActivity().finish();
+                }
             } else {
                 Toast.makeText(getContext(), "Ошибка при удалении", Toast.LENGTH_SHORT).show();
             }
