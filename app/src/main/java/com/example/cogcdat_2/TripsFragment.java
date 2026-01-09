@@ -554,6 +554,12 @@ public class TripsFragment extends Fragment {
                     intent.putExtra("trip_id", trip.getId());
                     startActivity(intent);
                 });
+
+                // Обработчик долгого нажатия по карточке поездки
+                tripHolder.itemView.setOnLongClickListener(v -> {
+                    showEditDeleteDialog(trip);
+                    return true;
+                });
             }
         }
 
@@ -604,6 +610,39 @@ public class TripsFragment extends Fragment {
                 tvFuelSpent = itemView.findViewById(R.id.tv_trip_fuel_spent);
                 tvFuelConsumption = itemView.findViewById(R.id.tv_trip_fuel_consumption);
             }
+        }
+    }
+
+    private void showEditDeleteDialog(Trip trip) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_delete_options, null);
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        View cardEdit = dialogView.findViewById(R.id.card_edit);
+        View cardDelete = dialogView.findViewById(R.id.card_delete);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+
+        cardEdit.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), EditTripActivity.class);
+            intent.putExtra("trip_id", trip.getId());
+            startActivity(intent);
+            dialog.dismiss();
+        });
+
+        cardDelete.setOnClickListener(v -> {
+            showDeleteConfirmation(trip);
+            dialog.dismiss();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+
+        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
     }
 

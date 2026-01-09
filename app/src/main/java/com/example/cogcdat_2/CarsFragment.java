@@ -8,9 +8,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -99,6 +102,7 @@ public class CarsFragment extends Fragment {
             holder.tvSpecs.setText(specs);
 
 
+
             // Загрузка изображения
             if (car.getImagePath() != null && !car.getImagePath().isEmpty()) {
                 loadImageSafe(holder.ivCarImage, car.getImagePath());
@@ -113,6 +117,12 @@ public class CarsFragment extends Fragment {
                 Intent intent = new Intent(getActivity(), CarDetailsActivity.class);
                 intent.putExtra("car_id", car.getId());
                 startActivity(intent);
+            });
+
+            // Обработчик долгого нажатия по карточке автомобиля
+            holder.itemView.setOnLongClickListener(v -> {
+                showEditDeleteDialog(car);
+                return true;
             });
         }
 
@@ -185,5 +195,69 @@ public class CarsFragment extends Fragment {
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         // Предполагается, что dark_bg_card_image - это существующий цвет
         // imageView.setBackgroundColor(getResources().getColor(R.color.dark_bg_card_image));
+    }
+
+    private void showEditDeleteDialog(Car car) {
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_edit_delete_options, null);
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(getContext())
+                .setView(dialogView)
+                .create();
+
+        View cardEdit = dialogView.findViewById(R.id.card_edit);
+        View cardDelete = dialogView.findViewById(R.id.card_delete);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+
+        cardEdit.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), EditCarActivity.class);
+            intent.putExtra("car_id", car.getId());
+            startActivity(intent);
+            dialog.dismiss();
+        });
+
+        cardDelete.setOnClickListener(v -> {
+            showDeleteConfirmation(car);
+            dialog.dismiss();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+
+        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+
+    private void showDeleteConfirmation(Car car) {
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_car_delete_confirmation, null);
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(getContext())
+                .setView(dialogView)
+                .create();
+
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_delete);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_delete);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            boolean deleted = dbHelper.deleteCar(car.getId());
+            if (deleted) {
+                loadCars();
+                Toast.makeText(getContext(), "Автомобиль удален", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Ошибка при удалении", Toast.LENGTH_SHORT).show();
+            }
+            dialog.dismiss();
+        });
+
+        dialog.show();
+
+        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
     }
 }
