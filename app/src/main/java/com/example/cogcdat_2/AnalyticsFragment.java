@@ -42,7 +42,6 @@ public class AnalyticsFragment extends Fragment {
     private TextView tvTotalDistance, tvTotalFuel, tvAvgConsumption;
     private TextView tvNoData, tvWarningTitle, tvWarningDetails;
     private LineChart chartFuelConsumption;
-    private View cardWarnings;
     private View carSelectionView;
     private ImageView ivSelectedCarIcon;
     private TextView tvSelectedCarName;
@@ -68,6 +67,11 @@ public class AnalyticsFragment extends Fragment {
     private View layoutMonitoringSection;
     private View layoutChart;
 
+    // Настройки для определения аномалий
+    private static final double CONSUMPTION_THRESHOLD_PERCENT = 15.0; // 15%
+    private static final int RECENT_TRIPS_COUNT = 5;
+    private static final int MIN_TRIPS_FOR_ANALYSIS = RECENT_TRIPS_COUNT + 1; // минимум 6 поездок
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_analytics, container, false);
@@ -91,7 +95,6 @@ public class AnalyticsFragment extends Fragment {
         tvTotalFuel = view.findViewById(R.id.tv_total_fuel);
         tvAvgConsumption = view.findViewById(R.id.tv_avg_consumption);
         chartFuelConsumption = view.findViewById(R.id.chart_fuel_consumption);
-        cardWarnings = view.findViewById(R.id.card_warnings);
         layoutMonitoringSection = view.findViewById(R.id.layout_monitoring_section);
         layoutChart = view.findViewById(R.id.layout_chart);
         tvNoData = view.findViewById(R.id.tv_no_data);
@@ -166,7 +169,6 @@ public class AnalyticsFragment extends Fragment {
 
         tvNoData.setVisibility(View.GONE);
         layoutChart.setVisibility(View.VISIBLE);
-        cardWarnings.setVisibility(View.GONE); // пока скрываем, можно включить позже
     }
 
     private void calculateTotals() {
@@ -205,9 +207,19 @@ public class AnalyticsFragment extends Fragment {
     }
 
     private void updateStatistics() {
-        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.0f км", totalDistance));
-        tvTotalFuel.setText(String.format(Locale.getDefault(), "%.1f л", totalFuel));
-        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.1f л/100км", avgConsumption));
+        String distanceUnit = "км";
+        String fuelUnit = "л";
+        String consumptionUnit = "л/100км";
+
+        if (selectedCar != null) {
+            distanceUnit = selectedCar.getDistanceUnit();
+            fuelUnit = selectedCar.getFuelUnit();
+            consumptionUnit = selectedCar.getFuelConsumptionUnit();
+        }
+
+        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.0f %s", totalDistance, distanceUnit));
+        tvTotalFuel.setText(String.format(Locale.getDefault(), "%.1f %s", totalFuel, fuelUnit));
+        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.1f %s", avgConsumption, consumptionUnit));
     }
 
     private void updateChart() {
@@ -231,6 +243,20 @@ public class AnalyticsFragment extends Fragment {
         dataSet.setValueTextColor(getResources().getColor(R.color.text_primary, null));
         dataSet.setLineWidth(2.5f);
         dataSet.setCircleRadius(4f);
+
+        // ── Добавляем правильные единицы измерения на график ──
+        String consumptionUnit = "л/100км";
+        if (selectedCar != null) {
+            consumptionUnit = selectedCar.getFuelConsumptionUnit();
+        }
+
+        final String finalUnit = consumptionUnit;
+        dataSet.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.format(Locale.getDefault(), "%.1f %s", value, finalUnit);
+            }
+        });
 
         LineData lineData = new LineData(dataSet);
         chartFuelConsumption.setData(lineData);
@@ -256,8 +282,73 @@ public class AnalyticsFragment extends Fragment {
     }
 
     private void checkAnomalies() {
-        // Можно включить позже — пока просто скрываем карточку
-        cardWarnings.setVisibility(View.GONE);
+        layoutMonitoringSection.setVisibility(View.GONE);
+        if (selectedCar == null) return;
+
+        List<Trip> trips = dbHelper.getTripsForCar(selectedCar.getId());
+        if (trips.size() < MIN_TRIPS_FOR_ANALYSIS) {
+            return; // недостаточно данных
+        }
+
+        // Сортируем от новых к старым
+        trips.sort((t1, t2) -> {
+            try {
+                Date d1 = DB_DATE_FORMAT.parse(t1.getStartDateTime());
+                Date d2 = DB_DATE_FORMAT.parse(t2.getStartDateTime());
+                return d2.compareTo(d1); // новые сверху
+            } catch (ParseException e) {
+                return 0;
+            }
+        });
+
+        AnomalyResult anomaly = detectConsumptionAnomaly(trips);
+        if (anomaly != null) {
+            tvWarningTitle.setText("Повышенный расход топлива!");
+            tvWarningDetails.setText(anomaly.getWarningMessage());
+            layoutMonitoringSection.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private AnomalyResult detectConsumptionAnomaly(List<Trip> sortedTripsNewestFirst) {
+        // Последние (самые новые) поездки — первые в списке
+        List<Trip> recent = sortedTripsNewestFirst.subList(0, RECENT_TRIPS_COUNT);
+
+        // Всё остальное — предыдущие
+        List<Trip> previous = sortedTripsNewestFirst.subList(RECENT_TRIPS_COUNT, sortedTripsNewestFirst.size());
+
+        double recentAvg = calculateAverageConsumption(recent);
+        double previousAvg = calculateAverageConsumption(previous);
+
+        if (previousAvg <= 0 || recentAvg <= 0) {
+            return null;
+        }
+
+        double increasePercent = ((recentAvg - previousAvg) / previousAvg) * 100;
+
+        if (increasePercent >= CONSUMPTION_THRESHOLD_PERCENT) {
+            return new AnomalyResult(
+                    selectedCar.getName(),
+                    increasePercent,
+                    recentAvg,
+                    previousAvg
+            );
+        }
+
+        return null;
+    }
+
+    private double calculateAverageConsumption(List<Trip> trips) {
+        if (trips == null || trips.isEmpty()) return 0.0;
+
+        double totalDist = 0.0;
+        double totalFuel = 0.0;
+
+        for (Trip t : trips) {
+            totalDist += t.getDistance();
+            totalFuel += t.getFuelSpent();
+        }
+
+        return totalDist > 0 ? (totalFuel / totalDist) * 100 : 0.0;
     }
 
     private void showNoDataState() {
@@ -333,6 +424,26 @@ public class AnalyticsFragment extends Fragment {
         dialog.show();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+    private static class AnomalyResult {
+        final String carName;
+        final double increasePercent;
+        final double recentAvg;
+        final double previousAvg;
+
+        AnomalyResult(String carName, double increasePercent, double recentAvg, double previousAvg) {
+            this.carName = carName;
+            this.increasePercent = increasePercent;
+            this.recentAvg = recentAvg;
+            this.previousAvg = previousAvg;
+        }
+
+        String getWarningMessage() {
+            return String.format(Locale.getDefault(),
+                    "Последние %d поездок на автомобиле «%s» показывают расход на %.1f%% выше среднего\n" +
+                            "(было: %.1f л/100 км, стало: %.1f л/100 км)",
+                    RECENT_TRIPS_COUNT, carName, increasePercent, previousAvg, recentAvg);
         }
     }
 }
