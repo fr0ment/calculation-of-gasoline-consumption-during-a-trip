@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -132,23 +133,33 @@ public class CarDetailsActivity extends AppCompatActivity {
     }
 
     private void deleteCar() {
-        new AlertDialog.Builder(this)
-                .setTitle("Удаление автомобиля")
-                .setMessage("Вы уверены, что хотите удалить автомобиль \"" + car.getName() + "\"?")
-                .setPositiveButton("Удалить", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        boolean deleted = dbHelper.deleteCar(carId);
-                        if (deleted) {
-                            Toast.makeText(CarDetailsActivity.this, "Автомобиль удален", Toast.LENGTH_SHORT).show();
-                            finish();
-                        } else {
-                            Toast.makeText(CarDetailsActivity.this, "Ошибка при удалении", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_car_delete_confirmation, null);
+
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_delete);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_delete);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            boolean deleted = dbHelper.deleteCar(carId);
+            if (deleted) {
+                Toast.makeText(CarDetailsActivity.this, "Автомобиль удален", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(CarDetailsActivity.this, "Ошибка при удалении", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+
+        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
     }
 
     /**

@@ -607,7 +607,7 @@ public class TripsFragment extends Fragment {
     }
 
     private void showDeleteConfirmation(Trip trip) {
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_delete_confirmation, null);
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_trip_delete_confirmation, null);
 
         androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setView(dialogView)
