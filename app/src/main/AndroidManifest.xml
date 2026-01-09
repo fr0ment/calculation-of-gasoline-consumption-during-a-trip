@@ -56,7 +56,12 @@
         <activity
             android:name=".EditCarActivity"
             android:exported="false" />
-
+        <activity
+            android:name=".EditTripActivity"
+            android:exported="false" />
+        <activity
+            android:name=".TripDetailsActivity"
+            android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.cogcdat_2.fileprovider"

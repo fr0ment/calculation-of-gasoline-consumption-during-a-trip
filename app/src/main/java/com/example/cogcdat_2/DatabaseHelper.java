@@ -15,7 +15,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "cars.db";
     // Увеличиваем версию БД для корректного обновления схемы!
-    private static final int DATABASE_VERSION = 8;
+    private static final int DATABASE_VERSION = 9;
 
     // Константы для таблицы Cars
     private static final String TABLE_CARS = "cars";
@@ -204,6 +204,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     /**
+     * Получение поездки по ID.
+     */
+    public Trip getTrip(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(TABLE_TRIPS, new String[]{
+                        COLUMN_TRIP_ID, COLUMN_CAR_ID, COLUMN_TRIP_NAME,
+                        COLUMN_TRIP_START_DATETIME, COLUMN_TRIP_END_DATETIME,
+                        COLUMN_TRIP_DISTANCE, COLUMN_TRIP_FUEL_SPENT, COLUMN_TRIP_FUEL_CONSUMPTION},
+                COLUMN_TRIP_ID + "=?",
+                new String[]{String.valueOf(id)}, null, null, null, null);
+
+        Trip trip = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            trip = new Trip();
+            trip.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TRIP_ID)));
+            trip.setName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_NAME)));
+            trip.setCarId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CAR_ID)));
+            trip.setStartDateTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_START_DATETIME)));
+            trip.setEndDateTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_END_DATETIME)));
+            trip.setDistance(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_DISTANCE)));
+            trip.setFuelSpent(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_FUEL_SPENT)));
+            trip.setFuelConsumption(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_FUEL_CONSUMPTION)));
+            cursor.close();
+        }
+        db.close();
+        return trip;
+    }
+
+    /**
      * Получение всех поездок для конкретного автомобиля.
      */
     public List<Trip> getTripsForCar(int carId) {
@@ -230,6 +260,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return tripList;
+    }
+
+    /**
+     * Обновление поездки.
+     */
+    public boolean updateTrip(Trip trip) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_TRIP_NAME, trip.getName());
+        values.put(COLUMN_TRIP_START_DATETIME, trip.getStartDateTime());
+        values.put(COLUMN_TRIP_END_DATETIME, trip.getEndDateTime());
+        values.put(COLUMN_TRIP_DISTANCE, trip.getDistance());
+        values.put(COLUMN_TRIP_FUEL_SPENT, trip.getFuelSpent());
+        values.put(COLUMN_TRIP_FUEL_CONSUMPTION, trip.getFuelConsumption());
+
+        int rowsAffected = db.update(TABLE_TRIPS, values,
+                COLUMN_TRIP_ID + " = ?", new String[]{String.valueOf(trip.getId())});
+        db.close();
+
+        return rowsAffected > 0;
     }
 
     /**

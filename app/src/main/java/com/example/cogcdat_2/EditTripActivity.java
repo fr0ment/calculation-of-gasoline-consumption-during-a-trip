@@ -17,22 +17,21 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class AddTripManualActivity extends AppCompatActivity {
+public class EditTripActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
-    private int carId;
+    private int tripId;
+    private Trip trip;
 
     // Поля ввода
     private EditText etTripName;
     private EditText etDistance;
     private EditText etFuelSpent;
-    // private EditText etDescription; // УДАЛЕНО
     private Button btnSelectStartDate;
     private Button btnSelectStartTime;
     private Button btnSelectEndDate;
     private Button btnSelectEndTime;
     private Button btnSaveTrip;
-
     private Button btnBack;
 
     // Календари для хранения выбранной даты и времени
@@ -45,17 +44,24 @@ public class AddTripManualActivity extends AppCompatActivity {
     private static final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
     private static final SimpleDateFormat DISPLAY_TIME_FORMAT = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_trip_manual);
+        setContentView(R.layout.activity_edit_trip);
 
         dbHelper = new DatabaseHelper(this);
-        carId = getIntent().getIntExtra("car_id", -1);
+        tripId = getIntent().getIntExtra("trip_id", -1);
 
-        if (carId == -1) {
-            Toast.makeText(this, "Ошибка: Автомобиль не выбран.", Toast.LENGTH_LONG).show();
+        if (tripId == -1) {
+            Toast.makeText(this, "Ошибка: Поездка не выбрана.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        // Загружаем поездку
+        trip = getTripById(tripId);
+        if (trip == null) {
+            Toast.makeText(this, "Поездка не найдена.", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -64,16 +70,14 @@ public class AddTripManualActivity extends AppCompatActivity {
         etTripName = findViewById(R.id.et_trip_name);
         etDistance = findViewById(R.id.et_distance);
         etFuelSpent = findViewById(R.id.et_fuel_spent);
-        // etDescription = findViewById(R.id.et_description); // УДАЛЕНО
         btnSelectStartDate = findViewById(R.id.btn_select_start_date);
         btnSelectStartTime = findViewById(R.id.btn_select_start_time);
         btnSelectEndDate = findViewById(R.id.btn_select_end_date);
         btnSelectEndTime = findViewById(R.id.btn_select_end_time);
         btnSaveTrip = findViewById(R.id.btn_save_trip);
         btnBack = findViewById(R.id.btnBack);
-
-        // Установка текущей даты/времени по умолчанию
-        updateDateTimeButtons();
+        // Загружаем данные в поля
+        loadTripData();
 
         // Установка слушателей
         btnSelectStartDate.setOnClickListener(v -> showDatePicker(startDateTime, true));
@@ -83,6 +87,36 @@ public class AddTripManualActivity extends AppCompatActivity {
 
         btnSaveTrip.setOnClickListener(v -> saveTrip());
         btnBack.setOnClickListener(v -> finish());
+    }
+
+    private Trip getTripById(int id) {
+        // Обходной путь, как в TripDetailsActivity
+        for (Car car : dbHelper.getAllCars()) {
+            for (Trip t : dbHelper.getTripsForCar(car.getId())) {
+                if (t.getId() == id) {
+                    return t;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void loadTripData() {
+        etTripName.setText(trip.getName());
+        etDistance.setText(String.format(Locale.getDefault(), "%.1f", trip.getDistance()));
+        etFuelSpent.setText(String.format(Locale.getDefault(), "%.2f", trip.getFuelSpent()));
+
+        // Парсим даты
+        try {
+            startDateTime.setTime(DB_DATE_FORMAT.parse(trip.getStartDateTime()));
+            endDateTime.setTime(DB_DATE_FORMAT.parse(trip.getEndDateTime()));
+        } catch (ParseException e) {
+            // Используем текущую дату если ошибка
+            startDateTime = Calendar.getInstance();
+            endDateTime = Calendar.getInstance();
+        }
+
+        updateDateTimeButtons();
     }
 
     // --- ВЫБОР ДАТЫ/ВРЕМЕНИ ---
@@ -119,7 +153,7 @@ public class AddTripManualActivity extends AppCompatActivity {
 
     private void showTimePicker(Calendar calendar, boolean isStart) {
         MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H)           // или CLOCK_12H
+                .setTimeFormat(TimeFormat.CLOCK_24H)
                 .setHour(calendar.get(Calendar.HOUR_OF_DAY))
                 .setMinute(calendar.get(Calendar.MINUTE))
                 .setTitleText(isStart ? "Время начала" : "Время окончания")
@@ -197,35 +231,29 @@ public class AddTripManualActivity extends AppCompatActivity {
         // 3. Расчет расхода топлива
         double fuelConsumption = 0.0;
         if (distance > 0 && fuelSpent > 0) {
-            // Расход = (Топливо / Расстояние) * 100
             fuelConsumption = (fuelSpent / distance) * 100;
         }
 
         // 4. Форматирование дат
         String startDateTimeStr = DB_DATE_FORMAT.format(startDateTime.getTime());
         String endDateTimeStr = DB_DATE_FORMAT.format(endDateTime.getTime());
-        // String description = etDescription.getText().toString().trim(); // УДАЛЕНО
 
-        // 5. Создание и сохранение объекта Trip
-        Trip newTrip = new Trip(
-                carId,
-                name,
-                startDateTimeStr,
-                endDateTimeStr,
-                distance,
-                fuelSpent,
-                fuelConsumption
-        );
+        // 5. Обновление объекта Trip
+        trip.setName(name);
+        trip.setStartDateTime(startDateTimeStr);
+        trip.setEndDateTime(endDateTimeStr);
+        trip.setDistance(distance);
+        trip.setFuelSpent(fuelSpent);
+        trip.setFuelConsumption(fuelConsumption);
 
-        long result = dbHelper.addTrip(newTrip);
+        boolean success = dbHelper.updateTrip(trip);
 
-        if (result > 0) {
-            Toast.makeText(this, "Поездка успешно добавлена!", Toast.LENGTH_SHORT).show();
-            // Уведомляем TripsFragment об успешном добавлении
+        if (success) {
+            Toast.makeText(this, "Поездка успешно обновлена!", Toast.LENGTH_SHORT).show();
             setResult(RESULT_OK);
             finish();
         } else {
-            Toast.makeText(this, "Ошибка при добавлении поездки.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Ошибка при обновлении поездки.", Toast.LENGTH_SHORT).show();
         }
     }
 }

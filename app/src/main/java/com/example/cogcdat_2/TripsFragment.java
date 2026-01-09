@@ -549,9 +549,10 @@ public class TripsFragment extends Fragment {
                 tripHolder.tvFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelConsumption(), consumptionUnit));
                 tripHolder.tvDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));
 
-                tripHolder.itemView.setOnLongClickListener(v -> {
-                    showDeleteConfirmation(trip);
-                    return true;
+                tripHolder.itemView.setOnClickListener(v -> {
+                    Intent intent = new Intent(getContext(), TripDetailsActivity.class);
+                    intent.putExtra("trip_id", trip.getId());
+                    startActivity(intent);
                 });
             }
         }
