@@ -175,21 +175,31 @@ public class AddTripManualActivity extends AppCompatActivity {
         double distance = 0.0;
         double fuelSpent = 0.0;
 
+        // Валидация обязательного поля (Расстояние)
+        String distanceStr = etDistance.getText().toString().trim();
+        if (distanceStr.isEmpty()) {
+            etDistance.setError("Пройденное расстояние является обязательным полем!");
+            Toast.makeText(this, "Пожалуйста, введите пройденное расстояние.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         try {
-            String distanceStr = etDistance.getText().toString();
-            if (!distanceStr.isEmpty()) {
-                distance = parseDoubleWithComma(distanceStr);
-            }
+            distance = parseDoubleWithComma(distanceStr);
         } catch (NumberFormatException e) {
             etDistance.setError("Некорректное значение расстояния.");
             return;
         }
 
+        // Валидация обязательного поля (Топливо)
+        String fuelSpentStr = etFuelSpent.getText().toString().trim();
+        if (fuelSpentStr.isEmpty()) {
+            etFuelSpent.setError("Потраченное топливо является обязательным полем!");
+            Toast.makeText(this, "Пожалуйста, введите потраченное топливо.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         try {
-            String fuelSpentStr = etFuelSpent.getText().toString();
-            if (!fuelSpentStr.isEmpty()) {
-                fuelSpent = parseDoubleWithComma(fuelSpentStr);
-            }
+            fuelSpent = parseDoubleWithComma(fuelSpentStr);
         } catch (NumberFormatException e) {
             etFuelSpent.setError("Некорректное значение топлива.");
             return;
@@ -200,8 +210,21 @@ public class AddTripManualActivity extends AppCompatActivity {
             etDistance.setError("Расстояние должно быть больше 0.");
             return;
         }
+        if (fuelSpent <= 0) {
+            etFuelSpent.setError("Топливо должно быть больше 0.");
+            return;
+        }
         if (endDateTime.before(startDateTime)) {
             Toast.makeText(this, "Время окончания не может быть раньше времени начала.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        // Проверка минимальной длительности поездки (не менее 1 минуты)
+        long startMillis = startDateTime.getTimeInMillis();
+        long endMillis = endDateTime.getTimeInMillis();
+        long durationMillis = endMillis - startMillis;
+        long oneMinuteMillis = 60 * 1000; // 1 минута в миллисекундах
+        if (durationMillis < oneMinuteMillis) {
+            Toast.makeText(this, "Длительность поездки должна быть не менее 1 минуты.", Toast.LENGTH_LONG).show();
             return;
         }
 
