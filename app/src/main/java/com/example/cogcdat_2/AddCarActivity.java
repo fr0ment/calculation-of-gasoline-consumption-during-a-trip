@@ -94,7 +94,7 @@ public class AddCarActivity extends AppCompatActivity {
         // Устанавливаем начальные значения на кнопках
         btnDistanceUnit.setText(selectedDistanceUnit);
         btnFuelUnit.setText(selectedFuelUnit);
-        btnFuelConsumption.setText(selectedFuelConsumptionUnit);
+        updateFuelConsumptionUnit();
     }
 
     private void setupListeners() {
@@ -108,6 +108,7 @@ public class AddCarActivity extends AppCompatActivity {
                 unit -> {
                     selectedDistanceUnit = unit;
                     btnDistanceUnit.setText(unit);
+                    updateFuelConsumptionUnit();
                 }));
         btnFuelUnit.setOnClickListener(v -> showUnitSelectorDialog(
                 getResources().getStringArray(R.array.fuel_units),
@@ -116,15 +117,9 @@ public class AddCarActivity extends AppCompatActivity {
                 unit -> {
                     selectedFuelUnit = unit;
                     btnFuelUnit.setText(unit);
+                    updateFuelConsumptionUnit();
                 }));
-        btnFuelConsumption.setOnClickListener(v -> showUnitSelectorDialog(
-                getResources().getStringArray(R.array.fuel_consumption_units),
-                "Выберите единицу расхода топлива",
-                selectedFuelConsumptionUnit,
-                unit -> {
-                    selectedFuelConsumptionUnit = unit;
-                    btnFuelConsumption.setText(unit);
-                }));
+        // Удален listener для btnFuelConsumption, так как единица устанавливается автоматически
     }
 
     private void setupUnitButtons() {
@@ -369,6 +364,11 @@ public class AddCarActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void updateFuelConsumptionUnit() {
+        selectedFuelConsumptionUnit = selectedFuelUnit + "/100" + selectedDistanceUnit;
+        btnFuelConsumption.setText(selectedFuelConsumptionUnit);
     }
 
     private void setDefaultImage(ImageView imageView) {

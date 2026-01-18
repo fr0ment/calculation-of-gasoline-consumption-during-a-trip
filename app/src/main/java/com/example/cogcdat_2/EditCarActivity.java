@@ -134,6 +134,7 @@ public class EditCarActivity extends AppCompatActivity {
                 unit -> {
                     selectedDistanceUnit = unit;
                     btnDistanceUnit.setText(unit);
+                    updateFuelConsumptionUnit();
                 }));
 
         btnFuelUnit.setOnClickListener(v -> showUnitSelectorDialog(
@@ -143,16 +144,10 @@ public class EditCarActivity extends AppCompatActivity {
                 unit -> {
                     selectedFuelUnit = unit;
                     btnFuelUnit.setText(unit);
+                    updateFuelConsumptionUnit();
                 }));
 
-        btnFuelConsumption.setOnClickListener(v -> showUnitSelectorDialog(
-                getResources().getStringArray(R.array.fuel_consumption_units),
-                "Выберите единицу расхода топлива",
-                selectedFuelConsumptionUnit,
-                unit -> {
-                    selectedFuelConsumptionUnit = unit;
-                    btnFuelConsumption.setText(unit);
-                }));
+        // Удален listener для btnFuelConsumption, так как единица устанавливается автоматически
     }
 
     private void showUnitSelectorDialog(String[] units, String title, String currentSelection,
@@ -361,6 +356,11 @@ public class EditCarActivity extends AppCompatActivity {
                 if (outputStream != null) outputStream.close();
             } catch (Exception ignored) {}
         }
+    }
+
+    private void updateFuelConsumptionUnit() {
+        selectedFuelConsumptionUnit = selectedFuelUnit + "/100" + selectedDistanceUnit;
+        btnFuelConsumption.setText(selectedFuelConsumptionUnit);
     }
 
     private void setDefaultImage(android.widget.ImageView imageView) {
