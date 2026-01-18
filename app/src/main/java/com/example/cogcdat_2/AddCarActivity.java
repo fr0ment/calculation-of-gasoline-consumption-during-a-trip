@@ -251,29 +251,6 @@ public class AddCarActivity extends AppCompatActivity {
         return true;
     }
 
-    private void openImageChooser() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_MEDIA_IMAGES},
-                        PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
-                return;
-            }
-        } else if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P) {
-            // Для Android 9 и ниже нужно разрешение, для 10-12 обычно не нужно для ACTION_GET_CONTENT,
-            // но проверка не повредит
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
-                return;
-            }
-        }
-        launchImagePicker();
-    }
-
     private void launchImagePicker() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -294,7 +271,6 @@ public class AddCarActivity extends AppCompatActivity {
         }
     }
 
-    // --- ГЛАВНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ ---
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -307,7 +283,7 @@ public class AddCarActivity extends AppCompatActivity {
             String internalPath = copyImageToInternalStorage(uri);
 
             if (internalPath != null) {
-                // 2. Сохраняем ПУТЬ К ФАЙЛУ в переменную
+                // 2. Сохраняем путь к файлу в переменную
                 selectedImagePath = internalPath;
                 Log.d("ImageDebug", "Saved internal path: " + selectedImagePath);
 

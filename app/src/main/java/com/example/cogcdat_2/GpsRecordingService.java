@@ -200,18 +200,11 @@ public class GpsRecordingService extends Service implements LocationListener {
             }
             startLocationUpdates(); // Возобновляем GPS
         }
-
-        // Обновляем LiveData в репозитории, чтобы Activity обновило UI (статус и кнопки)
-        TripRecordingRepository.getInstance().setPaused(isPaused); // Используем метод репозитория
-        // Обновление уведомления
+        TripRecordingRepository.getInstance().setPaused(isPaused);
         updateNotification(totalDistanceKm, calculateCurrentDurationMs());
     }
 
     // --- Логика Времени ---
-
-    /**
-     * Рассчитывает общую продолжительность поездки (в мс) за вычетом времени паузы.
-     */
     private long calculateCurrentDurationMs() {
         if (timeStarted == 0) return 0;
 
@@ -228,7 +221,6 @@ public class GpsRecordingService extends Service implements LocationListener {
 
 
     // --- Уведомление ---
-
     private Notification buildNotification(double distanceKm, long durationMs) {
         // Создаем Intent для открытия Activity при клике на уведомление
         Intent notificationIntent = new Intent(this, GpsRecordingActivity.class);

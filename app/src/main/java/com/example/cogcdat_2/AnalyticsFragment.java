@@ -310,7 +310,6 @@ public class AnalyticsFragment extends Fragment {
     }
 
     private AnomalyResult detectConsumptionAnomaly(List<Trip> sortedTripsNewestFirst) {
-        // Последние (самые новые) поездки — первые в списке
         List<Trip> recent = sortedTripsNewestFirst.subList(0, RECENT_TRIPS_COUNT);
 
         // Всё остальное — предыдущие
