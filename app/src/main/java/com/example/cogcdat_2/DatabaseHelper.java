@@ -15,7 +15,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";
 
     private static final String DATABASE_NAME = "cars.db";
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 12;
 
     // Cars table
     private static final String TABLE_CARS = "cars";
@@ -28,6 +28,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_FUEL_CONSUMPTION_UNIT = "fuel_consumption_unit";
     private static final String COLUMN_FUEL_TYPE = "fuel_type";
     private static final String COLUMN_TANK_VOLUME = "tank_volume";
+    private static final String COLUMN_CREATED_AT = "created_at";
+    private static final String COLUMN_UPDATED_AT = "updated_at";
 
     // Trips table
     private static final String TABLE_TRIPS = "trips";
@@ -39,6 +41,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_TRIP_DISTANCE = "distance";
     private static final String COLUMN_TRIP_FUEL_SPENT = "fuel_spent";
     private static final String COLUMN_TRIP_FUEL_CONSUMPTION = "fuel_consumption";
+    private static final String COLUMN_TRIP_CREATED_AT = "created_at";
+    private static final String COLUMN_TRIP_UPDATED_AT = "updated_at";
 
     private static final String CREATE_TABLE_CARS = "CREATE TABLE " + TABLE_CARS + "("
             + COLUMN_ID + " TEXT PRIMARY KEY,"
@@ -49,8 +53,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_FUEL_UNIT + " TEXT,"
             + COLUMN_FUEL_CONSUMPTION_UNIT + " TEXT,"
             + COLUMN_FUEL_TYPE + " TEXT,"
-            + COLUMN_TANK_VOLUME + " REAL"
-            + ")";
+            + COLUMN_TANK_VOLUME + " REAL,"
+            + COLUMN_CREATED_AT + " TEXT NOT NULL,"
+            + COLUMN_UPDATED_AT + " TEXT NOT NULL"
+            + ")"; 
 
     private static final String CREATE_TABLE_TRIPS = "CREATE TABLE " + TABLE_TRIPS + "("
             + COLUMN_TRIP_ID + " TEXT PRIMARY KEY,"
@@ -61,8 +67,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_TRIP_DISTANCE + " REAL,"
             + COLUMN_TRIP_FUEL_SPENT + " REAL,"
             + COLUMN_TRIP_FUEL_CONSUMPTION + " REAL,"
+            + COLUMN_TRIP_CREATED_AT + " TEXT NOT NULL,"
+            + COLUMN_TRIP_UPDATED_AT + " TEXT NOT NULL,"
             + "FOREIGN KEY(" + COLUMN_CAR_ID + ") REFERENCES " + TABLE_CARS + "(" + COLUMN_ID + ") ON DELETE CASCADE"
-            + ")";
+            + ")"; 
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -94,6 +102,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
 
         String id = UUID.randomUUID().toString();
+        String now = java.time.Instant.now().toString();
         values.put(COLUMN_ID, id);
         values.put(COLUMN_NAME, car.getName());
         values.put(COLUMN_DESCRIPTION, car.getDescription());
@@ -103,6 +112,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_FUEL_CONSUMPTION_UNIT, car.getFuelConsumptionUnit());
         values.put(COLUMN_FUEL_TYPE, car.getFuelType());
         values.put(COLUMN_TANK_VOLUME, car.getTankVolume());
+        values.put(COLUMN_CREATED_AT, now);
+        values.put(COLUMN_UPDATED_AT, now);
 
         db.insert(TABLE_CARS, null, values);
         db.close();
@@ -177,6 +188,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
 
         String id = UUID.randomUUID().toString();
+        String now = java.time.Instant.now().toString();
         values.put(COLUMN_TRIP_ID, id);
         values.put(COLUMN_CAR_ID, trip.getCarId());
         values.put(COLUMN_TRIP_NAME, trip.getName());
@@ -185,6 +197,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TRIP_DISTANCE, trip.getDistance());
         values.put(COLUMN_TRIP_FUEL_SPENT, trip.getFuelSpent());
         values.put(COLUMN_TRIP_FUEL_CONSUMPTION, trip.getFuelConsumption());
+        values.put(COLUMN_TRIP_CREATED_AT, now);
+        values.put(COLUMN_TRIP_UPDATED_AT, now);
 
         db.insert(TABLE_TRIPS, null, values);
         db.close();
@@ -251,6 +265,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public boolean updateTrip(Trip trip) {
         SQLiteDatabase db = this.getWritableDatabase();
+        String now = java.time.Instant.now().toString();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TRIP_NAME, trip.getName());
         values.put(COLUMN_TRIP_START_DATETIME, trip.getStartDateTime());
@@ -258,6 +273,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TRIP_DISTANCE, trip.getDistance());
         values.put(COLUMN_TRIP_FUEL_SPENT, trip.getFuelSpent());
         values.put(COLUMN_TRIP_FUEL_CONSUMPTION, trip.getFuelConsumption());
+        values.put(COLUMN_TRIP_UPDATED_AT, now);
 
         int rowsAffected = db.update(TABLE_TRIPS, values,
                 COLUMN_TRIP_ID + " = ?", new String[]{trip.getId()});
@@ -276,6 +292,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean updateCar(Car car) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
+        String now = java.time.Instant.now().toString();
         values.put(COLUMN_NAME, car.getName());
         values.put(COLUMN_DESCRIPTION, car.getDescription());
         values.put(COLUMN_FUEL_TYPE, car.getFuelType());
@@ -284,6 +301,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_FUEL_UNIT, car.getFuelUnit());
         values.put(COLUMN_FUEL_CONSUMPTION_UNIT, car.getFuelConsumptionUnit());
         values.put(COLUMN_IMAGE_PATH, car.getImagePath());
+        values.put(COLUMN_UPDATED_AT, now);
 
         int rowsAffected = db.update(TABLE_CARS, values,
                 COLUMN_ID + " = ?", new String[]{car.getId()});

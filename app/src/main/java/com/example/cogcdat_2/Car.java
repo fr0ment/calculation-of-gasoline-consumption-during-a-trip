@@ -10,6 +10,8 @@ public class Car {
     private String fuelConsumptionUnit;
     private String fuelType;
     private double tankVolume;
+    private String createdAt;
+    private String updatedAt;
     // Удалены: brand, model, year, licensePlate, vin, insurancePolicy
 
     public Car() {}
@@ -62,6 +64,12 @@ public class Car {
 
     public double getTankVolume() { return tankVolume; }
     public void setTankVolume(double tankVolume) { this.tankVolume = tankVolume; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 
     @Override
     public String toString() {

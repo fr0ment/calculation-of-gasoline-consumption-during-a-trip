@@ -10,6 +10,8 @@ public class Trip {
     private double distance; // Расстояние
     private double fuelSpent; // Количество потраченного топлива
     private double fuelConsumption; // Расход топлива (л/100км)
+    private String createdAt;
+    private String updatedAt;
 
     public Trip() {
     }
@@ -42,5 +44,11 @@ public class Trip {
     public void setFuelSpent(double fuelSpent) { this.fuelSpent = fuelSpent; }
     public double getFuelConsumption() { return fuelConsumption; }
     public void setFuelConsumption(double fuelConsumption) { this.fuelConsumption = fuelConsumption; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 
 }
