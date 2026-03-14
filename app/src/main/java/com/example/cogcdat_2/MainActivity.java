@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Button;
 import androidx.annotation.NonNull;
@@ -17,6 +16,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
+    private static final String KEY_SELECTED_ITEM = "selected_nav_item";
+    private boolean isUISetup = false; // Флаг для отслеживания инициализации UI
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
         if (hasCars) {
             // Если машины есть, показываем основной интерфейс
             initializeMainUI(savedInstanceState);
+            isUISetup = true;
         } else {
             // Если машин нет, показываем приветственный экран в этой же активности
             showWelcomeScreen();
@@ -44,14 +46,32 @@ public class MainActivity extends AppCompatActivity {
         boolean hasCars = !dbHelper.getAllCars().isEmpty();
 
         if (hasCars) {
-            // Если машины появились, переключаемся на основной интерфейс
-            initializeMainUI(null);
+            // Если UI еще не настроен или мы на приветственном экране
+            if (!isUISetup || findViewById(R.id.fragment_container) == null) {
+                initializeMainUI(null);
+                isUISetup = true;
+            }
+            // Иначе ничего не делаем - сохраняем текущее состояние
+        } else {
+            // Если машин нет, показываем приветственный экран
+            if (isUISetup) {
+                showWelcomeScreen();
+                isUISetup = false;
+            }
         }
-        // Если машин нет, остаемся на приветственном экране
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (bottomNavigationView != null) {
+            outState.putInt(KEY_SELECTED_ITEM, bottomNavigationView.getSelectedItemId());
+        }
     }
 
     private void showWelcomeScreen() {
         setContentView(R.layout.activity_welcome);
+        isUISetup = false;
 
         Button btnContinue = findViewById(R.id.btn_continue);
         btnContinue.setOnClickListener(v -> {
@@ -69,64 +89,62 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-
-        // 💡 Оптимизированное назначение слушателя с использованием лямбда-выражения
         bottomNavigationView.setOnItemSelectedListener(navListener);
 
-        // Загружаем фрагмент по умолчанию при первом запуске (на всякий случай, если ID изменится)
+        // Загружаем фрагмент только если нет сохраненного состояния
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new TripsFragment())
-                    .commit();
+            // Проверяем, есть ли уже фрагмент
+            Fragment currentFragment = getSupportFragmentManager()
+                    .findFragmentById(R.id.fragment_container);
+
+            if (currentFragment == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new TripsFragment())
+                        .commit();
+            }
+        } else {
+            // Восстанавливаем выбранный пункт меню
+            int selectedItemId = savedInstanceState.getInt(KEY_SELECTED_ITEM, R.id.nav_trips);
+            bottomNavigationView.setSelectedItemId(selectedItemId);
         }
 
         requestNotificationPermission();
+        isUISetup = true;
     }
 
     private void requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {  // Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
-                // Разрешение не дано — запрашиваем
                 ActivityCompat.requestPermissions(this,
                         new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
                         101);
-            } else {
-                // Разрешение уже дано — ничего не делаем
             }
         }
     }
 
-    // 💡 Используем новый интерфейс OnItemSelectedListener
     private BottomNavigationView.OnItemSelectedListener navListener =
-        new BottomNavigationView.OnItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = null;
+            new BottomNavigationView.OnItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    Fragment selectedFragment = null;
+                    int itemId = item.getItemId();
 
-                // 💡 Используем switch с item.getItemId()
-                int itemId = item.getItemId();
+                    if (itemId == R.id.nav_trips) {
+                        selectedFragment = new TripsFragment();
+                    } else if (itemId == R.id.nav_cars) {
+                        selectedFragment = new CarsFragment();
+                    } else if (itemId == R.id.nav_analytics) {
+                        selectedFragment = new AnalyticsFragment();
+                    }
 
-                // 🛑 ВНИМАНИЕ: Убедитесь, что ID (R.id.nav_trips, R.id.nav_cars, R.id.nav_analytics)
-                // ТОЧНО СОВПАДАЮТ с ID в вашем файле menu/bottom_nav_menu.xml
-
-                if (itemId == R.id.nav_trips) {
-                    selectedFragment = new TripsFragment();
-                } else if (itemId == R.id.nav_cars) {
-                    selectedFragment = new CarsFragment();
-                } else if (itemId == R.id.nav_analytics) {
-                    selectedFragment = new AnalyticsFragment();
+                    if (selectedFragment != null) {
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.fragment_container, selectedFragment)
+                                .setReorderingAllowed(true)
+                                .commit();
+                    }
+                    return true;
                 }
-
-                if (selectedFragment != null) {
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, selectedFragment)
-                            // Добавление .setReorderingAllowed(true) может улучшить производительность
-                            .setReorderingAllowed(true)
-                            .commit();
-                }
-                // Возвращаем true, чтобы элемент был помечен как выбранный
-                return true;
-            }
-        };
+            };
 }
