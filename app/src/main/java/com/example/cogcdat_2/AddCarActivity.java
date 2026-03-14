@@ -196,7 +196,7 @@ public class AddCarActivity extends AppCompatActivity {
         }
 
         // Используем упрощенный конструктор Car
-        Car car = new Car(
+        Car car = new Car(null,
                 name,
                 etDescription.getText().toString().trim(),
                 selectedImagePath,
@@ -207,9 +207,9 @@ public class AddCarActivity extends AppCompatActivity {
                 tankVolume
         );
 
-        long carId = dbHelper.addCar(car);
+        String carId = dbHelper.addCar(car);
 
-        if (carId > 0) {
+        if (carId != null) {
             Toast.makeText(this, "Автомобиль сохранен", Toast.LENGTH_SHORT).show();
 
             if (isFirstLaunch) {

@@ -45,7 +45,7 @@ public class EditCarActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private Car car;
-    private int carId;
+    private String carId;
     private String selectedImagePath = null;
 
     // Текущие выбранные единицы измерения (загружаются из БД)
@@ -60,8 +60,8 @@ public class EditCarActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
-        carId = getIntent().getIntExtra("car_id", -1);
-        if (carId == -1) {
+        carId = getIntent().getStringExtra("car_id");
+        if (carId == null || carId.isEmpty()) {
             Toast.makeText(this, "Ошибка: ID автомобиля не передан", Toast.LENGTH_SHORT).show();
             finish();
             return;

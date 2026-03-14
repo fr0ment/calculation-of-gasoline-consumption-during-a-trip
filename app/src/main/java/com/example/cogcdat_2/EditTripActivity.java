@@ -20,7 +20,7 @@ import java.util.Locale;
 public class EditTripActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
-    private int tripId;
+    private String tripId;
     private Trip trip;
 
     // Поля ввода
@@ -50,9 +50,9 @@ public class EditTripActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_trip);
 
         dbHelper = new DatabaseHelper(this);
-        tripId = getIntent().getIntExtra("trip_id", -1);
+        tripId = getIntent().getStringExtra("trip_id");
 
-        if (tripId == -1) {
+        if (tripId == null || tripId.isEmpty()) {
             Toast.makeText(this, "Ошибка: Поездка не выбрана.", Toast.LENGTH_LONG).show();
             finish();
             return;
@@ -89,11 +89,11 @@ public class EditTripActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
     }
 
-    private Trip getTripById(int id) {
+    private Trip getTripById(String id) {
         // Обходной путь, как в TripDetailsActivity
         for (Car car : dbHelper.getAllCars()) {
             for (Trip t : dbHelper.getTripsForCar(car.getId())) {
-                if (t.getId() == id) {
+                if (t.getId().equals(id)) {
                     return t;
                 }
             }

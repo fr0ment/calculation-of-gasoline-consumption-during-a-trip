@@ -32,7 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class GpsRecordingActivity extends AppCompatActivity {
+    public class GpsRecordingActivity extends AppCompatActivity {
 
     private static final String TAG = "GpsRecordingActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
@@ -48,7 +48,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private Car selectedCar;
-    private int carId; // Добавлено для хранения ID автомобиля
+    private String carId; // Добавлено для хранения ID автомобиля
 
     // Состояние поездки
     private boolean isRecording = false;
@@ -89,8 +89,8 @@ public class GpsRecordingActivity extends AppCompatActivity {
         });
 
         // Получение ID автомобиля
-        carId = getIntent().getIntExtra("car_id", -1);
-        if (carId == -1) {
+        carId = getIntent().getStringExtra("car_id");
+        if (carId == null || carId.isEmpty()) {
             Toast.makeText(this, "Автомобиль не выбран", Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -138,7 +138,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);  // Обновляем intent для extras (car_id)
-        carId = intent.getIntExtra("car_id", carId);  // Перезагружаем car_id если изменился
+        carId = intent.getStringExtra("car_id") != null ? intent.getStringExtra("car_id") : carId;  // Перезагружаем car_id если изменился
         selectedCar = dbHelper.getCar(carId);
         updateUnitInfo();  // Обновляем UI (единицы)
         // Если запись активна, восстанавливаем состояние
@@ -459,9 +459,9 @@ public class GpsRecordingActivity extends AppCompatActivity {
                 fuelConsumption
         );
 
-        long result = dbHelper.addTrip(newTrip);
+        String result = dbHelper.addTrip(newTrip);
 
-        if (result > 0) {
+        if (result != null && !result.isEmpty()) {
             Toast.makeText(this, "Поездка успешно сохранена!", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(this, "Ошибка при сохранении поездки.", Toast.LENGTH_LONG).show();

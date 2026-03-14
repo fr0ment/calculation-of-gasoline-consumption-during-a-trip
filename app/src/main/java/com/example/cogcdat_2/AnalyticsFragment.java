@@ -124,11 +124,11 @@ public class AnalyticsFragment extends Fragment {
         carSelectionView.setVisibility(View.VISIBLE);
 
         // Восстанавливаем выбранный автомобиль
-        int savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
+        String savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
         selectedCar = null;
 
         for (Car car : carList) {
-            if (car.getId() == savedCarId) {
+            if (car.getId().equals(savedCarId)) {
                 selectedCar = car;
                 break;
             }

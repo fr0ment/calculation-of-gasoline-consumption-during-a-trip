@@ -2,9 +2,9 @@ package com.example.cogcdat_2;
 
 // Модель данных для таблицы Trips
 public class Trip {
-    private int id;
+    private String id;
     private String name; // Навзание поездки
-    private int carId; // id_Машины
+    private String carId; // id_Машины
     private String startDateTime; // Дата и время отправления (TEXT, ISO8601)
     private String endDateTime;   // Дата и время прибытия (TEXT, ISO8601)
     private double distance; // Расстояние
@@ -14,7 +14,7 @@ public class Trip {
     public Trip() {
     }
 
-    public Trip(int carId, String name, String startDateTime, String endDateTime, double distance, double fuelSpent, double fuelConsumption) {
+    public Trip(String carId, String name, String startDateTime, String endDateTime, double distance, double fuelSpent, double fuelConsumption) {
         this.carId = carId;
         this.name = name;
         this.startDateTime = startDateTime;
@@ -26,12 +26,12 @@ public class Trip {
 
     // Геттеры и Сеттеры
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public int getCarId() { return carId; }
-    public void setCarId(int carId) { this.carId = carId; }
+    public String getCarId() { return carId; }
+    public void setCarId(String carId) { this.carId = carId; }
     public String getStartDateTime() { return startDateTime; }
     public void setStartDateTime(String startDateTime) { this.startDateTime = startDateTime; }
     public String getEndDateTime() { return endDateTime; }

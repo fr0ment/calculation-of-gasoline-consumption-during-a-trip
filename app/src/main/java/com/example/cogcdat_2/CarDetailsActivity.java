@@ -24,7 +24,7 @@ public class CarDetailsActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private Car car;
-    private int carId;
+    private String carId;
 
     private TextView tvName, tvDescription, tvFuelType, tvTankVolume, tvUnits;
     private ImageView ivCarImage;
@@ -38,8 +38,8 @@ public class CarDetailsActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
-        carId = getIntent().getIntExtra("car_id", -1);
-        if (carId != -1) {
+        carId = getIntent().getStringExtra("car_id");
+        if (carId != null && !carId.isEmpty()) {
             initViews();
             setupListeners();
             loadCarData();
@@ -53,7 +53,7 @@ public class CarDetailsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Обновляем данные при возврате из редактирования
-        if (carId != -1) {
+        if (carId != null && !carId.isEmpty()) {
             loadCarData();
         }
     }

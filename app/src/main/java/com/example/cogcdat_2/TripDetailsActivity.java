@@ -22,7 +22,7 @@ public class TripDetailsActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private Trip trip;
-    private int tripId;
+    private String tripId;
 
     private TextView tvTripName, tvTripDateTime, tvTripDistance, tvTripFuelSpent, tvTripFuelConsumption, tvTripDuration;
     private Button btnEditTrip, btnDeleteTrip;
@@ -38,8 +38,8 @@ public class TripDetailsActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
-        tripId = getIntent().getIntExtra("trip_id", -1);
-        if (tripId != -1) {
+        tripId = getIntent().getStringExtra("trip_id");
+        if (tripId != null && !tripId.isEmpty()) {
             initViews();
             setupListeners();
             loadTripData();
@@ -49,11 +49,11 @@ public class TripDetailsActivity extends AppCompatActivity {
         }
     }
 
-    @Override
+@Override
     protected void onResume() {
         super.onResume();
         // Обновляем данные при возврате из редактирования
-        if (tripId != -1) {
+        if (tripId != null && !tripId.isEmpty()) {
             loadTripData();
         }
     }
@@ -83,7 +83,7 @@ public class TripDetailsActivity extends AppCompatActivity {
         }
     }
 
-    private Trip getTripById(int id) {
+    private Trip getTripById(String id) {
         return dbHelper.getTrip(id);
     }
 

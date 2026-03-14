@@ -51,7 +51,7 @@ public class TripsFragment extends Fragment {
     private List<Car> carList = new ArrayList<>();
     private List<TripListItem> tripListItems = new ArrayList<>();
 
-    private int selectedCarId = -1;
+    private String selectedCarId = "";
 
     // Поиск
     private EditText etSearchQuery;
@@ -120,10 +120,10 @@ public class TripsFragment extends Fragment {
         }
 
         // Восстанавливаем сохранённый выбор автомобиля
-        int savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
+        String savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
         Car selectedCar = null;
         for (Car car : carList) {
-            if (car.getId() == savedCarId) {
+            if (savedCarId.isEmpty() || car.getId().equals(savedCarId)) {
                 selectedCar = car;
                 break;
             }
@@ -135,7 +135,7 @@ public class TripsFragment extends Fragment {
             SelectedCarManager.setSelectedCarId(requireContext(), selectedCar.getId());
         }
 
-        selectedCarId = selectedCar != null ? selectedCar.getId() : -1;
+        selectedCarId = selectedCar != null ? selectedCar.getId() : "";
         updateSelectedCarDisplay(selectedCar);
 
         // Загружаем поездки для выбранного автомобиля
@@ -186,7 +186,7 @@ public class TripsFragment extends Fragment {
         // Подсвечиваем текущий выбранный автомобиль
         int selectedPos = -1;
         for (int i = 0; i < carList.size(); i++) {
-            if (carList.get(i).getId() == selectedCarId) {
+            if (carList.get(i).getId().equals(selectedCarId)) {
                 selectedPos = i;
                 break;
             }
@@ -204,7 +204,7 @@ public class TripsFragment extends Fragment {
     private void loadTripsForCar() {
         tripListItems.clear();
 
-        if (selectedCarId == -1) {
+        if (selectedCarId.isEmpty()) {
             updateEmptyState("Выберите автомобиль");
             return;
         }
@@ -454,7 +454,7 @@ public class TripsFragment extends Fragment {
     }
 
     private void showAddTripOptionsDialog() {
-        if (selectedCarId == -1) {
+        if (selectedCarId.isEmpty()) {
             Toast.makeText(getContext(), "Сначала выберите автомобиль", Toast.LENGTH_SHORT).show();
             return;
         }

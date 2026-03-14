@@ -1,7 +1,7 @@
 package com.example.cogcdat_2;
 
 public class Car {
-    private int id;
+    private String id;
     private String name;
     private String description;
     private String imagePath;
@@ -15,7 +15,7 @@ public class Car {
     public Car() {}
 
     // Упрощенный конструктор с ID
-    public Car(int id, String name, String description, String imagePath, String distanceUnit, String fuelUnit,
+    public Car(String id, String name, String description, String imagePath, String distanceUnit, String fuelUnit,
                String fuelConsumptionUnit, String fuelType, double tankVolume) {
         this.id = id;
         this.name = name;
@@ -31,13 +31,13 @@ public class Car {
     // Упрощенный конструктор без ID для добавления
     public Car(String name, String description, String imagePath, String distanceUnit, String fuelUnit,
                String fuelConsumptionUnit, String fuelType, double tankVolume) {
-        this(-1, name, description, imagePath, distanceUnit, fuelUnit, fuelConsumptionUnit, fuelType, tankVolume);
+        this(null, name, description, imagePath, distanceUnit, fuelUnit, fuelConsumptionUnit, fuelType, tankVolume);
     }
 
     // Геттеры и Сеттеры
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

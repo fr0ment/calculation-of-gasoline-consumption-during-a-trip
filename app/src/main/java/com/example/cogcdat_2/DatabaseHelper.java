@@ -9,15 +9,15 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";
 
     private static final String DATABASE_NAME = "cars.db";
-    // Увеличиваем версию БД для корректного обновления схемы!
-    private static final int DATABASE_VERSION = 9;
+    private static final int DATABASE_VERSION = 11;
 
-    // Константы для таблицы Cars
+    // Cars table
     private static final String TABLE_CARS = "cars";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_NAME = "name";
@@ -28,9 +28,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_FUEL_CONSUMPTION_UNIT = "fuel_consumption_unit";
     private static final String COLUMN_FUEL_TYPE = "fuel_type";
     private static final String COLUMN_TANK_VOLUME = "tank_volume";
-    // Удалены: COLUMN_BRAND, COLUMN_MODEL, COLUMN_YEAR, COLUMN_LICENSE_PLATE, COLUMN_VIN, COLUMN_INSURANCE_POLICY
 
-    // Константы для таблицы Trips
+    // Trips table
     private static final String TABLE_TRIPS = "trips";
     private static final String COLUMN_TRIP_ID = "id";
     private static final String COLUMN_CAR_ID = "car_id";
@@ -41,10 +40,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_TRIP_FUEL_SPENT = "fuel_spent";
     private static final String COLUMN_TRIP_FUEL_CONSUMPTION = "fuel_consumption";
 
-
-    // SQL для создания таблицы Cars (УПРОЩЕННО)
     private static final String CREATE_TABLE_CARS = "CREATE TABLE " + TABLE_CARS + "("
-            + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + COLUMN_ID + " TEXT PRIMARY KEY,"
             + COLUMN_NAME + " TEXT NOT NULL,"
             + COLUMN_DESCRIPTION + " TEXT,"
             + COLUMN_IMAGE_PATH + " TEXT,"
@@ -52,22 +49,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_FUEL_UNIT + " TEXT,"
             + COLUMN_FUEL_CONSUMPTION_UNIT + " TEXT,"
             + COLUMN_FUEL_TYPE + " TEXT,"
-            + COLUMN_TANK_VOLUME + " REAL" // REAL для double
+            + COLUMN_TANK_VOLUME + " REAL"
             + ")";
 
-    // SQL для создания таблицы Trips
     private static final String CREATE_TABLE_TRIPS = "CREATE TABLE " + TABLE_TRIPS + "("
-            + COLUMN_TRIP_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + COLUMN_CAR_ID + " INTEGER,"
+            + COLUMN_TRIP_ID + " TEXT PRIMARY KEY,"
+            + COLUMN_CAR_ID + " TEXT,"
             + COLUMN_TRIP_NAME + " TEXT,"
-            + COLUMN_TRIP_START_DATETIME + " TEXT," // ISO8601
-            + COLUMN_TRIP_END_DATETIME + " TEXT," // ISO8601
+            + COLUMN_TRIP_START_DATETIME + " TEXT,"
+            + COLUMN_TRIP_END_DATETIME + " TEXT,"
             + COLUMN_TRIP_DISTANCE + " REAL,"
             + COLUMN_TRIP_FUEL_SPENT + " REAL,"
             + COLUMN_TRIP_FUEL_CONSUMPTION + " REAL,"
             + "FOREIGN KEY(" + COLUMN_CAR_ID + ") REFERENCES " + TABLE_CARS + "(" + COLUMN_ID + ") ON DELETE CASCADE"
             + ")";
-
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -81,9 +76,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // В случае изменения схемы, просто пересоздаем (потеря данных)
-        Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
-                + newVersion + ", which will destroy all old data");
+        Log.w(TAG, "Upgrading database from version " + oldVersion + " to " + newVersion + ", which will destroy all old data");
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRIPS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CARS);
         onCreate(db);
@@ -95,15 +88,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.setForeignKeyConstraintsEnabled(true);
     }
 
-    // --- Методы для Cars ---
-
-    /**
-     * Добавление нового автомобиля.
-     */
-    public long addCar(Car car) {
+    // Cars methods
+    public String addCar(Car car) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
+        String id = UUID.randomUUID().toString();
+        values.put(COLUMN_ID, id);
         values.put(COLUMN_NAME, car.getName());
         values.put(COLUMN_DESCRIPTION, car.getDescription());
         values.put(COLUMN_IMAGE_PATH, car.getImagePath());
@@ -113,15 +104,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_FUEL_TYPE, car.getFuelType());
         values.put(COLUMN_TANK_VOLUME, car.getTankVolume());
 
-        long id = db.insert(TABLE_CARS, null, values);
+        db.insert(TABLE_CARS, null, values);
         db.close();
+        car.setId(id);
         return id;
     }
 
-    /**
-     * Получение автомобиля по ID.
-     */
-    public Car getCar(int id) {
+    public Car getCar(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_CARS, new String[]{
@@ -129,12 +118,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         COLUMN_DISTANCE_UNIT, COLUMN_FUEL_UNIT, COLUMN_FUEL_CONSUMPTION_UNIT,
                         COLUMN_FUEL_TYPE, COLUMN_TANK_VOLUME},
                 COLUMN_ID + "=?",
-                new String[]{String.valueOf(id)}, null, null, null, null);
+                new String[]{id}, null, null, null, null);
 
-        Car car = null;
         if (cursor != null && cursor.moveToFirst()) {
-            car = new Car(
-                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+            Car car = new Car(
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ID)),
                     cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)),
                     cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION)),
                     cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IMAGE_PATH)),
@@ -145,14 +133,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TANK_VOLUME))
             );
             cursor.close();
+            db.close();
+            return car;
+        }
+        if (cursor != null) {
+            cursor.close();
         }
         db.close();
-        return car;
+        return null;
     }
 
-    /**
-     * Получение всех автомобилей.
-     */
     public List<Car> getAllCars() {
         List<Car> carList = new ArrayList<>();
         String selectQuery = "SELECT * FROM " + TABLE_CARS;
@@ -163,7 +153,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
                 Car car = new Car(
-                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ID)),
                         cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)),
                         cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DESCRIPTION)),
                         cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IMAGE_PATH)),
@@ -181,15 +171,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return carList;
     }
 
-    // --- Методы для Trips (без изменений) ---
-
-    /**
-     * Добавление новой поездки.
-     */
-    public long addTrip(Trip trip) {
+    // Trips methods
+    public String addTrip(Trip trip) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
+        String id = UUID.randomUUID().toString();
+        values.put(COLUMN_TRIP_ID, id);
         values.put(COLUMN_CAR_ID, trip.getCarId());
         values.put(COLUMN_TRIP_NAME, trip.getName());
         values.put(COLUMN_TRIP_START_DATETIME, trip.getStartDateTime());
@@ -198,15 +186,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TRIP_FUEL_SPENT, trip.getFuelSpent());
         values.put(COLUMN_TRIP_FUEL_CONSUMPTION, trip.getFuelConsumption());
 
-        long id = db.insert(TABLE_TRIPS, null, values);
+        db.insert(TABLE_TRIPS, null, values);
         db.close();
+        trip.setId(id);
         return id;
     }
 
-    /**
-     * Получение поездки по ID.
-     */
-    public Trip getTrip(int id) {
+    public Trip getTrip(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_TRIPS, new String[]{
@@ -214,41 +200,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         COLUMN_TRIP_START_DATETIME, COLUMN_TRIP_END_DATETIME,
                         COLUMN_TRIP_DISTANCE, COLUMN_TRIP_FUEL_SPENT, COLUMN_TRIP_FUEL_CONSUMPTION},
                 COLUMN_TRIP_ID + "=?",
-                new String[]{String.valueOf(id)}, null, null, null, null);
+                new String[]{id}, null, null, null, null);
 
-        Trip trip = null;
         if (cursor != null && cursor.moveToFirst()) {
-            trip = new Trip();
-            trip.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TRIP_ID)));
+            Trip trip = new Trip();
+            trip.setId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_ID)));
             trip.setName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_NAME)));
-            trip.setCarId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CAR_ID)));
+            trip.setCarId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CAR_ID)));
             trip.setStartDateTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_START_DATETIME)));
             trip.setEndDateTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_END_DATETIME)));
             trip.setDistance(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_DISTANCE)));
             trip.setFuelSpent(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_FUEL_SPENT)));
             trip.setFuelConsumption(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_FUEL_CONSUMPTION)));
             cursor.close();
+            db.close();
+            return trip;
+        }
+        if (cursor != null) {
+            cursor.close();
         }
         db.close();
-        return trip;
+        return null;
     }
 
-    /**
-     * Получение всех поездок для конкретного автомобиля.
-     */
-    public List<Trip> getTripsForCar(int carId) {
+    public List<Trip> getTripsForCar(String carId) {
         List<Trip> tripList = new ArrayList<>();
-        String selectQuery = "SELECT * FROM " + TABLE_TRIPS + " WHERE " + COLUMN_CAR_ID + " = " + carId + " ORDER BY " + COLUMN_TRIP_START_DATETIME + " DESC";
+        String selectQuery = "SELECT * FROM " + TABLE_TRIPS + " WHERE " + COLUMN_CAR_ID + " = ? ORDER BY " + COLUMN_TRIP_START_DATETIME + " DESC";
 
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
+        Cursor cursor = db.rawQuery(selectQuery, new String[]{carId});
 
         if (cursor.moveToFirst()) {
             do {
                 Trip trip = new Trip();
-                trip.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TRIP_ID)));
+                trip.setId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_ID)));
                 trip.setName(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_NAME)));
-                trip.setCarId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CAR_ID)));
+                trip.setCarId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CAR_ID)));
                 trip.setStartDateTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_START_DATETIME)));
                 trip.setEndDateTime(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_END_DATETIME)));
                 trip.setDistance(cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_DISTANCE)));
@@ -262,9 +249,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return tripList;
     }
 
-    /**
-     * Обновление поездки.
-     */
     public boolean updateTrip(Trip trip) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -276,21 +260,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TRIP_FUEL_CONSUMPTION, trip.getFuelConsumption());
 
         int rowsAffected = db.update(TABLE_TRIPS, values,
-                COLUMN_TRIP_ID + " = ?", new String[]{String.valueOf(trip.getId())});
+                COLUMN_TRIP_ID + " = ?", new String[]{trip.getId()});
         db.close();
 
         return rowsAffected > 0;
     }
 
-    /**
-     * Удаление поездки по ID.
-     */
-    public void deleteTrip(int tripId) {
+    public void deleteTrip(String tripId) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_TRIPS, COLUMN_TRIP_ID + " = ?",
-                new String[] { String.valueOf(tripId) });
+                new String[]{tripId});
         db.close();
     }
+
     public boolean updateCar(Car car) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -304,18 +286,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_IMAGE_PATH, car.getImagePath());
 
         int rowsAffected = db.update(TABLE_CARS, values,
-                COLUMN_ID + " = ?", new String[]{String.valueOf(car.getId())});
+                COLUMN_ID + " = ?", new String[]{car.getId()});
         db.close();
 
         return rowsAffected > 0;
     }
 
-    public boolean deleteCar(int carId) {
+    public boolean deleteCar(String carId) {
         SQLiteDatabase db = this.getWritableDatabase();
         int rowsAffected = db.delete(TABLE_CARS, COLUMN_ID + " = ?",
-                new String[]{String.valueOf(carId)});
+                new String[]{carId});
         db.close();
 
         return rowsAffected > 0;
     }
 }
+

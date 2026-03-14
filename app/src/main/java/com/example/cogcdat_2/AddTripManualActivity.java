@@ -20,7 +20,7 @@ import java.util.Locale;
 public class AddTripManualActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
-    private int carId;
+    private String carId;
 
     // Поля ввода
     private EditText etTripName;
@@ -52,9 +52,9 @@ public class AddTripManualActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_trip_manual);
 
         dbHelper = new DatabaseHelper(this);
-        carId = getIntent().getIntExtra("car_id", -1);
+        carId = getIntent().getStringExtra("car_id");
 
-        if (carId == -1) {
+        if (carId == null || carId.isEmpty()) {
             Toast.makeText(this, "Ошибка: Автомобиль не выбран.", Toast.LENGTH_LONG).show();
             finish();
             return;
@@ -251,9 +251,9 @@ public class AddTripManualActivity extends AppCompatActivity {
                 fuelConsumption
         );
 
-        long result = dbHelper.addTrip(newTrip);
+        String result = dbHelper.addTrip(newTrip);
 
-        if (result > 0) {
+        if (result != null) {
             Toast.makeText(this, "Поездка успешно добавлена!", Toast.LENGTH_SHORT).show();
             // Уведомляем TripsFragment об успешном добавлении
             setResult(RESULT_OK);
