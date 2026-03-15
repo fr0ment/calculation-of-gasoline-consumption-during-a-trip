@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+
+import com.example.cogcdat_2.sync.SyncManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -22,6 +24,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SyncManager syncManager = SyncManager.getInstance(this);
+
+        if (syncManager.getSavedToken() == null) {
+            // Если нет токена, но есть данные в БД - очищаем (остались от предыдущего пользователя)
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
+            if (!dbHelper.getAllCars().isEmpty()) {
+                // Очищаем данные, так как пользователь не авторизован
+                syncManager.clearLocalData();
+            }
+
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
 
         // Проверяем, есть ли машины
         DatabaseHelper dbHelper = new DatabaseHelper(this);
@@ -136,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
                         selectedFragment = new CarsFragment();
                     } else if (itemId == R.id.nav_analytics) {
                         selectedFragment = new AnalyticsFragment();
+                    } else if (itemId == R.id.nav_settings) {
+                        selectedFragment = new SettingsFragment();
                     }
 
                     if (selectedFragment != null) {

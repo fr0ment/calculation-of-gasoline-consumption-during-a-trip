@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.cogcdat_2.sync.SyncManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -104,7 +105,7 @@ public class EditCarActivity extends AppCompatActivity {
         btnFuelUnit.setText(selectedFuelUnit);
         btnFuelConsumption.setText(selectedFuelConsumptionUnit);
     }
-
+    private String oldImagePath;
     private void loadCarData() {
         etName.setText(car.getName());
         etDescription.setText(car.getDescription());
@@ -120,6 +121,7 @@ public class EditCarActivity extends AppCompatActivity {
         } else {
             setDefaultImage(ivCarPhoto);
         }
+        oldImagePath = car.getImagePath();
     }
 
     private void setupListeners() {
@@ -215,6 +217,9 @@ public class EditCarActivity extends AppCompatActivity {
             return;
         }
 
+        String oldPath = car.getImagePath();
+        int oldVersion = car.getImageVersion();
+
         // Обновляем объект Car
         car.setName(name);
         car.setDescription(etDescription.getText().toString().trim());
@@ -227,6 +232,22 @@ public class EditCarActivity extends AppCompatActivity {
 
         boolean success = dbHelper.updateCar(car);
         if (success) {
+            // Если фото изменилось
+            if (selectedImagePath != null && !selectedImagePath.isEmpty() &&
+                    !selectedImagePath.equals(oldPath)) {
+
+                // Увеличиваем версию!
+                int newVersion = oldVersion + 1;
+                car.setImageVersion(newVersion);
+                dbHelper.updateCar(car); // Обновляем с новой версией
+
+                File imageFile = new File(selectedImagePath);
+                if (imageFile.exists()) {
+                    SyncManager.getInstance(this).uploadCarImage(car.getId(), imageFile);
+                }
+                Log.d("", "Image version increased from " + oldVersion + " to " + newVersion);
+            }
+
             Toast.makeText(this, "Автомобиль обновлён", Toast.LENGTH_SHORT).show();
             finish();
         } else {

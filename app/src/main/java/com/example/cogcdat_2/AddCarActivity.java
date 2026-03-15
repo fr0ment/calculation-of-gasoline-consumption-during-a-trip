@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.cogcdat_2.sync.SyncManager;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -55,6 +56,8 @@ public class AddCarActivity extends AppCompatActivity {
     private String selectedDistanceUnit = "км";
     private String selectedFuelUnit = "л";
     private String selectedFuelConsumptionUnit = "л/100км";
+
+    private String createdCarId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,6 +213,17 @@ public class AddCarActivity extends AppCompatActivity {
         String carId = dbHelper.addCar(car);
 
         if (carId != null) {
+            createdCarId = carId;
+            if (selectedImagePath != null && !selectedImagePath.isEmpty()) {
+                File imageFile = new File(selectedImagePath);
+                if (imageFile.exists()) {
+                    // Устанавливаем начальную версию 1 для нового фото
+                    car.setImageVersion(1);
+                    // Загружаем на сервер
+                    SyncManager.getInstance(this).uploadCarImage(carId, imageFile);
+                }
+            }
+
             Toast.makeText(this, "Автомобиль сохранен", Toast.LENGTH_SHORT).show();
 
             if (isFirstLaunch) {
