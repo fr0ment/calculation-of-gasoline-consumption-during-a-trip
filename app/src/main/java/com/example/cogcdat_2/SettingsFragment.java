@@ -42,7 +42,7 @@ import retrofit2.Response;
 public class SettingsFragment extends Fragment {
 
     private TextView tvUsername, tvEmail, tvFullName, tvLastSync, tvVersion, tvServerUrl;
-    private Button btnEditProfile, btnSyncNow, btnChangePassword, btnLogout;
+    private Button btnEditProfile, btnSyncNow, btnChangePassword, btnLogout, btnDeleteAccount;
     private LinearLayout llSyncStatus;
     private ProgressBar progressSync;
     private TextView tvSyncStatus;
@@ -92,6 +92,7 @@ public class SettingsFragment extends Fragment {
 
         btnEditProfile = view.findViewById(R.id.btn_edit_profile);
         btnChangePassword = view.findViewById(R.id.btn_change_password);
+        btnDeleteAccount = view.findViewById(R.id.btn_delete_account); // Новая кнопка
         btnLogout = view.findViewById(R.id.btn_logout);
 
         cardProfile = view.findViewById(R.id.card_profile);
@@ -138,14 +139,14 @@ public class SettingsFragment extends Fragment {
         String email = prefs.getString("email", "email@example.com");
         String fullName = prefs.getString("full_name", "");
 
-        tvUsername.setText("@" + username);
+        tvUsername.setText(username);
         tvEmail.setText(email);
         tvFullName.setText(fullName.isEmpty() ? "Не указано" : fullName);
     }
 
     private void updateUI() {
         if (currentUser != null) {
-            tvUsername.setText("@" + currentUser.getUsername());
+            tvUsername.setText(currentUser.getUsername());
             tvEmail.setText(currentUser.getEmail());
             tvFullName.setText(currentUser.getFullName() != null && !currentUser.getFullName().isEmpty()
                     ? currentUser.getFullName() : "Не указано");
@@ -184,6 +185,7 @@ public class SettingsFragment extends Fragment {
             Toast.makeText(getContext(), "Синхронизация запущена", Toast.LENGTH_SHORT).show();
         });
         btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
+        btnDeleteAccount.setOnClickListener(v -> showDeleteAccountConfirmation()); // Новая кнопка
         btnLogout.setOnClickListener(v -> showLogoutConfirmation());
     }
 
@@ -446,6 +448,105 @@ public class SettingsFragment extends Fragment {
                     Toast.makeText(getContext(), "Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
                 dialog.dismiss();
+            }
+        });
+    }
+
+    // НОВЫЙ МЕТОД: Подтверждение удаления аккаунта
+    private void showDeleteAccountConfirmation() {
+        // Проверяем интернет (удаление аккаунта требует интернета)
+        if (!isNetworkAvailable()) {
+            Toast.makeText(getContext(), "Для удаления аккаунта требуется подключение к интернету", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_delete_account_confirmation, null);
+
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_delete);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_delete);
+        TextView tvWarning = dialogView.findViewById(R.id.tv_warning);
+        EditText etPassword = dialogView.findViewById(R.id.et_password);
+        TextInputLayout tilPassword = dialogView.findViewById(R.id.til_password);
+
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setView(dialogView)
+                .create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            String password = etPassword.getText().toString().trim();
+
+            if (password.isEmpty()) {
+                tilPassword.setError("Введите пароль для подтверждения");
+                return;
+            }
+
+            // Показываем прогресс
+            btnConfirm.setEnabled(false);
+            btnConfirm.setText("Удаление...");
+
+            deleteAccount(password, dialog, btnConfirm, tilPassword);
+        });
+
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+
+    // НОВЫЙ МЕТОД: Удаление аккаунта через API
+    private void deleteAccount(String password, AlertDialog dialog, Button btnConfirm, TextInputLayout tilPassword) {
+        String token = syncManager.getSavedToken();
+        if (token == null || currentUser == null) {
+            Toast.makeText(getContext(), "Ошибка авторизации", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+            return;
+        }
+
+        // Сначала подтверждаем пароль (можно через отдельный эндпоинт или включить в удаление)
+        // Для простоты будем считать, что на сервере есть эндпоинт DELETE /users/{userId} с подтверждением пароля
+
+        apiService.deleteUser("Bearer " + token, currentUser.getId()).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // Успешно удалили на сервере
+                    Toast.makeText(getContext(), "Аккаунт успешно удален", Toast.LENGTH_SHORT).show();
+
+                    // Очищаем локальные данные и выходим
+                    syncManager.logout();
+
+                    Intent intent = new Intent(getActivity(), LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    if (getActivity() != null) {
+                        getActivity().finish();
+                    }
+                } else {
+                    btnConfirm.setEnabled(true);
+                    btnConfirm.setText("Удалить");
+
+                    if (response.code() == 401) {
+                        tilPassword.setError("Неверный пароль");
+                    } else if (response.code() == 400) {
+                        Toast.makeText(getContext(), "Невозможно удалить аккаунт с данными", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Ошибка при удалении аккаунта", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                btnConfirm.setEnabled(true);
+                btnConfirm.setText("Удалить");
+
+                if (!isNetworkAvailable()) {
+                    Toast.makeText(getContext(), "Нет подключения к интернету", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }

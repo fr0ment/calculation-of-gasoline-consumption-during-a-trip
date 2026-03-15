@@ -37,6 +37,9 @@ public interface ApiService {
     Call<Void> changePassword(@Header("Authorization") String token,
                               @Body ChangePasswordRequest request);
 
+    @DELETE("users/{userId}")
+    Call<Void> deleteUser(@Header("Authorization") String token, @Path("userId") String userId);
+
     // Автомобили
     @GET("cars")
     Call<java.util.List<ApiCar>> getCars(@Header("Authorization") String token);
