@@ -4,10 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.cogcdat_2.api.models.LoginRequest;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -15,24 +17,25 @@ import com.google.android.material.timepicker.TimeFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 public class AddTripManualActivity extends AppCompatActivity {
 
     private DatabaseHelper dbHelper;
     private String carId;
+    private String currentUserId;
+    private UserSettings userSettings;
 
     // Поля ввода
     private EditText etTripName;
     private EditText etDistance;
     private EditText etFuelSpent;
-    // private EditText etDescription; // УДАЛЕНО
     private Button btnSelectStartDate;
     private Button btnSelectStartTime;
     private Button btnSelectEndDate;
     private Button btnSelectEndTime;
     private Button btnSaveTrip;
-
     private Button btnBack;
 
     // Календари для хранения выбранной даты и времени
@@ -44,7 +47,6 @@ public class AddTripManualActivity extends AppCompatActivity {
     // Формат для отображения в кнопках
     private static final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
     private static final SimpleDateFormat DISPLAY_TIME_FORMAT = new SimpleDateFormat("HH:mm", Locale.getDefault());
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,17 +62,30 @@ public class AddTripManualActivity extends AppCompatActivity {
             return;
         }
 
+        // Получаем ID текущего пользователя из SharedPreferences
+        currentUserId = getSharedPreferences("user", MODE_PRIVATE).getString("user_id", null);
+
+        // Загружаем настройки пользователя
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+        } else {
+            // Если нет user_id, создаем настройки по умолчанию
+            userSettings = new UserSettings();
+        }
+
         // Инициализация полей
         etTripName = findViewById(R.id.et_trip_name);
         etDistance = findViewById(R.id.et_distance);
         etFuelSpent = findViewById(R.id.et_fuel_spent);
-        // etDescription = findViewById(R.id.et_description); // УДАЛЕНО
         btnSelectStartDate = findViewById(R.id.btn_select_start_date);
         btnSelectStartTime = findViewById(R.id.btn_select_start_time);
         btnSelectEndDate = findViewById(R.id.btn_select_end_date);
         btnSelectEndTime = findViewById(R.id.btn_select_end_time);
         btnSaveTrip = findViewById(R.id.btn_save_trip);
         btnBack = findViewById(R.id.btnBack);
+
+        // Устанавливаем подсказку для поля расстояния с учетом единиц измерения
+        updateDistanceHint();
 
         // Установка текущей даты/времени по умолчанию
         updateDateTimeButtons();
@@ -83,6 +98,19 @@ public class AddTripManualActivity extends AppCompatActivity {
 
         btnSaveTrip.setOnClickListener(v -> saveTrip());
         btnBack.setOnClickListener(v -> finish());
+    }
+
+    /**
+     * Обновляет подсказку в поле расстояния в зависимости от единиц измерения
+     */
+    private void updateDistanceHint() {
+        String unitHint;
+        if (userSettings != null && userSettings.getDistanceUnit() == DistanceUnit.MI) {
+            unitHint = "Расстояние (мили)";
+        } else {
+            unitHint = "Расстояние (км)";
+        }
+        etDistance.setHint(unitHint);
     }
 
     // --- ВЫБОР ДАТЫ/ВРЕМЕНИ ---
@@ -98,7 +126,7 @@ public class AddTripManualActivity extends AppCompatActivity {
 
         datePicker.addOnPositiveButtonClickListener(selectionMillis -> {
             calendar.setTimeInMillis(selectionMillis);
-            // Приводим к началу дня (очень рекомендуется!)
+            // Приводим к началу дня
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 0);
             calendar.set(Calendar.SECOND, 0);
@@ -119,7 +147,7 @@ public class AddTripManualActivity extends AppCompatActivity {
 
     private void showTimePicker(Calendar calendar, boolean isStart) {
         MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H)           // или CLOCK_12H
+                .setTimeFormat(TimeFormat.CLOCK_24H)
                 .setHour(calendar.get(Calendar.HOUR_OF_DAY))
                 .setMinute(calendar.get(Calendar.MINUTE))
                 .setTitleText(isStart ? "Время начала" : "Время окончания")
@@ -172,7 +200,7 @@ public class AddTripManualActivity extends AppCompatActivity {
         }
 
         // 2. Считывание и валидация числовых полей
-        double distance = 0.0;
+        double userDistance = 0.0;
         double fuelSpent = 0.0;
 
         // Валидация обязательного поля (Расстояние)
@@ -184,7 +212,7 @@ public class AddTripManualActivity extends AppCompatActivity {
         }
 
         try {
-            distance = parseDoubleWithComma(distanceStr);
+            userDistance = parseDoubleWithComma(distanceStr);
         } catch (NumberFormatException e) {
             etDistance.setError("Некорректное значение расстояния.");
             return;
@@ -206,7 +234,7 @@ public class AddTripManualActivity extends AppCompatActivity {
         }
 
         // Дополнительная валидация данных
-        if (distance <= 0) {
+        if (userDistance <= 0) {
             etDistance.setError("Расстояние должно быть больше 0.");
             return;
         }
@@ -218,39 +246,35 @@ public class AddTripManualActivity extends AppCompatActivity {
             Toast.makeText(this, "Время окончания не может быть раньше времени начала.", Toast.LENGTH_LONG).show();
             return;
         }
+
         // Проверка минимальной длительности поездки (не менее 1 минуты)
         long startMillis = startDateTime.getTimeInMillis();
         long endMillis = endDateTime.getTimeInMillis();
         long durationMillis = endMillis - startMillis;
-        long oneMinuteMillis = 60 * 1000; // 1 минута в миллисекундах
+        long oneMinuteMillis = 60 * 1000;
         if (durationMillis < oneMinuteMillis) {
             Toast.makeText(this, "Длительность поездки должна быть не менее 1 минуты.", Toast.LENGTH_LONG).show();
             return;
         }
 
-        // 3. Расчет расхода топлива
-        double fuelConsumption = 0.0;
-        if (distance > 0 && fuelSpent > 0) {
-            // Расход = (Топливо / Расстояние) * 100
-            fuelConsumption = (fuelSpent / distance) * 100;
-        }
+        // 3. Создание объекта поездки
+        Trip newTrip = new Trip();
+        newTrip.setCarId(carId);
+        newTrip.setName(name);
 
-        // 4. Форматирование дат
+        // Форматирование дат
         String startDateTimeStr = DB_DATE_FORMAT.format(startDateTime.getTime());
         String endDateTimeStr = DB_DATE_FORMAT.format(endDateTime.getTime());
-        // String description = etDescription.getText().toString().trim(); // УДАЛЕНО
+        newTrip.setStartDateTime(startDateTimeStr);
+        newTrip.setEndDateTime(endDateTimeStr);
 
-        // 5. Создание и сохранение объекта Trip
-        Trip newTrip = new Trip(
-                carId,
-                name,
-                startDateTimeStr,
-                endDateTimeStr,
-                distance,
-                fuelSpent,
-                fuelConsumption
-        );
+        // Устанавливаем расстояние с конвертацией из единиц пользователя в километры
+        DistanceUnit inputUnit = userSettings != null ? userSettings.getDistanceUnit() : DistanceUnit.KM;
+        newTrip.setDistanceFromUserInput(userDistance, inputUnit);
 
+        newTrip.setFuelSpent(fuelSpent);
+
+        // 4. Сохранение в БД
         String result = dbHelper.addTrip(newTrip);
 
         if (result != null) {
@@ -260,6 +284,16 @@ public class AddTripManualActivity extends AppCompatActivity {
             finish();
         } else {
             Toast.makeText(this, "Ошибка при добавлении поездки.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Обновляем настройки при возврате на экран
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+            updateDistanceHint();
         }
     }
 }

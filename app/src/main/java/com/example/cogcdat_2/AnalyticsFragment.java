@@ -1,5 +1,7 @@
 package com.example.cogcdat_2;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,6 +39,8 @@ import java.util.Map;
 public class AnalyticsFragment extends Fragment {
 
     private DatabaseHelper dbHelper;
+    private String currentUserId;
+    private UserSettings userSettings;
 
     // UI элементы
     private TextView tvTotalDistance, tvTotalFuel, tvAvgConsumption;
@@ -78,6 +82,17 @@ public class AnalyticsFragment extends Fragment {
 
         dbHelper = new DatabaseHelper(getContext());
 
+        // Получаем ID текущего пользователя из SharedPreferences
+        SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
+        currentUserId = prefs.getString("user_id", null);
+
+        // Загружаем настройки пользователя
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+        } else {
+            userSettings = new UserSettings(); // Настройки по умолчанию
+        }
+
         initViews(rootView);
         setupCarSelection();
 
@@ -87,6 +102,10 @@ public class AnalyticsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // Обновляем настройки при возврате на фрагмент
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+        }
         loadAnalyticsData();
     }
 
@@ -175,7 +194,7 @@ public class AnalyticsFragment extends Fragment {
         totalDistance = 0.0;
         totalFuel = 0.0;
         for (Trip trip : allTrips) {
-            totalDistance += trip.getDistance();
+            totalDistance += trip.getDistance(); // Всегда в километрах
             totalFuel += trip.getFuelSpent();
         }
         avgConsumption = totalDistance > 0 ? (totalFuel / totalDistance) * 100 : 0.0;
@@ -207,19 +226,31 @@ public class AnalyticsFragment extends Fragment {
     }
 
     private void updateStatistics() {
-        String distanceUnit = "км";
-        String fuelUnit = "л";
-        String consumptionUnit = "л/100км";
+        // Получаем единицы расстояния из настроек пользователя
+        DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+        String distanceUnitSymbol = distanceUnit.getDisplayName();
 
-        if (selectedCar != null) {
-            distanceUnit = selectedCar.getDistanceUnit();
-            fuelUnit = selectedCar.getFuelUnit();
-            consumptionUnit = selectedCar.getFuelConsumptionUnit();
+        // Единицы топлива из выбранного автомобиля
+        String fuelUnit = selectedCar != null ? selectedCar.getFuelUnit() : "л";
+
+        // Конвертируем общее расстояние в выбранные единицы для отображения
+        double displayTotalDistance = totalDistance;
+        if (distanceUnit == DistanceUnit.MI) {
+            displayTotalDistance = totalDistance / 1.60934; // км -> мили
         }
 
-        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.2f %s", totalDistance, distanceUnit));
+        // Расход всегда л/100км или л/100миль в зависимости от единиц расстояния
+        double displayAvgConsumption = avgConsumption;
+        if (distanceUnit == DistanceUnit.MI) {
+            displayAvgConsumption = avgConsumption * 1.60934; // л/100км -> л/100миль
+        }
+        String consumptionUnit = distanceUnit == DistanceUnit.MI ? "л/100миль" : "л/100км";
+
+        tvTotalDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
+                displayTotalDistance, distanceUnitSymbol));
         tvTotalFuel.setText(String.format(Locale.getDefault(), "%.2f %s", totalFuel, fuelUnit));
-        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", avgConsumption, consumptionUnit));
+        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.2f %s",
+                displayAvgConsumption, consumptionUnit));
     }
 
     private void updateChart() {
@@ -244,11 +275,9 @@ public class AnalyticsFragment extends Fragment {
         dataSet.setLineWidth(2.5f);
         dataSet.setCircleRadius(4f);
 
-        // ── Добавляем правильные единицы измерения на график ──
-        String consumptionUnit = "л/100км";
-        if (selectedCar != null) {
-            consumptionUnit = selectedCar.getFuelConsumptionUnit();
-        }
+        // Получаем единицы расстояния из настроек
+        DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+        String consumptionUnit = distanceUnit == DistanceUnit.MI ? "л/100миль" : "л/100км";
 
         final String finalUnit = consumptionUnit;
         dataSet.setValueFormatter(new ValueFormatter() {
@@ -343,7 +372,7 @@ public class AnalyticsFragment extends Fragment {
         double totalFuel = 0.0;
 
         for (Trip t : trips) {
-            totalDist += t.getDistance();
+            totalDist += t.getDistance(); // Всегда в километрах
             totalFuel += t.getFuelSpent();
         }
 
@@ -355,16 +384,21 @@ public class AnalyticsFragment extends Fragment {
         tvNoData.setText(String.format("Нет данных для автомобиля %s. Добавьте поездки, чтобы увидеть статистику.",
                 selectedCar.getName()));
 
-        tvTotalDistance.setText("0 км");
+        // Получаем единицы расстояния из настроек
+        DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+        String distanceUnitSymbol = distanceUnit.getDisplayName();
+        String consumptionUnit = distanceUnit == DistanceUnit.MI ? "л/100миль" : "л/100км";
+
+        tvTotalDistance.setText("0 " + distanceUnitSymbol);
         tvTotalFuel.setText("0 л");
-        tvAvgConsumption.setText("0.0 л/100км");
+        tvAvgConsumption.setText("0.0 " + consumptionUnit);
 
         hideAllDataViews();
     }
 
     private void hideAllDataViews() {
         layoutChart.setVisibility(View.GONE);
-        layoutMonitoringSection.setVisibility(View.GONE); // Скрываем весь блок
+        layoutMonitoringSection.setVisibility(View.GONE);
     }
 
     private void updateSelectedCarDisplay(Car car) {
@@ -411,7 +445,7 @@ public class AnalyticsFragment extends Fragment {
         // Подсвечиваем текущий выбранный
         int selectedPos = -1;
         for (int i = 0; i < carList.size(); i++) {
-            if (carList.get(i).getId() == selectedCar.getId()) {
+            if (carList.get(i).getId().equals(selectedCar.getId())) {
                 selectedPos = i;
                 break;
             }
@@ -425,6 +459,7 @@ public class AnalyticsFragment extends Fragment {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
     }
+
     private static class AnomalyResult {
         final String carName;
         final double increasePercent;
@@ -439,6 +474,7 @@ public class AnalyticsFragment extends Fragment {
         }
 
         String getWarningMessage() {
+            // В предупреждении всегда используем л/100км для простоты
             return String.format(Locale.getDefault(),
                     "Последние %d поездок на автомобиле «%s» показывают расход на %.1f%% выше среднего\n" +
                             "(было: %.1f л/100 км, стало: %.1f л/100 км)",

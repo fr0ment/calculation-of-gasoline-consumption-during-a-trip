@@ -12,7 +12,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Добавлен id tvTitle -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
@@ -100,8 +99,8 @@
                 android:id="@+id/etTankVolume"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal|numberSigned"
-                android:digits="0123456789."
+                android:inputType="numberDecimal"
+                android:digits="0123456789.,"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -109,13 +108,14 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Единицы измерения"
+            android:text="Единицы измерения топлива"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="12dp" />
 
+        <!-- Только единицы топлива -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -123,61 +123,33 @@
             android:layout_marginBottom="16dp">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDistanceUnit"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:padding="16dp"
-                android:text="км"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:maxLines="5"
-                android:gravity="center"
-                android:backgroundTint="@color/card_background_secondary"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                app:cornerRadius="12dp" />
-
-            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnFuelUnit"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:padding="16dp"
                 android:text="л"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:maxLines="5"
                 android:gravity="center"
                 android:backgroundTint="@color/card_background_secondary"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 app:cornerRadius="12dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnFuelConsumption"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:padding="16dp"
-                android:text="л/100км"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:maxLines="5"
-                android:gravity="center"
-                android:backgroundTint="@color/card_background_secondary"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                app:cornerRadius="12dp"
-                android:visibility="gone"/>
         </LinearLayout>
+
+        <!-- Скрытые старые кнопки (оставлены для совместимости, но скрыты) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDistanceUnit"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFuelConsumption"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"

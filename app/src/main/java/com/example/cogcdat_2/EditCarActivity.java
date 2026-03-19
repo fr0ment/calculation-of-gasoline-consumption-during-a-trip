@@ -39,7 +39,7 @@ public class EditCarActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_READ_EXTERNAL_STORAGE = 2;
 
     private TextInputEditText etName, etDescription, etFuelType, etTankVolume;
-    private MaterialButton btnDistanceUnit, btnFuelUnit, btnFuelConsumption;
+    private MaterialButton btnFuelUnit; // Только единицы топлива
     private Button btnSave, btnBack, btnAddPhoto;
     private android.widget.ImageView ivCarPhoto;
     private android.widget.TextView tvTitle;
@@ -49,10 +49,9 @@ public class EditCarActivity extends AppCompatActivity {
     private String carId;
     private String selectedImagePath = null;
 
-    // Текущие выбранные единицы измерения (загружаются из БД)
-    private String selectedDistanceUnit;
+    // Текущие выбранные единицы измерения (только топливо)
     private String selectedFuelUnit;
-    private String selectedFuelConsumptionUnit;
+    private String oldImagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,9 +75,7 @@ public class EditCarActivity extends AppCompatActivity {
         }
 
         // Инициализируем выбранные единицы из объекта Car
-        selectedDistanceUnit = car.getDistanceUnit();
         selectedFuelUnit = car.getFuelUnit();
-        selectedFuelConsumptionUnit = car.getFuelConsumptionUnit();
         selectedImagePath = car.getImagePath();
 
         initViews();
@@ -88,24 +85,27 @@ public class EditCarActivity extends AppCompatActivity {
 
     private void initViews() {
         tvTitle = findViewById(R.id.tvTitle);
+        tvTitle.setText("Редактировать автомобиль");
         etName = findViewById(R.id.etName);
         etDescription = findViewById(R.id.etDescription);
         etFuelType = findViewById(R.id.etFuelType);
         etTankVolume = findViewById(R.id.etTankVolume);
 
-        btnDistanceUnit = findViewById(R.id.btnDistanceUnit);
         btnFuelUnit = findViewById(R.id.btnFuelUnit);
-        btnFuelConsumption = findViewById(R.id.btnFuelConsumption);
+        // Скрываем ненужные кнопки
+        MaterialButton btnDistanceUnit = findViewById(R.id.btnDistanceUnit);
+        MaterialButton btnFuelConsumption = findViewById(R.id.btnFuelConsumption);
+        btnDistanceUnit.setVisibility(View.GONE);
+        btnFuelConsumption.setVisibility(View.GONE);
+
         btnSave = findViewById(R.id.btnSave);
         btnBack = findViewById(R.id.btnBack);
         btnAddPhoto = findViewById(R.id.btnAddPhoto);
         ivCarPhoto = findViewById(R.id.ivCarPhoto);
 
-        btnDistanceUnit.setText(selectedDistanceUnit);
         btnFuelUnit.setText(selectedFuelUnit);
-        btnFuelConsumption.setText(selectedFuelConsumptionUnit);
     }
-    private String oldImagePath;
+
     private void loadCarData() {
         etName.setText(car.getName());
         etDescription.setText(car.getDescription());
@@ -129,16 +129,6 @@ public class EditCarActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         btnAddPhoto.setOnClickListener(v -> checkPermissionAndOpenPicker());
 
-        btnDistanceUnit.setOnClickListener(v -> showUnitSelectorDialog(
-                getResources().getStringArray(R.array.distance_units),
-                "Выберите единицу расстояния",
-                selectedDistanceUnit,
-                unit -> {
-                    selectedDistanceUnit = unit;
-                    btnDistanceUnit.setText(unit);
-                    updateFuelConsumptionUnit();
-                }));
-
         btnFuelUnit.setOnClickListener(v -> showUnitSelectorDialog(
                 getResources().getStringArray(R.array.fuel_units),
                 "Выберите единицу топлива",
@@ -146,10 +136,7 @@ public class EditCarActivity extends AppCompatActivity {
                 unit -> {
                     selectedFuelUnit = unit;
                     btnFuelUnit.setText(unit);
-                    updateFuelConsumptionUnit();
                 }));
-
-        // Удален listener для btnFuelConsumption, так как единица устанавливается автоматически
     }
 
     private void showUnitSelectorDialog(String[] units, String title, String currentSelection,
@@ -164,7 +151,7 @@ public class EditCarActivity extends AppCompatActivity {
         tvDialogTitle.setText(title);
 
         List<String> unitsList = new ArrayList<>(Arrays.asList(units));
-        UnitAdapter adapter = new UnitAdapter(unitsList, null); // без немедленного применения
+        UnitAdapter adapter = new UnitAdapter(unitsList, null);
 
         int currentPosition = unitsList.indexOf(currentSelection);
         if (currentPosition >= 0) {
@@ -217,7 +204,6 @@ public class EditCarActivity extends AppCompatActivity {
             return;
         }
 
-        String oldPath = car.getImagePath();
         int oldVersion = car.getImageVersion();
 
         // Обновляем объект Car
@@ -225,27 +211,25 @@ public class EditCarActivity extends AppCompatActivity {
         car.setDescription(etDescription.getText().toString().trim());
         car.setFuelType(etFuelType.getText().toString().trim());
         car.setTankVolume(tankVolume);
-        car.setDistanceUnit(selectedDistanceUnit);
         car.setFuelUnit(selectedFuelUnit);
-        car.setFuelConsumptionUnit(selectedFuelConsumptionUnit);
         car.setImagePath(selectedImagePath);
 
         boolean success = dbHelper.updateCar(car);
         if (success) {
             // Если фото изменилось
             if (selectedImagePath != null && !selectedImagePath.isEmpty() &&
-                    !selectedImagePath.equals(oldPath)) {
+                    !selectedImagePath.equals(oldImagePath)) {
 
                 // Увеличиваем версию!
                 int newVersion = oldVersion + 1;
                 car.setImageVersion(newVersion);
-                dbHelper.updateCar(car); // Обновляем с новой версией
+                dbHelper.updateCar(car);
 
                 File imageFile = new File(selectedImagePath);
                 if (imageFile.exists()) {
                     SyncManager.getInstance(this).uploadCarImage(car.getId(), imageFile);
                 }
-                Log.d("", "Image version increased from " + oldVersion + " to " + newVersion);
+                Log.d("EditCar", "Image version increased from " + oldVersion + " to " + newVersion);
             }
 
             Toast.makeText(this, "Автомобиль обновлён", Toast.LENGTH_SHORT).show();
@@ -377,11 +361,6 @@ public class EditCarActivity extends AppCompatActivity {
                 if (outputStream != null) outputStream.close();
             } catch (Exception ignored) {}
         }
-    }
-
-    private void updateFuelConsumptionUnit() {
-        selectedFuelConsumptionUnit = selectedFuelUnit + "/100" + selectedDistanceUnit;
-        btnFuelConsumption.setText(selectedFuelConsumptionUnit);
     }
 
     private void setDefaultImage(android.widget.ImageView imageView) {

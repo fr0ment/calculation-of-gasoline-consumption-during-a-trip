@@ -20,13 +20,10 @@ public class ApiTrip {
     private String endDateTime;
 
     @SerializedName("distance")
-    private double distance;
+    private double distance; // Всегда в километрах!
 
     @SerializedName("fuel_spent")
     private double fuelSpent;
-
-    @SerializedName("fuel_consumption")
-    private double fuelConsumption;
 
     @SerializedName("created_at")
     private String createdAt;
@@ -40,32 +37,33 @@ public class ApiTrip {
     @SerializedName("deleted_at")
     private String deletedAt;
 
+    // Конструктор для преобразования из локальной Trip в API модель
     public ApiTrip(Trip trip) {
         this.id = trip.getId();
         this.name = trip.getName();
         this.carId = trip.getCarId();
         this.startDateTime = trip.getStartDateTime();
         this.endDateTime = trip.getEndDateTime();
-        this.distance = trip.getDistance();
+        this.distance = trip.getDistance(); // Всегда в километрах!
         this.fuelSpent = trip.getFuelSpent();
-        this.fuelConsumption = trip.getFuelConsumption();
         this.createdAt = trip.getCreatedAt();
         this.updatedAt = trip.getUpdatedAt();
         this.isDeleted = trip.isDeleted();
         this.deletedAt = trip.getDeletedAt();
     }
 
+    // Пустой конструктор для Gson
     public ApiTrip() {}
 
+    // Метод для преобразования из API модели в локальную Trip
     public Trip toLocalTrip() {
         Trip trip = new Trip(
                 this.carId,
                 this.name,
                 this.startDateTime,
                 this.endDateTime,
-                this.distance,
+                this.distance, // Всегда в километрах!
                 this.fuelSpent,
-                this.fuelConsumption,
                 this.isDeleted,
                 this.deletedAt
         );
@@ -96,9 +94,6 @@ public class ApiTrip {
 
     public double getFuelSpent() { return fuelSpent; }
     public void setFuelSpent(double fuelSpent) { this.fuelSpent = fuelSpent; }
-
-    public double getFuelConsumption() { return fuelConsumption; }
-    public void setFuelConsumption(double fuelConsumption) { this.fuelConsumption = fuelConsumption; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }

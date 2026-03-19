@@ -1,6 +1,8 @@
 package com.example.cogcdat_2.sync;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
@@ -8,12 +10,17 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.example.cogcdat_2.Car;
 import com.example.cogcdat_2.DatabaseHelper;
+import com.example.cogcdat_2.DistanceUnit;
+import com.example.cogcdat_2.Language;
 import com.example.cogcdat_2.SelectedCarManager;
+import com.example.cogcdat_2.Theme;
 import com.example.cogcdat_2.Trip;
+import com.example.cogcdat_2.UserSettings;
 import com.example.cogcdat_2.api.ApiClient;
 import com.example.cogcdat_2.api.ApiService;
 import com.example.cogcdat_2.api.models.ApiCar;
 import com.example.cogcdat_2.api.models.ApiTrip;
+import com.example.cogcdat_2.api.models.ApiUserSettings;
 import com.example.cogcdat_2.api.models.LoginRequest;
 import com.example.cogcdat_2.api.models.SyncRequest;
 import com.example.cogcdat_2.api.models.SyncResponse;
@@ -43,6 +50,7 @@ public class SyncManager {
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
     private static final String PREF_LAST_SYNC = "last_sync_time";
     private static final String PREF_AUTH_TOKEN = "auth_token";
+    private static final String PREF_USER_ID = "user_id";
 
     // Базовый URL сервера для изображений
     private static final String BASE_URL = "http://192.168.3.15:8000";
@@ -56,6 +64,7 @@ public class SyncManager {
     private final MutableLiveData<Boolean> isAuthenticated = new MutableLiveData<>(false);
 
     private boolean isFirstSyncAfterLogin = true;
+    private String currentUserId = null;
 
     private SyncManager(Context context) {
         this.context = context.getApplicationContext();
@@ -66,6 +75,10 @@ public class SyncManager {
         if (token != null) {
             ApiClient.getInstance(this.context).setAuthToken(token);
             isAuthenticated.setValue(true);
+
+            // Загружаем userId из SharedPreferences
+            currentUserId = context.getSharedPreferences("user", Context.MODE_PRIVATE)
+                    .getString(PREF_USER_ID, null);
         }
     }
 
@@ -87,6 +100,14 @@ public class SyncManager {
                 .getString(PREF_AUTH_TOKEN, null);
     }
 
+    public String getCurrentUserId() {
+        if (currentUserId == null) {
+            currentUserId = context.getSharedPreferences("user", Context.MODE_PRIVATE)
+                    .getString(PREF_USER_ID, null);
+        }
+        return currentUserId;
+    }
+
     private void saveToken(String token) {
         context.getSharedPreferences("auth", Context.MODE_PRIVATE)
                 .edit()
@@ -94,6 +115,14 @@ public class SyncManager {
                 .apply();
         ApiClient.getInstance(context).setAuthToken(token);
         isAuthenticated.postValue(true);
+    }
+
+    public void saveUserId(String userId) {
+        this.currentUserId = userId;
+        context.getSharedPreferences("user", Context.MODE_PRIVATE)
+                .edit()
+                .putString(PREF_USER_ID, userId)
+                .apply();
     }
 
     public void clearLocalData() {
@@ -122,7 +151,13 @@ public class SyncManager {
                 .remove(PREF_LAST_SYNC)
                 .apply();
 
+        context.getSharedPreferences("user", Context.MODE_PRIVATE)
+                .edit()
+                .remove(PREF_USER_ID)
+                .apply();
+
         SelectedCarManager.clear(context);
+        currentUserId = null;
 
         Log.d(TAG, "Локальные данные очищены");
     }
@@ -162,8 +197,10 @@ public class SyncManager {
                     }
 
                     saveToken(token);
-                    callback.onSuccess(token);
-                    forceSyncFromServer();
+
+                    // Сразу после получения токена загружаем информацию о пользователе
+                    loadUserInfo(token, callback);
+
                 } else {
                     String error = "Ошибка входа: " + response.code();
                     try {
@@ -180,6 +217,38 @@ public class SyncManager {
             @Override
             public void onFailure(Call<TokenResponse> call, Throwable t) {
                 callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
+
+    private void loadUserInfo(String token, AuthCallback callback) {
+        apiService.getCurrentUser("Bearer " + token).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    User user = response.body();
+                    saveUserId(user.getId());
+
+                    // Сохраняем информацию о пользователе в SharedPreferences
+                    context.getSharedPreferences("user", Context.MODE_PRIVATE)
+                            .edit()
+                            .putString("username", user.getUsername())
+                            .putString("email", user.getEmail())
+                            .putString("full_name", user.getFullName())
+                            .apply();
+
+                    callback.onSuccess(token);
+
+                    // Загружаем все данные с сервера
+                    forceSyncFromServer();
+                } else {
+                    callback.onError("Не удалось загрузить информацию о пользователе");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                callback.onError("Ошибка сети при загрузке информации о пользователе");
             }
         });
     }
@@ -222,7 +291,7 @@ public class SyncManager {
         }
 
         syncInProgress.postValue(true);
-        syncStatus.postValue("Синхронизация...");
+        syncStatus.postValue("Начало синхронизации...");
 
         List<ApiCar> apiCars = new ArrayList<>();
         for (Car car : dbHelper.getAllCars(true)) {
@@ -234,8 +303,20 @@ public class SyncManager {
             apiTrips.add(new ApiTrip(trip));
         }
 
+        // Получаем настройки пользователя ТОЛЬКО если есть userId
+        ApiUserSettings apiSettings = null;
+        if (currentUserId != null) {
+            // Используем прямой запрос к БД, но БЕЗ создания новых настроек
+            UserSettings settings = getUserSettingsDirect(currentUserId);
+            if (settings != null) {
+                apiSettings = new ApiUserSettings(settings);
+            }
+        }
+
+
+
         String lastSync = getLastSyncTime();
-        SyncRequest request = new SyncRequest(lastSync, apiCars, apiTrips);
+        SyncRequest request = new SyncRequest(lastSync, apiCars, apiTrips, apiSettings);
 
         apiService.syncData("Bearer " + getSavedToken(), request).enqueue(new Callback<SyncResponse>() {
             @Override
@@ -266,9 +347,49 @@ public class SyncManager {
         });
     }
 
+    private UserSettings getUserSettingsDirect(String userId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.query("user_settings", null,
+                "user_id=?", new String[]{userId},
+                null, null, null);
+
+        UserSettings settings = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            settings = new UserSettings();
+            settings.setId(cursor.getString(cursor.getColumnIndexOrThrow("id")));
+            settings.setUserId(cursor.getString(cursor.getColumnIndexOrThrow("user_id")));
+            settings.setDistanceUnit(cursor.getString(cursor.getColumnIndexOrThrow("distance_unit")));
+            settings.setTheme(cursor.getString(cursor.getColumnIndexOrThrow("theme")));
+            settings.setLanguage(cursor.getString(cursor.getColumnIndexOrThrow("language")));
+            settings.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
+            settings.setUpdatedAt(cursor.getString(cursor.getColumnIndexOrThrow("updated_at")));
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        db.close();
+        return settings;
+    }
+
     private void processSyncResponse(SyncResponse response) {
         Log.d(TAG, "Processing sync response. Cars received: " +
                 (response.getCars() != null ? response.getCars().size() : 0));
+
+        // Обработка настроек пользователя - используйте прямой доступ
+        if (response.getSettings() != null && currentUserId != null) {
+            ApiUserSettings apiSettings = response.getSettings();
+            UserSettings serverSettings = apiSettings.toLocalSettings();
+
+            // Получаем локальные настройки без создания новых
+            UserSettings localSettings = getUserSettingsDirect(currentUserId);
+
+            if (localSettings == null ||
+                    isServerNewer(serverSettings.getUpdatedAt(), localSettings.getUpdatedAt())) {
+                // Сохраняем с флагом false, чтобы не вызывать синхронизацию
+                dbHelper.saveUserSettings(serverSettings, false);
+                Log.d(TAG, "Settings updated from server");
+            }
+        }
 
         // 1. Обрабатываем удаленные ID
         if (response.getDeletedCarIds() != null) {
@@ -299,20 +420,23 @@ public class SyncManager {
                 Car localCar = dbHelper.getCar(serverCar.getId());
 
                 if (localCar == null) {
-                    // НОВЫЙ автомобиль с сервера
                     if (!serverCar.isDeleted()) {
-                        // Убираем ЭТУ строку - она затирает то, что уже установлено в toLocalCar()!
-                        // serverCar.setServerImageUrl(serverCar.getImagePath()); // <-- УДАЛИТЬ!
+                        // Логируем перед добавлением
+                        Log.d(TAG, "About to add car: " + serverCar.getName() +
+                                " with serverImageUrl: " + serverCar.getServerImageUrl());
 
-                        // Очищаем локальный путь (еще нет изображения)
                         serverCar.setImagePath(null);
-
                         dbHelper.addCar(serverCar);
+
+                        // Проверим, сохранился ли URL
+                        Car savedCar = dbHelper.getCar(serverCar.getId());
+                        Log.d(TAG, "After saving, serverImageUrl: " +
+                                (savedCar != null ? savedCar.getServerImageUrl() : "null"));
+
                         Log.d(TAG, "Added new car from server: " + serverCar.getName() +
                                 " with image version: " + serverCar.getImageVersion() +
-                                " and URL: " + serverCar.getServerImageUrl()); // Теперь URL должен быть!
+                                " and URL: " + serverCar.getServerImageUrl());
 
-                        // Скачиваем изображение, если есть версия > 0
                         if (serverCar.getImageVersion() > 0) {
                             downloadCarImage(serverCar.getId(), serverCar.getServerImageUrl());
                         }
@@ -329,19 +453,17 @@ public class SyncManager {
                             String currentLocalPath = localCar.getImagePath();
                             int currentImageVersion = localCar.getImageVersion();
 
-                            // Обновляем все поля, включая serverImageUrl
+                            // Обновляем все поля
                             localCar.setName(serverCar.getName());
                             localCar.setDescription(serverCar.getDescription());
-                            localCar.setDistanceUnit(serverCar.getDistanceUnit());
                             localCar.setFuelUnit(serverCar.getFuelUnit());
-                            localCar.setFuelConsumptionUnit(serverCar.getFuelConsumptionUnit());
                             localCar.setFuelType(serverCar.getFuelType());
                             localCar.setTankVolume(serverCar.getTankVolume());
                             localCar.setUpdatedAt(serverCar.getUpdatedAt());
                             localCar.setDeleted(serverCar.isDeleted());
                             localCar.setDeletedAt(serverCar.getDeletedAt());
 
-                            // Сохраняем URL с сервера
+                            // Сохраняем URL с сервера - ЭТО НУЖНО!
                             localCar.setServerImageUrl(serverCar.getImagePath());
                             // Восстанавливаем локальный путь
                             localCar.setImagePath(currentLocalPath);
@@ -353,16 +475,11 @@ public class SyncManager {
                                 dbHelper.updateCar(localCar);
 
                                 deleteLocalImage(currentLocalPath);
-                                Log.d(TAG, "Server has newer image version (server: " + serverCar.getImageVersion() +
-                                        ", local: " + currentImageVersion + "), downloading for car: " + serverCar.getName() +
+                                Log.d(TAG, "Server has newer image version, downloading for car: " + serverCar.getName() +
                                         " from URL: " + serverCar.getImagePath());
                                 downloadCarImage(serverCar.getId(), serverCar.getImagePath());
                             } else {
-                                // Версии одинаковые или клиент новее
                                 dbHelper.updateCar(localCar);
-                                Log.d(TAG, "Updated car from server: " + serverCar.getName() +
-                                        " with same or older image version (server: " + serverCar.getImageVersion() +
-                                        ", local: " + currentImageVersion + ")");
                             }
                         }
                     }
@@ -436,14 +553,11 @@ public class SyncManager {
 
         Log.d(TAG, "Building URL from path: " + imagePath);
 
-        // Если уже полный URL
         if (imagePath.startsWith("http")) {
             return imagePath;
         }
 
-        // Если путь начинается с /static (правильный URL с сервера)
         if (imagePath.startsWith("/static")) {
-            // Базовая проверка BASE_URL
             String baseUrl = BASE_URL;
             if (baseUrl.endsWith("/")) {
                 baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
@@ -453,13 +567,11 @@ public class SyncManager {
             return fullUrl;
         }
 
-        // Если это локальный путь с телефона - не скачиваем
         if (imagePath.startsWith("/data")) {
             Log.d(TAG, "Skipping download for local path: " + imagePath);
             return null;
         }
 
-        // Для любых других путей (на случай если сервер вернет что-то еще)
         Log.d(TAG, "Unknown path format: " + imagePath);
         return null;
     }
@@ -470,9 +582,17 @@ public class SyncManager {
             return;
         }
 
+        if (currentUserId == null) {
+            currentUserId = getCurrentUserId();
+            if (currentUserId == null) {
+                Log.e(TAG, "No user ID, cannot force sync");
+                return;
+            }
+        }
+
         Log.d(TAG, "Starting force sync from server");
 
-        SyncRequest request = new SyncRequest(null, new ArrayList<>(), new ArrayList<>());
+        SyncRequest request = new SyncRequest(null, new ArrayList<>(), new ArrayList<>(), null);
 
         apiService.syncData("Bearer " + getSavedToken(), request).enqueue(new Callback<SyncResponse>() {
             @Override
@@ -513,7 +633,6 @@ public class SyncManager {
 
         Log.d(TAG, "Uploading image for car: " + carId + ", file: " + imageFile.getName());
 
-        // Получаем текущую версию (уже установленную в Activity)
         Car currentCar = dbHelper.getCar(carId);
         int currentVersion = currentCar != null ? currentCar.getImageVersion() : 1;
 
@@ -532,11 +651,8 @@ public class SyncManager {
                     Car currentCar = dbHelper.getCar(carId);
 
                     if (currentCar != null) {
-                        // Сохраняем URL, который вернул сервер
                         currentCar.setServerImageUrl(apiCar.getImagePath());
-                        // Локальный путь уже правильный
                         currentCar.setImagePath(imageFile.getAbsolutePath());
-                        // Версия НЕ МЕНЯЕТСЯ - она уже была увеличена в Activity
                         currentCar.setUpdatedAt(apiCar.getUpdatedAt());
 
                         dbHelper.updateCar(currentCar);
@@ -609,8 +725,7 @@ public class SyncManager {
             Car car = dbHelper.getCar(carId);
             if (car != null) {
                 car.setImagePath(file.getAbsolutePath());
-                car.setServerImageUrl(serverImageUrl); // СОХРАНЯЕМ URL В БД!
-                // НЕ меняем версию при скачивании!
+                car.setServerImageUrl(serverImageUrl);
                 dbHelper.updateCar(car);
                 Log.d(TAG, "Car updated with image path: " + file.getAbsolutePath() +
                         " and server URL: " + serverImageUrl);

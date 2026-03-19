@@ -17,7 +17,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "DatabaseHelper";
 
     private static final String DATABASE_NAME = "cars.db";
-    private static final int DATABASE_VERSION = 15;
+    private static final int DATABASE_VERSION = 17; // Увеличена версия
 
     // Cars table
     private static final String TABLE_CARS = "cars";
@@ -27,9 +27,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_IMAGE_PATH = "image_path";
     private static final String COLUMN_SERVER_IMAGE_URL = "server_image_url";
     private static final String COLUMN_IMAGE_VERSION = "image_version";
-    private static final String COLUMN_DISTANCE_UNIT = "distance_unit";
     private static final String COLUMN_FUEL_UNIT = "fuel_unit";
-    private static final String COLUMN_FUEL_CONSUMPTION_UNIT = "fuel_consumption_unit";
     private static final String COLUMN_FUEL_TYPE = "fuel_type";
     private static final String COLUMN_TANK_VOLUME = "tank_volume";
     private static final String COLUMN_CREATED_AT = "created_at";
@@ -47,11 +45,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String COLUMN_TRIP_END_DATETIME = "end_datetime";
     private static final String COLUMN_TRIP_DISTANCE = "distance";
     private static final String COLUMN_TRIP_FUEL_SPENT = "fuel_spent";
-    private static final String COLUMN_TRIP_FUEL_CONSUMPTION = "fuel_consumption";
     private static final String COLUMN_TRIP_CREATED_AT = "created_at";
     private static final String COLUMN_TRIP_UPDATED_AT = "updated_at";
     private static final String COLUMN_TRIP_IS_DELETED = "is_deleted";
     private static final String COLUMN_TRIP_DELETED_AT = "deleted_at";
+
+    // User Settings table
+    private static final String TABLE_USER_SETTINGS = "user_settings";
+    private static final String COLUMN_SETTINGS_ID = "id";
+    private static final String COLUMN_USER_ID = "user_id";
+    private static final String COLUMN_DISTANCE_UNIT = "distance_unit";
+    private static final String COLUMN_THEME = "theme";
+    private static final String COLUMN_LANGUAGE = "language";
+    private static final String COLUMN_SETTINGS_CREATED_AT = "created_at";
+    private static final String COLUMN_SETTINGS_UPDATED_AT = "updated_at";
 
     private final Context context;
 
@@ -62,9 +69,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_IMAGE_PATH + " TEXT,"
             + COLUMN_SERVER_IMAGE_URL + " TEXT,"
             + COLUMN_IMAGE_VERSION + " INTEGER DEFAULT 0,"
-            + COLUMN_DISTANCE_UNIT + " TEXT,"
-            + COLUMN_FUEL_UNIT + " TEXT,"
-            + COLUMN_FUEL_CONSUMPTION_UNIT + " TEXT,"
+            + COLUMN_FUEL_UNIT + " TEXT NOT NULL,"
             + COLUMN_FUEL_TYPE + " TEXT,"
             + COLUMN_TANK_VOLUME + " REAL,"
             + COLUMN_CREATED_AT + " TEXT NOT NULL,"
@@ -82,12 +87,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_TRIP_END_DATETIME + " TEXT,"
             + COLUMN_TRIP_DISTANCE + " REAL,"
             + COLUMN_TRIP_FUEL_SPENT + " REAL,"
-            + COLUMN_TRIP_FUEL_CONSUMPTION + " REAL,"
             + COLUMN_TRIP_CREATED_AT + " TEXT NOT NULL,"
             + COLUMN_TRIP_UPDATED_AT + " TEXT NOT NULL,"
             + COLUMN_TRIP_IS_DELETED + " INTEGER DEFAULT 0,"
             + COLUMN_TRIP_DELETED_AT + " TEXT,"
             + "FOREIGN KEY(" + COLUMN_CAR_ID + ") REFERENCES " + TABLE_CARS + "(" + COLUMN_ID + ") ON DELETE CASCADE"
+            + ")";
+
+    private static final String CREATE_TABLE_USER_SETTINGS = "CREATE TABLE " + TABLE_USER_SETTINGS + "("
+            + COLUMN_SETTINGS_ID + " TEXT PRIMARY KEY,"
+            + COLUMN_USER_ID + " TEXT UNIQUE NOT NULL,"
+            + COLUMN_DISTANCE_UNIT + " TEXT NOT NULL DEFAULT 'km',"
+            + COLUMN_THEME + " TEXT NOT NULL DEFAULT 'system',"
+            + COLUMN_LANGUAGE + " TEXT NOT NULL DEFAULT 'ru',"
+            + COLUMN_SETTINGS_CREATED_AT + " TEXT NOT NULL,"
+            + COLUMN_SETTINGS_UPDATED_AT + " TEXT NOT NULL"
             + ")";
 
     public DatabaseHelper(Context context) {
@@ -99,6 +113,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_CARS);
         db.execSQL(CREATE_TABLE_TRIPS);
+        db.execSQL(CREATE_TABLE_USER_SETTINGS);
     }
 
     @Override
@@ -120,12 +135,110 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 15) {
             db.execSQL("ALTER TABLE " + TABLE_CARS + " ADD COLUMN " + COLUMN_IMAGE_VERSION + " INTEGER DEFAULT 0");
         }
+
+        if (oldVersion < 16) {
+            db.execSQL(CREATE_TABLE_USER_SETTINGS);
+        }
     }
 
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
         db.setForeignKeyConstraintsEnabled(true);
+    }
+
+    // ========== МЕТОДЫ ДЛЯ НАСТРОЕК ПОЛЬЗОВАТЕЛЯ ==========
+
+    public UserSettings getUserSettings(String userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(TABLE_USER_SETTINGS, new String[]{
+                        COLUMN_SETTINGS_ID, COLUMN_USER_ID, COLUMN_DISTANCE_UNIT,
+                        COLUMN_THEME, COLUMN_LANGUAGE, COLUMN_SETTINGS_CREATED_AT,
+                        COLUMN_SETTINGS_UPDATED_AT},
+                COLUMN_USER_ID + "=?",
+                new String[]{userId}, null, null, null, null);
+
+        UserSettings settings = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            settings = extractUserSettingsFromCursor(cursor);
+            cursor.close();
+        }
+        if (cursor != null && !cursor.isClosed()) {
+            cursor.close();
+        }
+        db.close();
+
+        // Если настроек нет, создаем с значениями по умолчанию
+        if (settings == null) {
+            settings = new UserSettings();
+            settings.setUserId(userId);
+            settings.setDistanceUnit(DistanceUnit.KM);
+            settings.setTheme(Theme.SYSTEM);
+            settings.setLanguage(Language.RU);
+
+            // Сохраняем, НО без triggerSync!
+            saveUserSettings(settings, false); // false = не вызывать синхронизацию
+        }
+
+        return settings;
+    }
+
+    public void saveUserSettings(UserSettings settings) {
+        saveUserSettings(settings, true); // По умолчанию с синхронизацией
+    }
+
+    public void saveUserSettings(UserSettings settings, boolean triggerSync) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        String now = java.time.Instant.now().toString();
+
+        String id = settings.getId() != null ? settings.getId() : UUID.randomUUID().toString();
+
+        values.put(COLUMN_SETTINGS_ID, id);
+        values.put(COLUMN_USER_ID, settings.getUserId());
+        values.put(COLUMN_DISTANCE_UNIT, settings.getDistanceUnit().getValue());
+        values.put(COLUMN_THEME, settings.getTheme().getValue());
+        values.put(COLUMN_LANGUAGE, settings.getLanguage().getValue());
+        values.put(COLUMN_SETTINGS_CREATED_AT, settings.getCreatedAt() != null ? settings.getCreatedAt() : now);
+        values.put(COLUMN_SETTINGS_UPDATED_AT, now);
+
+        // Проверяем, есть ли уже запись
+        Cursor cursor = db.query(TABLE_USER_SETTINGS, new String[]{COLUMN_SETTINGS_ID},
+                COLUMN_USER_ID + "=?", new String[]{settings.getUserId()},
+                null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            // Обновляем существующую
+            db.update(TABLE_USER_SETTINGS, values, COLUMN_USER_ID + "=?",
+                    new String[]{settings.getUserId()});
+        } else {
+            // Вставляем новую
+            db.insert(TABLE_USER_SETTINGS, null, values);
+            settings.setId(id);
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+        db.close();
+
+        // Вызываем синхронизацию только если нужно
+        if (triggerSync) {
+            triggerSync();
+        }
+    }
+
+    private UserSettings extractUserSettingsFromCursor(Cursor cursor) {
+        UserSettings settings = new UserSettings();
+        settings.setId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SETTINGS_ID)));
+        settings.setUserId(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_USER_ID)));
+        settings.setDistanceUnit(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISTANCE_UNIT)));
+        settings.setTheme(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_THEME)));
+        settings.setLanguage(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LANGUAGE)));
+        settings.setCreatedAt(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SETTINGS_CREATED_AT)));
+        settings.setUpdatedAt(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SETTINGS_UPDATED_AT)));
+        return settings;
     }
 
     // ========== МЕТОДЫ ДЛЯ АВТОМОБИЛЕЙ ==========
@@ -141,11 +254,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_NAME, car.getName());
         values.put(COLUMN_DESCRIPTION, car.getDescription());
         values.put(COLUMN_IMAGE_PATH, car.getImagePath());
-        values.put(COLUMN_SERVER_IMAGE_URL, car.getServerImageUrl());
+        values.put(COLUMN_SERVER_IMAGE_URL, car.getServerImageUrl()); // ЭТО ДОЛЖНО БЫТЬ!
         values.put(COLUMN_IMAGE_VERSION, car.getImageVersion());
-        values.put(COLUMN_DISTANCE_UNIT, car.getDistanceUnit());
         values.put(COLUMN_FUEL_UNIT, car.getFuelUnit());
-        values.put(COLUMN_FUEL_CONSUMPTION_UNIT, car.getFuelConsumptionUnit());
         values.put(COLUMN_FUEL_TYPE, car.getFuelType());
         values.put(COLUMN_TANK_VOLUME, car.getTankVolume());
         values.put(COLUMN_CREATED_AT, car.getCreatedAt() != null ? car.getCreatedAt() : now);
@@ -153,6 +264,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_IS_DELETED, car.isDeleted() ? 1 : 0);
         values.put(COLUMN_DELETED_AT, car.getDeletedAt());
         values.put(COLUMN_OWNER_ID, car.getOwnerId());
+
+        Log.d("DatabaseHelper", "Adding car with serverImageUrl: " + car.getServerImageUrl());
 
         long result = db.insert(TABLE_CARS, null, values);
         db.close();
@@ -170,9 +283,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         Cursor cursor = db.query(TABLE_CARS, new String[]{
                         COLUMN_ID, COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_IMAGE_PATH,
-                        COLUMN_SERVER_IMAGE_URL, COLUMN_IMAGE_VERSION,
-                        COLUMN_DISTANCE_UNIT, COLUMN_FUEL_UNIT, COLUMN_FUEL_CONSUMPTION_UNIT,
-                        COLUMN_FUEL_TYPE, COLUMN_TANK_VOLUME, COLUMN_CREATED_AT, COLUMN_UPDATED_AT,
+                        COLUMN_SERVER_IMAGE_URL, // ЭТО ДОЛЖНО БЫТЬ В ЗАПРОСЕ!
+                        COLUMN_IMAGE_VERSION,
+                        COLUMN_FUEL_UNIT, COLUMN_FUEL_TYPE, COLUMN_TANK_VOLUME,
+                        COLUMN_CREATED_AT, COLUMN_UPDATED_AT,
                         COLUMN_IS_DELETED, COLUMN_DELETED_AT, COLUMN_OWNER_ID},
                 COLUMN_ID + "=?",
                 new String[]{id}, null, null, null, null);
@@ -225,11 +339,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_IMAGE_PATH, car.getImagePath());
         values.put(COLUMN_SERVER_IMAGE_URL, car.getServerImageUrl());
         values.put(COLUMN_IMAGE_VERSION, car.getImageVersion());
+        values.put(COLUMN_FUEL_UNIT, car.getFuelUnit());
         values.put(COLUMN_FUEL_TYPE, car.getFuelType());
         values.put(COLUMN_TANK_VOLUME, car.getTankVolume());
-        values.put(COLUMN_DISTANCE_UNIT, car.getDistanceUnit());
-        values.put(COLUMN_FUEL_UNIT, car.getFuelUnit());
-        values.put(COLUMN_FUEL_CONSUMPTION_UNIT, car.getFuelConsumptionUnit());
         values.put(COLUMN_UPDATED_AT, now);
         values.put(COLUMN_IS_DELETED, car.isDeleted() ? 1 : 0);
         values.put(COLUMN_DELETED_AT, car.getDeletedAt());
@@ -246,7 +358,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean deleteCar(String carId) {
-        // Мягкое удаление
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         String now = java.time.Instant.now().toString();
@@ -266,7 +377,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public boolean permanentDeleteCar(String carId) {
-        // Физическое удаление (используется только при выходе из аккаунта)
         SQLiteDatabase db = this.getWritableDatabase();
         int rowsAffected = db.delete(TABLE_CARS, COLUMN_ID + " = ?",
                 new String[]{carId});
@@ -286,9 +396,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_IMAGE_PATH)),
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SERVER_IMAGE_URL)),
                 cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IMAGE_VERSION)),
-                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISTANCE_UNIT)),
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FUEL_UNIT)),
-                cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FUEL_CONSUMPTION_UNIT)),
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FUEL_TYPE)),
                 cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TANK_VOLUME)),
                 cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_IS_DELETED)) == 1,
@@ -316,7 +424,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TRIP_END_DATETIME, trip.getEndDateTime());
         values.put(COLUMN_TRIP_DISTANCE, trip.getDistance());
         values.put(COLUMN_TRIP_FUEL_SPENT, trip.getFuelSpent());
-        values.put(COLUMN_TRIP_FUEL_CONSUMPTION, trip.getFuelConsumption());
         values.put(COLUMN_TRIP_CREATED_AT, trip.getCreatedAt() != null ? trip.getCreatedAt() : now);
         values.put(COLUMN_TRIP_UPDATED_AT, trip.getUpdatedAt() != null ? trip.getUpdatedAt() : now);
         values.put(COLUMN_TRIP_IS_DELETED, trip.isDeleted() ? 1 : 0);
@@ -339,7 +446,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_TRIPS, new String[]{
                         COLUMN_TRIP_ID, COLUMN_CAR_ID, COLUMN_TRIP_NAME,
                         COLUMN_TRIP_START_DATETIME, COLUMN_TRIP_END_DATETIME,
-                        COLUMN_TRIP_DISTANCE, COLUMN_TRIP_FUEL_SPENT, COLUMN_TRIP_FUEL_CONSUMPTION,
+                        COLUMN_TRIP_DISTANCE, COLUMN_TRIP_FUEL_SPENT,
                         COLUMN_TRIP_CREATED_AT, COLUMN_TRIP_UPDATED_AT,
                         COLUMN_TRIP_IS_DELETED, COLUMN_TRIP_DELETED_AT},
                 COLUMN_TRIP_ID + "=?",
@@ -394,7 +501,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put(COLUMN_TRIP_END_DATETIME, trip.getEndDateTime());
         values.put(COLUMN_TRIP_DISTANCE, trip.getDistance());
         values.put(COLUMN_TRIP_FUEL_SPENT, trip.getFuelSpent());
-        values.put(COLUMN_TRIP_FUEL_CONSUMPTION, trip.getFuelConsumption());
         values.put(COLUMN_TRIP_UPDATED_AT, now);
         values.put(COLUMN_TRIP_IS_DELETED, trip.isDeleted() ? 1 : 0);
         values.put(COLUMN_TRIP_DELETED_AT, trip.getDeletedAt());
@@ -410,7 +516,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void deleteTrip(String tripId) {
-        // Мягкое удаление
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         String now = java.time.Instant.now().toString();
@@ -426,7 +531,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public void permanentDeleteTrip(String tripId) {
-        // Физическое удаление (используется только при выходе из аккаунта)
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_TRIPS, COLUMN_TRIP_ID + " = ?", new String[]{tripId});
         db.close();
@@ -442,7 +546,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_END_DATETIME)),
                 cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_DISTANCE)),
                 cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_FUEL_SPENT)),
-                cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_TRIP_FUEL_CONSUMPTION)),
                 cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TRIP_IS_DELETED)) == 1,
                 cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TRIP_DELETED_AT))
         );

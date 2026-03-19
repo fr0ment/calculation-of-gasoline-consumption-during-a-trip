@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,10 +20,14 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cogcdat_2.api.ApiClient;
 import com.example.cogcdat_2.api.ApiService;
+import com.example.cogcdat_2.api.models.ApiUserSettings;
 import com.example.cogcdat_2.api.models.ChangePasswordRequest;
 import com.example.cogcdat_2.api.models.UpdateProfileRequest;
 import com.example.cogcdat_2.api.models.User;
@@ -32,7 +37,10 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import retrofit2.Call;
@@ -42,15 +50,20 @@ import retrofit2.Response;
 public class SettingsFragment extends Fragment {
 
     private TextView tvUsername, tvEmail, tvFullName, tvLastSync, tvVersion, tvServerUrl;
+    private TextView tvDistanceUnitValue, tvThemeValue, tvLanguageValue;
     private Button btnEditProfile, btnSyncNow, btnChangePassword, btnLogout, btnDeleteAccount;
+    private Button btnChangeDistanceUnit, btnChangeTheme, btnChangeLanguage;
     private LinearLayout llSyncStatus;
     private ProgressBar progressSync;
     private TextView tvSyncStatus;
-    private MaterialCardView cardProfile, cardSync, cardSecurity, cardAbout;
+    private MaterialCardView cardProfile, cardSync, cardSecurity, cardAbout, cardPreferences;
 
     private SyncManager syncManager;
     private ApiService apiService;
+    private DatabaseHelper dbHelper;
+    private UserSettings userSettings;
     private User currentUser;
+    private String currentUserId;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -58,9 +71,12 @@ public class SettingsFragment extends Fragment {
 
         syncManager = SyncManager.getInstance(requireContext());
         apiService = ApiClient.getInstance(requireContext()).getApiService();
+        dbHelper = new DatabaseHelper(requireContext());
 
         initViews(view);
+        loadCurrentUserId();
         loadUserProfile();
+        loadUserSettings();
         setupObservers();
         setupListeners();
 
@@ -70,7 +86,9 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        loadCurrentUserId();
         loadUserProfile();
+        loadUserSettings();
         updateLastSyncTime();
     }
 
@@ -90,15 +108,24 @@ public class SettingsFragment extends Fragment {
         progressSync = view.findViewById(R.id.progress_sync);
         tvSyncStatus = view.findViewById(R.id.tv_sync_status);
 
+        // Настройки предпочтений
+        tvDistanceUnitValue = view.findViewById(R.id.tv_distance_unit_value);
+        tvThemeValue = view.findViewById(R.id.tv_theme_value);
+        tvLanguageValue = view.findViewById(R.id.tv_language_value);
+        btnChangeDistanceUnit = view.findViewById(R.id.btn_change_distance_unit);
+        btnChangeTheme = view.findViewById(R.id.btn_change_theme);
+        btnChangeLanguage = view.findViewById(R.id.btn_change_language);
+
         btnEditProfile = view.findViewById(R.id.btn_edit_profile);
         btnChangePassword = view.findViewById(R.id.btn_change_password);
-        btnDeleteAccount = view.findViewById(R.id.btn_delete_account); // Новая кнопка
+        btnDeleteAccount = view.findViewById(R.id.btn_delete_account);
         btnLogout = view.findViewById(R.id.btn_logout);
 
         cardProfile = view.findViewById(R.id.card_profile);
         cardSync = view.findViewById(R.id.card_sync);
         cardSecurity = view.findViewById(R.id.card_security);
         cardAbout = view.findViewById(R.id.card_about);
+        cardPreferences = view.findViewById(R.id.card_preferences);
 
         try {
             String versionName = requireContext().getPackageManager()
@@ -113,6 +140,11 @@ public class SettingsFragment extends Fragment {
         tvServerUrl.setText(serverUrl);
     }
 
+    private void loadCurrentUserId() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("user", Context.MODE_PRIVATE);
+        currentUserId = prefs.getString("user_id", null);
+    }
+
     private void loadUserProfile() {
         String token = syncManager.getSavedToken();
         if (token == null) return;
@@ -123,6 +155,12 @@ public class SettingsFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     currentUser = response.body();
                     updateUI();
+
+                    if (currentUserId == null) {
+                        SharedPreferences prefs = requireContext().getSharedPreferences("user", Context.MODE_PRIVATE);
+                        prefs.edit().putString("user_id", currentUser.getId()).apply();
+                        currentUserId = currentUser.getId();
+                    }
                 }
             }
 
@@ -131,6 +169,55 @@ public class SettingsFragment extends Fragment {
                 loadFromLocal();
             }
         });
+    }
+
+    private void loadUserSettings() {
+        if (currentUserId == null) return;
+
+        userSettings = dbHelper.getUserSettings(currentUserId);
+        updateSettingsUI();
+
+        if (isNetworkAvailable() && syncManager.getSavedToken() != null) {
+            loadSettingsFromServer();
+        }
+    }
+
+    private void loadSettingsFromServer() {
+        String token = syncManager.getSavedToken();
+        apiService.getSettings("Bearer " + token).enqueue(new Callback<ApiUserSettings>() {
+            @Override
+            public void onResponse(Call<ApiUserSettings> call, Response<ApiUserSettings> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiUserSettings serverSettings = response.body();
+
+                    UserSettings serverLocalSettings = serverSettings.toLocalSettings();
+
+                    if (userSettings == null ||
+                            isServerNewer(serverLocalSettings.getUpdatedAt(), userSettings.getUpdatedAt())) {
+
+                        userSettings = serverLocalSettings;
+                        dbHelper.saveUserSettings(userSettings);
+                        updateSettingsUI();
+
+                        // Сохраняем тему при загрузке с сервера
+                        ThemeManager.saveTheme(requireContext(), userSettings.getTheme());
+
+                        Log.d("Settings", "Settings updated from server");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiUserSettings> call, Throwable t) {
+                Log.e("Settings", "Failed to load settings from server", t);
+            }
+        });
+    }
+
+    private boolean isServerNewer(String serverTime, String localTime) {
+        if (localTime == null) return true;
+        if (serverTime == null) return false;
+        return serverTime.compareTo(localTime) > 0;
     }
 
     private void loadFromLocal() {
@@ -156,7 +243,18 @@ public class SettingsFragment extends Fragment {
                     .putString("username", currentUser.getUsername())
                     .putString("email", currentUser.getEmail())
                     .putString("full_name", currentUser.getFullName())
+                    .putString("user_id", currentUser.getId())
                     .apply();
+
+            currentUserId = currentUser.getId();
+        }
+    }
+
+    private void updateSettingsUI() {
+        if (userSettings != null) {
+            tvDistanceUnitValue.setText(userSettings.getDistanceUnit().getDisplayName());
+            tvThemeValue.setText(userSettings.getTheme().getDisplayName());
+            tvLanguageValue.setText(userSettings.getLanguage().getDisplayName());
         }
     }
 
@@ -185,8 +283,12 @@ public class SettingsFragment extends Fragment {
             Toast.makeText(getContext(), "Синхронизация запущена", Toast.LENGTH_SHORT).show();
         });
         btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
-        btnDeleteAccount.setOnClickListener(v -> showDeleteAccountConfirmation()); // Новая кнопка
+        btnDeleteAccount.setOnClickListener(v -> showDeleteAccountConfirmation());
         btnLogout.setOnClickListener(v -> showLogoutConfirmation());
+
+        btnChangeDistanceUnit.setOnClickListener(v -> showDistanceUnitDialog());
+        btnChangeTheme.setOnClickListener(v -> showThemeDialog());
+        btnChangeLanguage.setOnClickListener(v -> showLanguageDialog());
     }
 
     private boolean isNetworkAvailable() {
@@ -214,8 +316,310 @@ public class SettingsFragment extends Fragment {
         }
     }
 
+    /**
+     * Красивый диалог выбора единиц расстояния
+     */
+    private void showDistanceUnitDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_unit_selector, null);
+
+        TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
+        RecyclerView rvUnits = dialogView.findViewById(R.id.rv_units);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_unit);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_unit);
+
+        tvTitle.setText("Единицы расстояния");
+
+        // Список единиц расстояния
+        List<DistanceUnit> units = Arrays.asList(DistanceUnit.KM, DistanceUnit.MI);
+        List<String> unitNames = new ArrayList<>();
+        for (DistanceUnit unit : units) {
+            unitNames.add(unit.getDisplayName());
+        }
+
+        // Создаем адаптер
+        UnitSelectionAdapter adapter = new UnitSelectionAdapter(unitNames, null);
+
+        // Находим текущую позицию
+        int currentPosition = units.indexOf(userSettings.getDistanceUnit());
+        adapter.setSelectedPosition(currentPosition);
+
+        rvUnits.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvUnits.setAdapter(adapter);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            int selectedPos = adapter.getSelectedPosition();
+            if (selectedPos >= 0 && selectedPos < units.size()) {
+                DistanceUnit selectedUnit = units.get(selectedPos);
+
+                if (selectedUnit != userSettings.getDistanceUnit()) {
+                    userSettings.setDistanceUnit(selectedUnit);
+                    saveSettings();
+
+                    // Показываем диалог перезагрузки
+                    showRestartDialog();
+                }
+            }
+            dialog.dismiss();
+        });
+
+        dialog.show();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+
+    /**
+     * Красивый диалог выбора темы
+     */
+    private void showThemeDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_unit_selector, null);
+
+        TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
+        RecyclerView rvUnits = dialogView.findViewById(R.id.rv_units);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_unit);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_unit);
+
+        tvTitle.setText("Тема оформления");
+
+        List<Theme> themes = Arrays.asList(Theme.SYSTEM, Theme.LIGHT, Theme.DARK);
+        List<String> themeNames = new ArrayList<>();
+        for (Theme theme : themes) {
+            themeNames.add(theme.getDisplayName());
+        }
+
+        UnitSelectionAdapter adapter = new UnitSelectionAdapter(themeNames, null);
+
+        int currentPosition = themes.indexOf(userSettings.getTheme());
+        adapter.setSelectedPosition(currentPosition);
+
+        rvUnits.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvUnits.setAdapter(adapter);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            int selectedPos = adapter.getSelectedPosition();
+            if (selectedPos >= 0 && selectedPos < themes.size()) {
+                Theme selectedTheme = themes.get(selectedPos);
+
+                if (selectedTheme != userSettings.getTheme()) {
+                    // Сначала сохраняем тему
+                    userSettings.setTheme(selectedTheme);
+                    saveSettings();
+
+                    // Закрываем диалог
+                    dialog.dismiss();
+
+                    // Показываем диалог перезагрузки
+                    showRestartDialog();
+                } else {
+                    dialog.dismiss();
+                }
+            } else {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+
+    /**
+     * Красивый диалог выбора языка
+     */
+    private void showLanguageDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_unit_selector, null);
+
+        TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
+        RecyclerView rvUnits = dialogView.findViewById(R.id.rv_units);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_unit);
+        Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_unit);
+
+        tvTitle.setText("Язык");
+
+        // Список языков
+        List<Language> languages = Arrays.asList(Language.RU, Language.EN);
+        List<String> languageNames = new ArrayList<>();
+        for (Language lang : languages) {
+            languageNames.add(lang.getDisplayName());
+        }
+
+        // Создаем адаптер
+        UnitSelectionAdapter adapter = new UnitSelectionAdapter(languageNames, null);
+
+        // Находим текущую позицию
+        int currentPosition = languages.indexOf(userSettings.getLanguage());
+        adapter.setSelectedPosition(currentPosition);
+
+        rvUnits.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvUnits.setAdapter(adapter);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnConfirm.setOnClickListener(v -> {
+            int selectedPos = adapter.getSelectedPosition();
+            if (selectedPos >= 0 && selectedPos < languages.size()) {
+                Language selectedLang = languages.get(selectedPos);
+
+                if (selectedLang != userSettings.getLanguage()) {
+                    userSettings.setLanguage(selectedLang);
+                    saveSettings();
+
+                    // Показываем диалог перезагрузки
+                    showRestartDialog();
+
+                    Toast.makeText(getContext(), "Смена языка будет доступна в следующей версии", Toast.LENGTH_SHORT).show();
+                }
+            }
+            dialog.dismiss();
+        });
+
+        dialog.show();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
+
+    private void showRestartDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Применить настройки")
+                .setMessage("Для применения изменений необходимо перезапустить приложение. Сделать это сейчас?")
+                .setPositiveButton("Перезапустить", (dialog, which) -> {
+                    Intent intent = new Intent(getActivity(), MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    Runtime.getRuntime().exit(0);
+                })
+                .setNegativeButton("Позже", null)
+                .setCancelable(false) // Не даем закрыть диалог без выбора
+                .show();
+    }
+
+    private void saveSettings() {
+        if (currentUserId == null) {
+            Toast.makeText(getContext(), "Ошибка: пользователь не идентифицирован", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        dbHelper.saveUserSettings(userSettings);
+        updateSettingsUI();
+
+        // Сохраняем тему в отдельные SharedPreferences
+        App.saveTheme(requireContext(), userSettings.getTheme());
+
+        if (isNetworkAvailable() && syncManager.getSavedToken() != null) {
+            uploadSettingsToServer();
+        }
+    }
+
+    private void uploadSettingsToServer() {
+        String token = syncManager.getSavedToken();
+        ApiUserSettings apiSettings = new ApiUserSettings(userSettings);
+
+        apiService.updateSettings("Bearer " + token, apiSettings).enqueue(new Callback<ApiUserSettings>() {
+            @Override
+            public void onResponse(Call<ApiUserSettings> call, Response<ApiUserSettings> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d("Settings", "Settings uploaded successfully");
+                } else {
+                    Log.e("Settings", "Failed to upload settings");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiUserSettings> call, Throwable t) {
+                Log.e("Settings", "Network error uploading settings", t);
+            }
+        });
+    }
+
+
+    // --- Адаптер для выбора единиц ---
+    private class UnitSelectionAdapter extends RecyclerView.Adapter<UnitSelectionAdapter.UnitViewHolder> {
+        private List<String> items;
+        private int selectedPosition = -1;
+
+        public UnitSelectionAdapter(List<String> items, Integer currentSelection) {
+            this.items = items;
+        }
+
+        public void setSelectedPosition(int position) {
+            int oldPosition = selectedPosition;
+            selectedPosition = position;
+            if (oldPosition != -1) {
+                notifyItemChanged(oldPosition);
+            }
+            if (selectedPosition != -1) {
+                notifyItemChanged(selectedPosition);
+            }
+        }
+
+        public int getSelectedPosition() {
+            return selectedPosition;
+        }
+
+        @NonNull
+        @Override
+        public UnitViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_unit_option, parent, false);
+            return new UnitViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull UnitViewHolder holder, int position) {
+            String item = items.get(position);
+            holder.tvUnitName.setText(item);
+
+            boolean isSelected = position == selectedPosition;
+            if (isSelected) {
+                holder.cardView.setStrokeWidth(5);
+                holder.cardView.setStrokeColor(requireContext().getColor(R.color.primary));
+            } else {
+                holder.cardView.setStrokeWidth(0);
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                setSelectedPosition(position);
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        class UnitViewHolder extends RecyclerView.ViewHolder {
+            TextView tvUnitName;
+            MaterialCardView cardView;
+
+            UnitViewHolder(@NonNull View itemView) {
+                super(itemView);
+                cardView = (MaterialCardView) itemView;
+                tvUnitName = itemView.findViewById(R.id.tv_unit_name);
+            }
+        }
+    }
     private void showEditProfileDialog() {
-        // Проверяем интернет
         if (!isNetworkAvailable()) {
             Toast.makeText(getContext(), "Для изменения профиля требуется подключение к интернету", Toast.LENGTH_LONG).show();
             return;
@@ -251,13 +655,11 @@ public class SettingsFragment extends Fragment {
             String fullName = etFullName.getText().toString().trim();
             String email = tvEmailDisplay.getText().toString().trim();
 
-            // Повторная проверка интернета перед отправкой
             if (!isNetworkAvailable()) {
                 Toast.makeText(getContext(), "Нет подключения к интернету", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Показываем прогресс
             btnSave.setEnabled(false);
             btnSave.setText("Сохранение...");
 
@@ -286,11 +688,9 @@ public class SettingsFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     currentUser = response.body();
 
-                    // Обновляем UI
                     tvFullName.setText(fullName.isEmpty() ? "Не указано" : fullName);
                     tvEmail.setText(email);
 
-                    // Сохраняем в SharedPreferences
                     SharedPreferences prefs = requireContext().getSharedPreferences("user", Context.MODE_PRIVATE);
                     prefs.edit()
                             .putString("full_name", fullName)
@@ -328,7 +728,6 @@ public class SettingsFragment extends Fragment {
     }
 
     private void showChangePasswordDialog() {
-        // Проверяем интернет
         if (!isNetworkAvailable()) {
             Toast.makeText(getContext(), "Для смены пароля требуется подключение к интернету", Toast.LENGTH_LONG).show();
             return;
@@ -359,13 +758,11 @@ public class SettingsFragment extends Fragment {
             String newPass = etNewPassword.getText().toString();
             String confirmPass = etConfirmPassword.getText().toString();
 
-            // Сброс ошибок
             tilCurrentPassword.setError(null);
             tilNewPassword.setError(null);
             tilConfirmPassword.setError(null);
             tvError.setVisibility(View.GONE);
 
-            // Валидация
             if (currentPass.isEmpty()) {
                 tilCurrentPassword.setError("Введите текущий пароль");
                 return;
@@ -386,13 +783,11 @@ public class SettingsFragment extends Fragment {
                 return;
             }
 
-            // Повторная проверка интернета
             if (!isNetworkAvailable()) {
                 Toast.makeText(getContext(), "Нет подключения к интернету", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Показываем прогресс
             btnSave.setEnabled(false);
             btnSave.setText("Сохранение...");
 
@@ -426,7 +821,6 @@ public class SettingsFragment extends Fragment {
                     btnSave.setEnabled(true);
                     btnSave.setText("Сохранить");
 
-                    // Обработка ошибок
                     if (response.code() == 401) {
                         tvError.setText("Неверный текущий пароль");
                         tvError.setVisibility(View.VISIBLE);
@@ -452,9 +846,7 @@ public class SettingsFragment extends Fragment {
         });
     }
 
-    // НОВЫЙ МЕТОД: Подтверждение удаления аккаунта
     private void showDeleteAccountConfirmation() {
-        // Проверяем интернет (удаление аккаунта требует интернета)
         if (!isNetworkAvailable()) {
             Toast.makeText(getContext(), "Для удаления аккаунта требуется подключение к интернету", Toast.LENGTH_LONG).show();
             return;
@@ -482,7 +874,6 @@ public class SettingsFragment extends Fragment {
                 return;
             }
 
-            // Показываем прогресс
             btnConfirm.setEnabled(false);
             btnConfirm.setText("Удаление...");
 
@@ -495,7 +886,6 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    // НОВЫЙ МЕТОД: Удаление аккаунта через API
     private void deleteAccount(String password, AlertDialog dialog, Button btnConfirm, TextInputLayout tilPassword) {
         String token = syncManager.getSavedToken();
         if (token == null || currentUser == null) {
@@ -504,17 +894,12 @@ public class SettingsFragment extends Fragment {
             return;
         }
 
-        // Сначала подтверждаем пароль (можно через отдельный эндпоинт или включить в удаление)
-        // Для простоты будем считать, что на сервере есть эндпоинт DELETE /users/{userId} с подтверждением пароля
-
         apiService.deleteUser("Bearer " + token, currentUser.getId()).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    // Успешно удалили на сервере
                     Toast.makeText(getContext(), "Аккаунт успешно удален", Toast.LENGTH_SHORT).show();
 
-                    // Очищаем локальные данные и выходим
                     syncManager.logout();
 
                     Intent intent = new Intent(getActivity(), LoginActivity.class);
@@ -529,8 +914,6 @@ public class SettingsFragment extends Fragment {
 
                     if (response.code() == 401) {
                         tilPassword.setError("Неверный пароль");
-                    } else if (response.code() == 400) {
-                        Toast.makeText(getContext(), "Невозможно удалить аккаунт с данными", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getContext(), "Ошибка при удалении аккаунта", Toast.LENGTH_SHORT).show();
                     }
@@ -568,8 +951,6 @@ public class SettingsFragment extends Fragment {
 
         btnConfirm.setOnClickListener(v -> {
             dialog.dismiss();
-
-            // Для выхода интернет не нужен - очищаем локально и выходим
             syncManager.logout();
 
             Intent intent = new Intent(getActivity(), LoginActivity.class);

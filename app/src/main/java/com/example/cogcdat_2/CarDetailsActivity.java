@@ -1,6 +1,5 @@
 package com.example.cogcdat_2;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,13 +8,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 
 import java.io.File;
 import java.util.Locale;
@@ -26,10 +24,10 @@ public class CarDetailsActivity extends AppCompatActivity {
     private Car car;
     private String carId;
 
-    private TextView tvName, tvDescription, tvFuelType, tvTankVolume, tvUnits;
+    private TextView tvName, tvDescription, tvFuelType, tvTankVolume, tvFuelUnitInfo;
     private ImageView ivCarImage;
     private Button btnEdit, btnDelete;
-    private Button btnBack; // Изменено с ImageButton на CardView
+    private Button btnBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +50,6 @@ public class CarDetailsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Обновляем данные при возврате из редактирования
         if (carId != null && !carId.isEmpty()) {
             loadCarData();
         }
@@ -64,19 +61,12 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvDescription = findViewById(R.id.tvDescription);
         tvFuelType = findViewById(R.id.tvFuelType);
         tvTankVolume = findViewById(R.id.tvTankVolume);
-        tvUnits = findViewById(R.id.tvUnits);
+        tvFuelUnitInfo = findViewById(R.id.tvFuelUnitInfo); // Новая TextView для единиц топлива
         btnEdit = findViewById(R.id.btnEdit);
         btnDelete = findViewById(R.id.btnDelete);
-        btnBack = findViewById(R.id.btnBack); // Инициализация CardView
-
         btnBack = findViewById(R.id.btnBack);
 
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        btnBack.setOnClickListener(v -> finish());
     }
 
     private void loadCarData() {
@@ -96,34 +86,20 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvFuelType.setText(car.getFuelType());
 
         // Форматируем объем бака
-        String tankVolumeText = String.format(Locale.getDefault(), "%.1f %s", car.getTankVolume(), car.getFuelUnit());
+        String tankVolumeText = String.format(Locale.getDefault(), "%.1f %s",
+                car.getTankVolume(), car.getFuelUnit());
         tvTankVolume.setText(tankVolumeText);
 
-        // Форматируем единицы измерения
-        String unitsText = String.format("Расстояние: %s\nТопливо: %s\nРасход: %s",
-                car.getDistanceUnit(), car.getFuelUnit(), car.getFuelConsumptionUnit());
-        tvUnits.setText(unitsText);
+        // Показываем единицы топлива в отдельной строке
+        tvFuelUnitInfo.setText(car.getFuelUnit());
 
         // Загрузка изображения
         loadImageSafe(ivCarImage, car.getImagePath());
     }
 
     private void setupListeners() {
-        // Кнопка "Редактировать"
-        btnEdit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editCar();
-            }
-        });
-
-        // Кнопка "Удалить"
-        btnDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteCar();
-            }
-        });
+        btnEdit.setOnClickListener(v -> editCar());
+        btnDelete.setOnClickListener(v -> deleteCar());
     }
 
     private void editCar() {
@@ -135,7 +111,7 @@ public class CarDetailsActivity extends AppCompatActivity {
     private void deleteCar() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_car_delete_confirmation, null);
 
-        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .create();
 
@@ -156,15 +132,11 @@ public class CarDetailsActivity extends AppCompatActivity {
 
         dialog.show();
 
-        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
     }
 
-    /**
-     * Метод для безопасной загрузки изображения из локального пути.
-     */
     private void loadImageSafe(ImageView imageView, String currentPhotoPath) {
         final int targetW = 500;
         final int targetH = 250;

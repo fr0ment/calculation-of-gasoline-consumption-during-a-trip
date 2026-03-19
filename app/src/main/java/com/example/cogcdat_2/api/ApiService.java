@@ -2,13 +2,14 @@ package com.example.cogcdat_2.api;
 
 import com.example.cogcdat_2.api.models.ApiCar;
 import com.example.cogcdat_2.api.models.ApiTrip;
+import com.example.cogcdat_2.api.models.ApiUserSettings;
+import com.example.cogcdat_2.api.models.ChangePasswordRequest;
 import com.example.cogcdat_2.api.models.LoginRequest;
 import com.example.cogcdat_2.api.models.SyncRequest;
 import com.example.cogcdat_2.api.models.SyncResponse;
 import com.example.cogcdat_2.api.models.TokenResponse;
-import com.example.cogcdat_2.api.models.User;
-import com.example.cogcdat_2.api.models.ChangePasswordRequest;
 import com.example.cogcdat_2.api.models.UpdateProfileRequest;
+import com.example.cogcdat_2.api.models.User;
 
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
@@ -33,12 +34,21 @@ public interface ApiService {
                           @Body UpdateProfileRequest request);
 
     // Смена пароля
-    @POST("users/change-password")
+    @POST("auth/change-password")
     Call<Void> changePassword(@Header("Authorization") String token,
                               @Body ChangePasswordRequest request);
 
+    // Удаление пользователя
     @DELETE("users/{userId}")
     Call<Void> deleteUser(@Header("Authorization") String token, @Path("userId") String userId);
+
+    // Настройки пользователя
+    @GET("settings")
+    Call<ApiUserSettings> getSettings(@Header("Authorization") String token);
+
+    @PUT("settings")
+    Call<ApiUserSettings> updateSettings(@Header("Authorization") String token,
+                                         @Body ApiUserSettings settings);
 
     // Автомобили
     @GET("cars")

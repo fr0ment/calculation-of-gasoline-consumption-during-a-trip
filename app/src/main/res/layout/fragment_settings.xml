@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="@color/background">
 
-    <!-- Заголовок как в других фрагментах -->
+    <!-- Заголовок -->
     <TextView
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
@@ -22,7 +22,9 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingHorizontal="16dp">
+        android:padding="16dp"
+        android:paddingTop="0dp"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -54,7 +56,7 @@
                         android:textStyle="bold"
                         android:layout_marginBottom="16dp" />
 
-                    <!-- Имя пользователя (неизменяемое) -->
+                    <!-- Имя пользователя -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -79,7 +81,7 @@
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <!-- Email (неизменяемый) -->
+                    <!-- Email -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -103,7 +105,7 @@
                             android:textSize="14sp" />
                     </LinearLayout>
 
-                    <!-- Полное имя (изменяемое) -->
+                    <!-- Полное имя -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -138,6 +140,138 @@
 
                         app:iconGravity="textStart"
                         app:iconTint="@color/primary" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Предпочтения (НОВАЯ КАРТОЧКА) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_preferences"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/card_background_secondary"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Предпочтения"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Единицы расстояния -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Единицы расстояния:"
+                            android:textColor="@color/text_hint"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_distance_unit_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="км"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="8dp" />
+
+                        <Button
+                            android:id="@+id/btn_change_distance_unit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Изменить"
+                            android:backgroundTint="@color/primary"
+                            style="@style/Widget.Material3.Button" />
+                    </LinearLayout>
+
+                    <!-- Тема -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Тема:"
+                            android:textColor="@color/text_hint"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_theme_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Системная"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="8dp" />
+
+                        <Button
+                            android:id="@+id/btn_change_theme"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Изменить"
+                            android:backgroundTint="@color/primary"
+                            style="@style/Widget.Material3.Button" />
+                    </LinearLayout>
+
+                    <!-- Язык -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Язык:"
+                            android:textColor="@color/text_hint"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tv_language_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Русский"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="8dp" />
+
+                        <Button
+                            android:id="@+id/btn_change_language"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Изменить"
+                            android:backgroundTint="@color/primary"
+                            style="@style/Widget.Material3.Button" />
+                    </LinearLayout>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -203,13 +337,6 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:layout_marginBottom="16dp">
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-
-                            app:tint="@color/accent"
-                            android:layout_marginEnd="12dp" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -280,7 +407,6 @@
                         app:iconGravity="textStart"
                         app:iconTint="@color/primary" />
 
-                    <!-- НОВАЯ КНОПКА: Удалить аккаунт -->
                     <Button
                         android:id="@+id/btn_delete_account"
                         android:layout_width="match_parent"
@@ -315,8 +441,7 @@
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="@color/card_background_secondary"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone">
+                android:layout_marginBottom="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"

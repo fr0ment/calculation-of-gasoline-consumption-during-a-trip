@@ -1,7 +1,9 @@
 package com.example.cogcdat_2;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -42,8 +44,10 @@ public class TripsFragment extends Fragment {
     private FloatingActionButton fabAddTrip;
     private TextView tvEmptyTrips;
     private ImageButton btnFilterDate;
+    private String currentUserId;
+    private UserSettings userSettings;
 
-    // Новый UI для выбора автомобиля
+    // UI для выбора автомобиля
     private View carSelectionView;
     private ImageView ivSelectedCarIcon;
     private TextView tvSelectedCarName;
@@ -74,13 +78,23 @@ public class TripsFragment extends Fragment {
 
         dbHelper = new DatabaseHelper(getContext());
 
+        // Получаем ID текущего пользователя и его настройки
+        SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
+        currentUserId = prefs.getString("user_id", null);
+
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+        } else {
+            userSettings = new UserSettings(); // Настройки по умолчанию
+        }
+
         recyclerView = rootView.findViewById(R.id.recycler_view_trips);
         fabAddTrip = rootView.findViewById(R.id.fab_add_trip);
         tvEmptyTrips = rootView.findViewById(R.id.tv_empty_trips);
         btnFilterDate = rootView.findViewById(R.id.btn_filter_date);
         etSearchQuery = rootView.findViewById(R.id.et_search_query);
 
-        // Новые элементы выбора автомобиля
+        // Элементы выбора автомобиля
         carSelectionView = rootView.findViewById(R.id.car_selection_view);
         ivSelectedCarIcon = rootView.findViewById(R.id.iv_selected_car_icon);
         tvSelectedCarName = rootView.findViewById(R.id.tv_selected_car_name);
@@ -99,6 +113,10 @@ public class TripsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // Обновляем настройки при возврате на фрагмент
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+        }
         loadCarsAndTrips();
     }
 
@@ -366,7 +384,7 @@ public class TripsFragment extends Fragment {
         if (startDateFilter != null) {
             tempStart[0] = (Calendar) startDateFilter.clone();
         } else {
-            tempStart[0] = null; // Или Calendar.getInstance(), если нужно по умолчанию
+            tempStart[0] = null;
         }
 
         if (endDateFilter != null) {
@@ -375,11 +393,9 @@ public class TripsFragment extends Fragment {
             tempEnd[0] = null;
         }
 
-        // Обновляем текст кнопок
         updateFilterDateButtons(btnSelectStartDate, btnSelectEndDate, tempStart[0], tempEnd[0]);
 
         btnSelectStartDate.setOnClickListener(v -> showDatePickerForFilter(tempStart, true, btnSelectStartDate, btnSelectEndDate, tempEnd));
-
         btnSelectEndDate.setOnClickListener(v -> showDatePickerForFilter(tempEnd, false, btnSelectStartDate, btnSelectEndDate, tempStart));
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -409,7 +425,6 @@ public class TripsFragment extends Fragment {
     }
 
     private void showDatePickerForFilter(Calendar[] targetWrapper, boolean isStart, Button btnStart, Button btnEnd, Calendar[] otherWrapper) {
-        // Если в массиве null, берем текущую дату для открытия календаря
         long selection = (targetWrapper[0] != null) ? targetWrapper[0].getTimeInMillis() : MaterialDatePicker.todayInUtcMilliseconds();
 
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder
@@ -419,7 +434,6 @@ public class TripsFragment extends Fragment {
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selectionMillis -> {
-            // Инициализируем календарь в массиве, если там был null
             if (targetWrapper[0] == null) {
                 targetWrapper[0] = Calendar.getInstance();
             }
@@ -429,7 +443,6 @@ public class TripsFragment extends Fragment {
             targetWrapper[0].set(Calendar.MINUTE, isStart ? 0 : 59);
             targetWrapper[0].set(Calendar.SECOND, isStart ? 0 : 59);
 
-            // Проверка логики между Start и End
             if (otherWrapper[0] != null) {
                 if (!isStart && targetWrapper[0].before(otherWrapper[0])) {
                     Toast.makeText(requireContext(), "Дата до не может быть раньше даты от", Toast.LENGTH_SHORT).show();
@@ -440,7 +453,6 @@ public class TripsFragment extends Fragment {
                 }
             }
 
-            // Обновляем текст на кнопках, доставая значения из массивов
             updateFilterDateButtons(btnStart, btnEnd,
                     isStart ? targetWrapper[0] : otherWrapper[0],
                     isStart ? otherWrapper[0] : targetWrapper[0]);
@@ -448,6 +460,7 @@ public class TripsFragment extends Fragment {
 
         datePicker.show(getParentFragmentManager(), "DATE_PICKER_FILTER");
     }
+
     private void updateFilterDateButtons(Button btnStart, Button btnEnd, Calendar start, Calendar end) {
         btnStart.setText(start != null ? DISPLAY_DATE_FORMAT.format(start.getTime()) : "Дата");
         btnEnd.setText(end != null ? DISPLAY_DATE_FORMAT.format(end.getTime()) : "Дата");
@@ -459,19 +472,16 @@ public class TripsFragment extends Fragment {
             return;
         }
 
-        // Инфлейтим кастомный layout
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_trip_options, null);
 
-        // Находим карточки
         View cardRecordGps = dialogView.findViewById(R.id.card_record_gps);
         View cardAddManual = dialogView.findViewById(R.id.card_add_manual);
-        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_refuel); // ID из твоего XML
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel_refuel);
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
                 .create();
 
-        // Обработчики кликов
         cardRecordGps.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), GpsRecordingActivity.class);
             intent.putExtra("car_id", selectedCarId);
@@ -490,13 +500,12 @@ public class TripsFragment extends Fragment {
 
         dialog.show();
 
-        // Важно: делаем фон прозрачным, чтобы были закруглённые углы (как в выборе авто)
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
     }
 
-    // Адаптер остаётся без изменений — использует TripListItem
+    // Адаптер с обновленным отображением
     private class TripAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         private List<TripListItem> items;
@@ -538,15 +547,34 @@ public class TripsFragment extends Fragment {
                 Trip trip = item.getTrip();
 
                 Car car = dbHelper.getCar(trip.getCarId());
-                String distanceUnit = car != null ? car.getDistanceUnit() : "км";
                 String fuelUnit = car != null ? car.getFuelUnit() : "л";
-                String consumptionUnit = car != null ? car.getFuelConsumptionUnit() : "л/100км";
+
+                // Получаем единицы расстояния из настроек пользователя
+                DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+                String distanceUnitSymbol = distanceUnit.getDisplayName();
 
                 tripHolder.tvName.setText(trip.getName());
                 tripHolder.tvDateTime.setText(formatDateTime(trip.getStartDateTime()));
-                tripHolder.tvDistance.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getDistance(), distanceUnit));
-                tripHolder.tvFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelSpent(), fuelUnit));
-                tripHolder.tvFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelConsumption(), consumptionUnit));
+
+                // Конвертируем расстояние в выбранные единицы
+                double displayDistance = trip.getDistanceInUnit(distanceUnit);
+
+                // Получаем расход топлива в нужных единицах
+                double consumption = trip.getFuelConsumption();
+                String consumptionDisplay;
+
+                if (distanceUnit == DistanceUnit.MI) {
+                    consumption = consumption * 1.60934; // л/100км -> л/100миль
+                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f л/100миль", consumption);
+                } else {
+                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f л/100км", consumption);
+                }
+
+                tripHolder.tvDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
+                        displayDistance, distanceUnitSymbol));
+                tripHolder.tvFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s",
+                        trip.getFuelSpent(), fuelUnit));
+                tripHolder.tvFuelConsumption.setText(consumptionDisplay);
                 tripHolder.tvDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));
 
                 tripHolder.itemView.setOnClickListener(v -> {
@@ -640,7 +668,6 @@ public class TripsFragment extends Fragment {
 
         dialog.show();
 
-        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
@@ -667,7 +694,6 @@ public class TripsFragment extends Fragment {
 
         dialog.show();
 
-        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }

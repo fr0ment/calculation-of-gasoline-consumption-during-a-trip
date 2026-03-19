@@ -51,6 +51,7 @@
                 android:textSize="16sp"
                 android:layout_marginBottom="16dp"/>
 
+            <!-- Тип топлива -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -74,12 +75,13 @@
                     android:textSize="16sp"/>
             </LinearLayout>
 
+            <!-- Объем бака -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="8dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -97,29 +99,29 @@
                     android:textSize="16sp"/>
             </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/divider"
-                android:layout_marginVertical="16dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Единицы измерения"
-                android:textColor="@color/text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp"/>
-
-            <TextView
-                android:id="@+id/tvUnits"
+            <!-- Единицы топлива (в том же стиле) -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="8dp"
-                android:text="Расстояние: км\nТопливо: л\nРасход: л/100км"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Единицы топлива:"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="8dp"/>
+                <TextView
+                    android:id="@+id/tvFuelUnitInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="л"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"/>
+            </LinearLayout>
 
             <!-- Кнопки удаления и редактирования -->
             <LinearLayout
@@ -164,9 +166,6 @@
                 app:iconPadding="8dp"
                 app:iconTint="@color/text_primary"/>
         </LinearLayout>
-
-        <!-- Кнопка назад снизу -->
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

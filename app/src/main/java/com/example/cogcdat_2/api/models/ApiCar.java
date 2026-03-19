@@ -16,16 +16,10 @@ public class ApiCar {
     private String description;
 
     @SerializedName("image_path")
-    private String imagePath; // URL на сервере! (в терминах приложения - serverImageUrl)
-
-    @SerializedName("distance_unit")
-    private String distanceUnit;
+    private String imagePath; // URL на сервере!
 
     @SerializedName("fuel_unit")
     private String fuelUnit;
-
-    @SerializedName("fuel_consumption_unit")
-    private String fuelConsumptionUnit;
 
     @SerializedName("fuel_type")
     private String fuelType;
@@ -58,9 +52,7 @@ public class ApiCar {
         this.description = car.getDescription();
         // ВАЖНО: отправляем SERVER_IMAGE_URL (то, что хранится на сервере)
         this.imagePath = car.getServerImageUrl();
-        this.distanceUnit = car.getDistanceUnit();
         this.fuelUnit = car.getFuelUnit();
-        this.fuelConsumptionUnit = car.getFuelConsumptionUnit();
         this.fuelType = car.getFuelType();
         this.tankVolume = car.getTankVolume();
         this.createdAt = car.getCreatedAt();
@@ -80,12 +72,10 @@ public class ApiCar {
                 this.id,
                 this.name,
                 this.description,
-                null, // imagePath - локальный путь, пока неизвестен
-                this.imagePath, // serverImageUrl - это URL с сервера!
-                this.imageVersion, // imageVersion - версия с сервера
-                this.distanceUnit,
+                null, // imagePath - локальный путь
+                this.imagePath, // serverImageUrl - ЭТО ДОЛЖНО БЫТЬ!
+                this.imageVersion,
                 this.fuelUnit,
-                this.fuelConsumptionUnit,
                 this.fuelType,
                 this.tankVolume,
                 this.isDeleted,
@@ -95,7 +85,6 @@ public class ApiCar {
                 this.updatedAt
         );
 
-        // Дополнительная проверка для отладки
         Log.d("ApiCar", "toLocalCar: id=" + this.id +
                 ", serverImageUrl=" + this.imagePath +
                 ", imageVersion=" + this.imageVersion);
@@ -116,14 +105,8 @@ public class ApiCar {
     public String getImagePath() { return imagePath; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
-    public String getDistanceUnit() { return distanceUnit; }
-    public void setDistanceUnit(String distanceUnit) { this.distanceUnit = distanceUnit; }
-
     public String getFuelUnit() { return fuelUnit; }
     public void setFuelUnit(String fuelUnit) { this.fuelUnit = fuelUnit; }
-
-    public String getFuelConsumptionUnit() { return fuelConsumptionUnit; }
-    public void setFuelConsumptionUnit(String fuelConsumptionUnit) { this.fuelConsumptionUnit = fuelConsumptionUnit; }
 
     public String getFuelType() { return fuelType; }
     public void setFuelType(String fuelType) { this.fuelType = fuelType; }

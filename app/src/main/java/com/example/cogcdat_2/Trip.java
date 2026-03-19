@@ -1,28 +1,34 @@
 package com.example.cogcdat_2;
 
-// Модель данных для таблицы Trips
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
 public class Trip {
     private String id;
-    private String name; // Название поездки
-    private String carId; // id_Машины
-    private String startDateTime; // Дата и время отправления (TEXT, ISO8601)
-    private String endDateTime;   // Дата и время прибытия (TEXT, ISO8601)
-    private double distance; // Расстояние
-    private double fuelSpent; // Количество потраченного топлива
-    private double fuelConsumption; // Расход топлива (л/100км)
+    private String name;
+    private String carId;
+    private String startDateTime;
+    private String endDateTime;
+    private double distance; // Всегда в километрах!
+    private double fuelSpent;
     private String createdAt;
     private String updatedAt;
     private boolean isDeleted;
     private String deletedAt;
 
+    private static final SimpleDateFormat DB_DATE_FORMAT =
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
     // Пустой конструктор
     public Trip() {}
 
-    // Полный конструктор со всеми полями
+    // Полный конструктор для БД (со всеми полями)
     public Trip(String id, String carId, String name, String startDateTime,
                 String endDateTime, double distance, double fuelSpent,
-                double fuelConsumption, String createdAt, String updatedAt,
-                boolean isDeleted, String deletedAt) {
+                String createdAt, String updatedAt, boolean isDeleted, String deletedAt) {
         this.id = id;
         this.carId = carId;
         this.name = name;
@@ -30,31 +36,28 @@ public class Trip {
         this.endDateTime = endDateTime;
         this.distance = distance;
         this.fuelSpent = fuelSpent;
-        this.fuelConsumption = fuelConsumption;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.isDeleted = isDeleted;
         this.deletedAt = deletedAt;
     }
 
-    // Конструктор для создания новой поездки
+    // Конструктор для создания новой поездки (без ID и служебных полей)
     public Trip(String carId, String name, String startDateTime,
-                String endDateTime, double distance, double fuelSpent,
-                double fuelConsumption) {
+                String endDateTime, double distance, double fuelSpent) {
         this(null, carId, name, startDateTime, endDateTime, distance,
-                fuelSpent, fuelConsumption, null, null, false, null);
+                fuelSpent, null, null, false, null);
     }
 
-    // Конструктор с isDeleted (для восстановления из БД)
+    // Конструктор для восстановления из БД (с isDeleted)
     public Trip(String carId, String name, String startDateTime,
                 String endDateTime, double distance, double fuelSpent,
-                double fuelConsumption, boolean isDeleted, String deletedAt) {
+                boolean isDeleted, String deletedAt) {
         this(null, carId, name, startDateTime, endDateTime, distance,
-                fuelSpent, fuelConsumption, null, null, isDeleted, deletedAt);
+                fuelSpent, null, null, isDeleted, deletedAt);
     }
 
-    // Геттеры и Сеттеры
-
+    // Геттеры и сеттеры
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -73,11 +76,25 @@ public class Trip {
     public double getDistance() { return distance; }
     public void setDistance(double distance) { this.distance = distance; }
 
+    // Для установки расстояния из пользовательского ввода (с конвертацией)
+    public void setDistanceFromUserInput(double value, DistanceUnit inputUnit) {
+        if (inputUnit == DistanceUnit.MI) {
+            this.distance = value * 1.60934; // мили -> км
+        } else {
+            this.distance = value; // уже км
+        }
+    }
+
+    // Для получения расстояния в нужных единицах (для отображения)
+    public double getDistanceInUnit(DistanceUnit targetUnit) {
+        if (targetUnit == DistanceUnit.MI) {
+            return distance / 1.60934; // км -> мили
+        }
+        return distance; // км
+    }
+
     public double getFuelSpent() { return fuelSpent; }
     public void setFuelSpent(double fuelSpent) { this.fuelSpent = fuelSpent; }
-
-    public double getFuelConsumption() { return fuelConsumption; }
-    public void setFuelConsumption(double fuelConsumption) { this.fuelConsumption = fuelConsumption; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
@@ -91,49 +108,38 @@ public class Trip {
     public String getDeletedAt() { return deletedAt; }
     public void setDeletedAt(String deletedAt) { this.deletedAt = deletedAt; }
 
-    // Метод для проверки, нужно ли синхронизировать
-    public boolean needsSync(String lastSyncTime) {
-        if (lastSyncTime == null) return true;
-        if (updatedAt == null) return true;
-        return updatedAt.compareTo(lastSyncTime) > 0;
+    // Вычисляемый расход топлива (всегда л/100км)
+    public double getFuelConsumption() {
+        if (distance > 0 && fuelSpent > 0) {
+            return (fuelSpent / distance) * 100;
+        }
+        return 0.0;
     }
 
-    // Метод для создания копии
-    public Trip copy() {
-        return new Trip(
-                this.id,
-                this.carId,
-                this.name,
-                this.startDateTime,
-                this.endDateTime,
-                this.distance,
-                this.fuelSpent,
-                this.fuelConsumption,
-                this.createdAt,
-                this.updatedAt,
-                this.isDeleted,
-                this.deletedAt
-        );
+    // Расход в выбранных единицах расстояния
+    public double getFuelConsumptionInUnit(DistanceUnit targetUnit) {
+        double consumption = getFuelConsumption();
+        if (targetUnit == DistanceUnit.MI) {
+            // Конвертация л/100км в л/100миль
+            return consumption * 1.60934;
+        }
+        return consumption;
     }
 
-    // Метод для расчета длительности в миллисекундах
     public long getDurationMs() {
         try {
-            java.text.SimpleDateFormat format =
-                    new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
-            java.util.Date start = format.parse(this.startDateTime);
-            java.util.Date end = format.parse(this.endDateTime);
+            Date start = DB_DATE_FORMAT.parse(this.startDateTime);
+            Date end = DB_DATE_FORMAT.parse(this.endDateTime);
             return end.getTime() - start.getTime();
-        } catch (java.text.ParseException e) {
+        } catch (ParseException e) {
             return 0;
         }
     }
 
-    // Метод для форматированной длительности
     public String getFormattedDuration() {
         long ms = getDurationMs();
-        long hours = ms / (1000 * 60 * 60);
-        long minutes = (ms % (1000 * 60 * 60)) / (1000 * 60);
-        return String.format(java.util.Locale.getDefault(), "%d ч %02d мин", hours, minutes);
+        long hours = TimeUnit.MILLISECONDS.toHours(ms);
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(ms) % 60;
+        return String.format(Locale.getDefault(), "%d ч %02d мин", hours, minutes);
     }
 }

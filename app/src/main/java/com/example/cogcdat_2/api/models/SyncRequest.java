@@ -13,13 +13,28 @@ public class SyncRequest {
     @SerializedName("trips")
     private List<ApiTrip> trips;
 
+    @SerializedName("settings") // Добавляем поле для настроек
+    private ApiUserSettings settings;
+
+    // Конструктор с 3 параметрами (для обратной совместимости)
     public SyncRequest(String lastSync, List<ApiCar> cars, List<ApiTrip> trips) {
         this.lastSync = lastSync;
         this.cars = cars;
         this.trips = trips;
+        this.settings = null;
     }
 
+    // Новый конструктор с 4 параметрами
+    public SyncRequest(String lastSync, List<ApiCar> cars, List<ApiTrip> trips, ApiUserSettings settings) {
+        this.lastSync = lastSync;
+        this.cars = cars;
+        this.trips = trips;
+        this.settings = settings;
+    }
+
+    // Геттеры
     public String getLastSync() { return lastSync; }
     public List<ApiCar> getCars() { return cars; }
     public List<ApiTrip> getTrips() { return trips; }
+    public ApiUserSettings getSettings() { return settings; }
 }

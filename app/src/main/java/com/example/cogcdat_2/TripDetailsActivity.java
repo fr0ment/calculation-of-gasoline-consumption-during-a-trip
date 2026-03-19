@@ -1,6 +1,7 @@
 package com.example.cogcdat_2;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,6 +25,8 @@ public class TripDetailsActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private Trip trip;
     private String tripId;
+    private String currentUserId;
+    private UserSettings userSettings;
 
     private TextView tvTripName, tvTripDateTime, tvTripDistance, tvTripFuelSpent, tvTripFuelConsumption, tvTripDuration;
     private Button btnEditTrip, btnDeleteTrip;
@@ -38,6 +42,16 @@ public class TripDetailsActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
+        // Получаем ID текущего пользователя и его настройки
+        SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+        currentUserId = prefs.getString("user_id", null);
+
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+        } else {
+            userSettings = new UserSettings(); // Настройки по умолчанию
+        }
+
         tripId = getIntent().getStringExtra("trip_id");
         if (tripId != null && !tripId.isEmpty()) {
             initViews();
@@ -49,12 +63,20 @@ public class TripDetailsActivity extends AppCompatActivity {
         }
     }
 
-@Override
+    @Override
     protected void onResume() {
         super.onResume();
         // Обновляем данные при возврате из редактирования
         if (tripId != null && !tripId.isEmpty()) {
             loadTripData();
+        }
+        // Обновляем настройки пользователя
+        if (currentUserId != null) {
+            userSettings = dbHelper.getUserSettings(currentUserId);
+            // Обновляем UI с новыми настройками
+            if (trip != null) {
+                updateUI();
+            }
         }
     }
 
@@ -92,21 +114,37 @@ public class TripDetailsActivity extends AppCompatActivity {
         tvTripDateTime.setText(formatDateTime(trip.getStartDateTime()));
 
         Car car = dbHelper.getCar(trip.getCarId());
-        String distanceUnit = car != null ? car.getDistanceUnit() : "км";
         String fuelUnit = car != null ? car.getFuelUnit() : "л";
-        String consumptionUnit = car != null ? car.getFuelConsumptionUnit() : "л/100км";
 
-        tvTripDistance.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getDistance(), distanceUnit));
-        tvTripFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelSpent(), fuelUnit));
-        tvTripFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s", trip.getFuelConsumption(), consumptionUnit));
+        // Получаем единицы расстояния из настроек пользователя
+        DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+        String distanceUnitSymbol = distanceUnit.getDisplayName();
+
+        // Конвертируем расстояние в выбранные единицы
+        double displayDistance = trip.getDistanceInUnit(distanceUnit);
+
+        // Получаем расход топлива в нужных единицах
+        double consumption = trip.getFuelConsumption();
+        String consumptionUnit;
+
+        if (distanceUnit == DistanceUnit.MI) {
+            consumption = consumption * 1.60934; // л/100км -> л/100миль
+            consumptionUnit = "л/100миль";
+        } else {
+            consumptionUnit = "л/100км";
+        }
+
+        tvTripDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
+                displayDistance, distanceUnitSymbol));
+        tvTripFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s",
+                trip.getFuelSpent(), fuelUnit));
+        tvTripFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s",
+                consumption, consumptionUnit));
         tvTripDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));
     }
 
     private void setupListeners() {
-        // Кнопка "Редактировать"
         btnEditTrip.setOnClickListener(v -> editTrip());
-
-        // Кнопка "Удалить"
         btnDeleteTrip.setOnClickListener(v -> deleteTrip());
     }
 
@@ -119,7 +157,7 @@ public class TripDetailsActivity extends AppCompatActivity {
     private void deleteTrip() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_trip_delete_confirmation, null);
 
-        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .create();
 
@@ -136,7 +174,6 @@ public class TripDetailsActivity extends AppCompatActivity {
 
         dialog.show();
 
-        // Устанавливаем прозрачный фон для поддержки закругленных углов из drawable
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
