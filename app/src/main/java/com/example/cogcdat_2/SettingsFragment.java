@@ -278,7 +278,7 @@ public class SettingsFragment extends Fragment {
         }
 
         if (currentUser != null) {
-            tvUsername.setText("@" + currentUser.getUsername());
+            tvUsername.setText(currentUser.getUsername());
             tvEmail.setText(currentUser.getEmail());
             tvFullName.setText(currentUser.getFullName() != null && !currentUser.getFullName().isEmpty()
                     ? currentUser.getFullName() : "Не указано");
