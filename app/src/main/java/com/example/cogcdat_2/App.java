@@ -32,10 +32,14 @@ public class App extends Application {
         }
     }
 
-    public static void saveTheme(Context context, Theme theme) {
+    public static void saveAndApplyTheme(Context context, Theme theme) {
+        // Сохраняем в SharedPreferences
         context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
                 .edit()
                 .putString("theme", theme.getValue())
                 .apply();
+
+        // Применяем тему немедленно
+        applyTheme(theme);
     }
 }

@@ -83,6 +83,28 @@ public class SettingsFragment extends Fragment {
         return view;
     }
 
+    private boolean isFragmentAttached = true;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        isFragmentAttached = true;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        isFragmentAttached = false;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        isFragmentAttached = false;
+    }
+
+
+
     @Override
     public void onResume() {
         super.onResume();
@@ -152,6 +174,10 @@ public class SettingsFragment extends Fragment {
         apiService.getCurrentUser("Bearer " + token).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
+                if (!isFragmentAttached || !isAdded() || getActivity() == null) {
+                    return; // Фрагмент уже откреплен - выходим
+                }
+
                 if (response.isSuccessful() && response.body() != null) {
                     currentUser = response.body();
                     updateUI();
@@ -166,6 +192,9 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
+                if (!isFragmentAttached || !isAdded() || getActivity() == null) {
+                    return;
+                }
                 loadFromLocal();
             }
         });
@@ -184,23 +213,32 @@ public class SettingsFragment extends Fragment {
 
     private void loadSettingsFromServer() {
         String token = syncManager.getSavedToken();
+        if (token == null) return;
+
         apiService.getSettings("Bearer " + token).enqueue(new Callback<ApiUserSettings>() {
             @Override
             public void onResponse(Call<ApiUserSettings> call, Response<ApiUserSettings> response) {
+                if (!isFragmentAttached || !isAdded() || getActivity() == null) {
+                    return;
+                }
+
                 if (response.isSuccessful() && response.body() != null) {
                     ApiUserSettings serverSettings = response.body();
-
                     UserSettings serverLocalSettings = serverSettings.toLocalSettings();
 
-                    if (userSettings == null ||
-                            isServerNewer(serverLocalSettings.getUpdatedAt(), userSettings.getUpdatedAt())) {
+                    UserSettings localSettings = dbHelper.getUserSettings(currentUserId);
 
+                    if (localSettings == null ||
+                            isServerNewer(serverLocalSettings.getUpdatedAt(), localSettings.getUpdatedAt())) {
+
+                        dbHelper.saveUserSettings(serverLocalSettings);
                         userSettings = serverLocalSettings;
-                        dbHelper.saveUserSettings(userSettings);
                         updateSettingsUI();
 
-                        // Сохраняем тему при загрузке с сервера
-                        ThemeManager.saveTheme(requireContext(), userSettings.getTheme());
+                        // Применяем тему
+                        if (isFragmentAttached && getActivity() != null) {
+                            App.saveAndApplyTheme(requireContext(), serverLocalSettings.getTheme());
+                        }
 
                         Log.d("Settings", "Settings updated from server");
                     }
@@ -209,6 +247,9 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onFailure(Call<ApiUserSettings> call, Throwable t) {
+                if (!isFragmentAttached || !isAdded() || getActivity() == null) {
+                    return;
+                }
                 Log.e("Settings", "Failed to load settings from server", t);
             }
         });
@@ -232,8 +273,12 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updateUI() {
+        if (!isFragmentAttached || !isAdded() || getActivity() == null || getView() == null) {
+            return;
+        }
+
         if (currentUser != null) {
-            tvUsername.setText(currentUser.getUsername());
+            tvUsername.setText("@" + currentUser.getUsername());
             tvEmail.setText(currentUser.getEmail());
             tvFullName.setText(currentUser.getFullName() != null && !currentUser.getFullName().isEmpty()
                     ? currentUser.getFullName() : "Не указано");
@@ -251,6 +296,10 @@ public class SettingsFragment extends Fragment {
     }
 
     private void updateSettingsUI() {
+        if (!isFragmentAttached || !isAdded() || getActivity() == null || getView() == null) {
+            return;
+        }
+
         if (userSettings != null) {
             tvDistanceUnitValue.setText(userSettings.getDistanceUnit().getDisplayName());
             tvThemeValue.setText(userSettings.getTheme().getDisplayName());
@@ -360,9 +409,6 @@ public class SettingsFragment extends Fragment {
                 if (selectedUnit != userSettings.getDistanceUnit()) {
                     userSettings.setDistanceUnit(selectedUnit);
                     saveSettings();
-
-                    // Показываем диалог перезагрузки
-                    showRestartDialog();
                 }
             }
             dialog.dismiss();
@@ -406,6 +452,11 @@ public class SettingsFragment extends Fragment {
                 .setView(dialogView)
                 .create();
 
+        // Отмечаем, что диалог открыт
+        dialog.setOnDismissListener(dialogInterface -> {
+            // Ничего не делаем
+        });
+
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 
         btnConfirm.setOnClickListener(v -> {
@@ -414,20 +465,17 @@ public class SettingsFragment extends Fragment {
                 Theme selectedTheme = themes.get(selectedPos);
 
                 if (selectedTheme != userSettings.getTheme()) {
-                    // Сначала сохраняем тему
                     userSettings.setTheme(selectedTheme);
+
+                    // Сначала сохраняем настройки
                     saveSettings();
 
                     // Закрываем диалог
                     dialog.dismiss();
 
-                    // Показываем диалог перезагрузки
-                    showRestartDialog();
                 } else {
                     dialog.dismiss();
                 }
-            } else {
-                dialog.dismiss();
             }
         });
 
@@ -483,9 +531,6 @@ public class SettingsFragment extends Fragment {
                     userSettings.setLanguage(selectedLang);
                     saveSettings();
 
-                    // Показываем диалог перезагрузки
-                    showRestartDialog();
-
                     Toast.makeText(getContext(), "Смена языка будет доступна в следующей версии", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -499,20 +544,6 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    private void showRestartDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Применить настройки")
-                .setMessage("Для применения изменений необходимо перезапустить приложение. Сделать это сейчас?")
-                .setPositiveButton("Перезапустить", (dialog, which) -> {
-                    Intent intent = new Intent(getActivity(), MainActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    Runtime.getRuntime().exit(0);
-                })
-                .setNegativeButton("Позже", null)
-                .setCancelable(false) // Не даем закрыть диалог без выбора
-                .show();
-    }
 
     private void saveSettings() {
         if (currentUserId == null) {
@@ -523,8 +554,10 @@ public class SettingsFragment extends Fragment {
         dbHelper.saveUserSettings(userSettings);
         updateSettingsUI();
 
-        // Сохраняем тему в отдельные SharedPreferences
-        App.saveTheme(requireContext(), userSettings.getTheme());
+        // Применяем тему НО НЕ ПЕРЕЗАГРУЖАЕМ ФРАГМЕНТ
+        if (isFragmentAttached && getActivity() != null) {
+            App.saveAndApplyTheme(requireContext(), userSettings.getTheme());
+        }
 
         if (isNetworkAvailable() && syncManager.getSavedToken() != null) {
             uploadSettingsToServer();

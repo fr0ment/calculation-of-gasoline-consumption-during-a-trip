@@ -25,6 +25,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        String themeValue = prefs.getString("theme", Theme.SYSTEM.getValue());
+        App.applyTheme(Theme.fromValue(themeValue));
+
         SyncManager syncManager = SyncManager.getInstance(this);
 
         if (syncManager.getSavedToken() == null) {

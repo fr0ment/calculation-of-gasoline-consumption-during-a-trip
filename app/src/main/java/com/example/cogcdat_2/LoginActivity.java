@@ -1,10 +1,12 @@
 package com.example.cogcdat_2;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -120,7 +122,8 @@ public class LoginActivity extends AppCompatActivity {
                     // Наблюдаем за синхронизацией
                     syncManager.isSyncInProgress().observe(LoginActivity.this, inProgress -> {
                         if (!inProgress && !isDataLoaded) {
-                            // Синхронизация завершена, но нужно убедиться, что все изображения загружены
+                            // Синхронизация завершена - применяем тему и переходим
+                            applyThemeAfterSync();
                             checkAllDataLoaded();
                         }
                     });
@@ -148,6 +151,45 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    // Добавьте этот метод для применения темы после синхронизации
+    private void applyThemeAfterSync() {
+        SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+        String userId = prefs.getString("user_id", null);
+
+        if (userId != null) {
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
+            UserSettings settings = dbHelper.getUserSettings(userId);
+
+            // Применяем тему
+            App.applyTheme(settings.getTheme());
+
+            // Сохраняем тему в глобальные настройки
+            App.saveAndApplyTheme(this, settings.getTheme());
+
+            Log.d("LoginActivity", "Theme applied after sync: " + settings.getTheme().getDisplayName());
+        }
+    }
+
+    // Обновите checkAllDataLoaded, чтобы он действительно запускал MainActivity
+    private void checkAllDataLoaded() {
+        // Проверяем, загружены ли все данные
+        // Для простоты даем небольшую задержку, чтобы точно убедиться, что все операции завершены
+        handler.postDelayed(() -> {
+            if (!isDataLoaded) {
+                isDataLoaded = true;
+                if (timeoutRunnable != null) {
+                    handler.removeCallbacks(timeoutRunnable);
+                }
+
+                // Убираем наблюдателей, чтобы они не мешали
+                syncManager.isSyncInProgress().removeObservers(LoginActivity.this);
+                syncManager.getSyncStatus().removeObservers(LoginActivity.this);
+
+                startMainActivity();
+            }
+        }, 1000); // 1 секунда
+    }
+
     private void setupTimeout() {
         // Таймаут 30 секунд на случай, если синхронизация зависнет
         timeoutRunnable = () -> {
@@ -161,22 +203,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
         handler.postDelayed(timeoutRunnable, 30000);
-    }
-
-    private void checkAllDataLoaded() {
-        // Проверяем, загружены ли все данные
-        // Здесь можно добавить дополнительные проверки, например, что все изображения скачаны
-
-        // Для простоты даем небольшую задержку, чтобы точно убедиться, что все операции завершены
-        handler.postDelayed(() -> {
-            if (!isDataLoaded) {
-                isDataLoaded = true;
-                if (timeoutRunnable != null) {
-                    handler.removeCallbacks(timeoutRunnable);
-                }
-                startMainActivity();
-            }
-        }, 2000); // 2 секунды дополнительного ожидания для загрузки изображений
     }
 
     private void checkSyncStatusAndProceed() {
