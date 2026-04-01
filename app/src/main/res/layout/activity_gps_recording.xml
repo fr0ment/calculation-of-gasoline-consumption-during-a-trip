@@ -24,7 +24,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Начало GPS записи"
+                android:text="@string/gps_start_title"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp"/>
@@ -32,7 +32,7 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Название поездки (Например: Работа)"
+                android:hint="@string/trip_name_example"
                 android:layout_marginBottom="16dp">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -45,7 +45,7 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Начальный уровень топлива"
+                android:hint="@string/initial_fuel_hint"
                 android:layout_marginBottom="24dp">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -59,7 +59,7 @@
                 android:id="@+id/btn_start_recording"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Начать запись"
+                android:text="@string/start_recording"
                 android:padding="12dp"
                 android:textSize="18sp"/>
 
@@ -77,7 +77,7 @@
                 android:id="@+id/tv_current_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Статус: В ожидании GPS..."
+                android:text="@string/status_waiting_gps"
                 android:textColor="@color/accent"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -87,7 +87,7 @@
                 android:id="@+id/tv_distance_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Пройденное расстояние:"
+                android:text="@string/distance_title"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"/>
 
@@ -109,7 +109,7 @@
                     android:id="@+id/tv_unit_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="км"
+                    android:text="@string/distance_unit_km"
                     android:textSize="20sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginStart="8dp"
@@ -121,7 +121,7 @@
                 android:id="@+id/tv_duration_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Время в пути:"
+                android:text="@string/duration_title"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"/>
             <TextView
@@ -139,7 +139,7 @@
                 android:id="@+id/tv_fuel_recharged_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Заправленное топливо:"
+                android:text="@string/fuel_recharged_title"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"/>
             <TextView
@@ -177,7 +177,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="ПАУЗА"
+                    android:text="@string/pause"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
 
                 <com.google.android.material.button.MaterialButton
@@ -186,7 +186,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="ЗАПРАВКА"
+                    android:text="@string/refuel"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
             </LinearLayout>
 
@@ -202,7 +202,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="ОТМЕНА"
+                    android:text="@string/cancel_recording"
                     android:textColor="@color/warning"
                     style="@style/Widget.Material3.Button.OutlinedButton"/>
 
@@ -212,7 +212,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="СОХРАНИТЬ"
+                    android:text="@string/stop_recording"
                     app:backgroundTint="?attr/colorPrimary"
                     android:textColor="@android:color/white"/>
             </LinearLayout>

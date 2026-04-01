@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Выход из аккаунта"
+        android:text="@string/logout_confirm_title"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -19,7 +19,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Вы уверены, что хотите выйти?"
+        android:text="@string/logout_confirm_message"
         android:textColor="@color/dialog_text_secondary"
         android:gravity="center"
         android:textSize="16sp"
@@ -29,7 +29,7 @@
         android:id="@+id/tv_warning"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Все локальные данные будут удалены. Это действие нельзя отменить."
+        android:text="@string/logout_warning"
         android:textColor="@color/error"
         android:gravity="center"
         android:textSize="14sp"
@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Отмена"
+            android:text="@string/cancel"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
             style="@style/Widget.Material3.Button.OutlinedButton"/>
@@ -58,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Выйти"
+            android:text="@string/logout"
             android:backgroundTint="@color/error"/>
     </LinearLayout>
 </LinearLayout>

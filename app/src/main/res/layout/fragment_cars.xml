@@ -17,7 +17,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ваши Автомобили"
+            android:text="@string/your_cars"
             android:textSize="24sp"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
@@ -48,7 +48,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Нет добавленных автомобилей"
+            android:text="@string/no_cars_message"
             android:textSize="18sp"
             android:layout_marginTop="24dp"
             android:textColor="@color/text_primary" />

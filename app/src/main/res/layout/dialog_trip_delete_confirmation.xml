@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Удалить поездку?"
+            android:text="@string/trip_delete_confirm_title"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -26,7 +26,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Эта операция необратима. Запись будет удалена навсегда."
+        android:text="@string/trip_delete_confirm_message"
         android:textColor="@color/dialog_text_secondary"
         android:textSize="20dp"
         android:layout_marginBottom="24dp"/>
@@ -42,7 +42,7 @@
             android:id="@+id/btn_cancel_delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Отмена" android:layout_weight="1"
+            android:text="@string/cancel" android:layout_weight="1"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
             style="@style/Widget.Material3.Button.OutlinedButton"/>
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="Удалить"
+            android:text="@string/delete"
             android:backgroundTint="@color/error"/>
     </LinearLayout>
 </LinearLayout>

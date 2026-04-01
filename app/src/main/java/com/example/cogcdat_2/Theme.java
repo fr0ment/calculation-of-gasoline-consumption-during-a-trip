@@ -1,5 +1,7 @@
 package com.example.cogcdat_2;
 
+import android.content.Context;
+
 public enum Theme {
     SYSTEM("system"),
     LIGHT("light"),
@@ -24,16 +26,16 @@ public enum Theme {
         return SYSTEM;
     }
 
-    public String getDisplayName() {
+    public String getDisplayName(Context context) {
         switch (this) {
             case SYSTEM:
-                return "Системная";
+                return context.getString(R.string.theme_system);
             case LIGHT:
-                return "Светлая";
+                return context.getString(R.string.theme_light);
             case DARK:
-                return "Темная";
+                return context.getString(R.string.theme_dark);
             default:
-                return "Системная";
+                return context.getString(R.string.theme_system);
         }
     }
 }

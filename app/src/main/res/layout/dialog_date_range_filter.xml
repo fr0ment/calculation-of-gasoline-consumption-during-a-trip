@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Фильтрация по дате"
+            android:text="@string/filter_date"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -26,7 +26,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Дата от:"
+        android:text="@string/date_from"
         android:textColor="@color/text_secondary"
         android:textSize="14sp"
         android:layout_marginTop="8dp"
@@ -39,13 +39,13 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginEnd="8dp"
-        android:text="Дата"
+        android:text="@string/date_button"
         android:textColor="@color/text_primary"
         android:textSize="14sp" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Дата до:"
+        android:text="@string/date_to"
         android:textColor="@color/text_secondary"
         android:textSize="14sp"
         android:layout_marginTop="8dp"
@@ -58,14 +58,14 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginEnd="8dp"
-        android:text="Дата"
+        android:text="@string/date_button"
         android:textColor="@color/text_primary"
         android:textSize="14sp" />
     <Button
         android:id="@+id/btn_reset"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Сбросить"
+        android:text="@string/reset"
         android:layout_marginBottom="16dp"
         android:backgroundTint="@color/accent"/>
 
@@ -79,7 +79,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Отмена"
+            android:text="@string/cancel"
             android:layout_marginEnd="8dp"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
@@ -90,6 +90,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Применить" />
+            android:text="@string/apply" />
     </LinearLayout>
 </LinearLayout>

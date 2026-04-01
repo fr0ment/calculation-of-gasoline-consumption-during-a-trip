@@ -32,7 +32,7 @@
             android:id="@+id/tv_car_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Автомобиль"
+            android:text="@string/Car"
             android:textSize="16sp"
             android:textColor="@color/text_primary" />
 

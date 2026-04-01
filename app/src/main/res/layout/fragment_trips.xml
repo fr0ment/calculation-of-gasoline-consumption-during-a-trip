@@ -17,7 +17,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ваши Поездки"
+            android:text="@string/your_trips"
             android:textSize="24sp"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
@@ -47,7 +47,7 @@
             android:id="@+id/tv_selected_car_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Выберите автомобиль"
+            android:text="@string/select_car"
             android:textSize="16sp"
             android:textColor="@color/text_primary" />
 
@@ -65,7 +65,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Поиск по названию"
+                android:hint="@string/search_hint"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
                 app:startIconTint="@color/accent"
                 android:layout_marginEnd="8dp">
@@ -78,7 +78,7 @@
                     android:imeOptions="actionSearch"
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_hint"
-                    android:imeActionLabel="Поиск" />
+                    android:imeActionLabel="@string/Search" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -90,7 +90,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="8dp"
                 android:layout_marginStart="8dp"
-                android:contentDescription="Фильтр по дате"
+                android:contentDescription="@string/filter_date"
                 app:tint="@color/accent" />
 
         </LinearLayout>
@@ -107,7 +107,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Для выбранного автомобиля нет поездок."
+            android:text="@string/no_trips_message"
             android:textColor="@color/text_hint"
             android:textSize="16sp"
             android:visibility="gone"/>
@@ -120,7 +120,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:contentDescription="Добавить поездку"
+        android:contentDescription="@string/add_trip_options_title"
         android:src="@drawable/ic_add"
         app:backgroundTint="@color/colorPrimary" />
 

@@ -20,7 +20,7 @@ import com.example.cogcdat_2.sync.SyncManager;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
 
     private TextInputLayout tilUsername, tilPassword;
     private TextInputEditText etUsername, etPassword;
@@ -166,7 +166,7 @@ public class LoginActivity extends AppCompatActivity {
             // Сохраняем тему в глобальные настройки
             App.saveAndApplyTheme(this, settings.getTheme());
 
-            Log.d("LoginActivity", "Theme applied after sync: " + settings.getTheme().getDisplayName());
+            Log.d("LoginActivity", "Theme applied after sync: " + settings.getTheme().getValue());
         }
     }
 
@@ -195,7 +195,7 @@ public class LoginActivity extends AppCompatActivity {
         timeoutRunnable = () -> {
             if (!isDataLoaded) {
                 runOnUiThread(() -> {
-                    tvError.setText("Превышено время ожидания. Проверьте соединение.");
+                    tvError.setText(getString(R.string.timeout_message));
                     tvError.setVisibility(View.VISIBLE);
                     tvError.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
                     showProgress(false, null);
@@ -213,7 +213,7 @@ public class LoginActivity extends AppCompatActivity {
             // Синхронизация уже идет - показываем прогресс и ждем
             setContentView(R.layout.activity_login);
             initViews();
-            showProgress(true, "Загрузка данных...");
+            showProgress(true, getString(R.string.Uploading_data));
 
             syncManager.isSyncInProgress().observe(this, inProgress -> {
                 if (!inProgress && !isDataLoaded) {

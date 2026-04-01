@@ -33,7 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class GpsRecordingActivity extends AppCompatActivity {
+public class GpsRecordingActivity extends BaseActivity {
 
     private static final String TAG = "GpsRecordingActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
@@ -80,11 +80,11 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
             // Обновление кнопки Пауза/Возобновить
             if (tripData.isPaused()) {
-                btnPauseResume.setText("ВОЗОБНОВИТЬ");
-                tvCurrentStatus.setText("ЗАПИСЬ ПРИОСТАНОВЛЕНА");
+                btnPauseResume.setText(getString(R.string.btn_resume));
+                tvCurrentStatus.setText(getString(R.string.status_recording_paused));
             } else {
-                btnPauseResume.setText("ПАУЗА");
-                tvCurrentStatus.setText("ЗАПИСЬ АКТИВНА");
+                btnPauseResume.setText(getString(R.string.btn_pause));
+                tvCurrentStatus.setText(getString(R.string.status_recording_active));
             }
         }
     };
@@ -101,7 +101,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
         // Получение ID автомобиля
         carId = getIntent().getStringExtra("car_id");
         if (carId == null || carId.isEmpty()) {
-            Toast.makeText(this, "Автомобиль не выбран", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_car_not_selected, Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -110,7 +110,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
         selectedCar = dbHelper.getCar(carId);
 
         if (selectedCar == null) {
-            Toast.makeText(this, "Автомобиль не найден", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.car_not_found, Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -252,17 +252,17 @@ public class GpsRecordingActivity extends AppCompatActivity {
     private void handleStartRecording() {
         String initialFuelStr = etInitialFuel.getText().toString().trim();
         if (initialFuelStr.isEmpty()) {
-            etInitialFuel.setError("Введите начальный уровень топлива.");
+            etInitialFuel.setError(getString(R.string.enter_initial_fuel));
             return;
         }
         try {
             initialFuelLevel = Double.parseDouble(initialFuelStr);
             if (initialFuelLevel < 0) {
-                etInitialFuel.setError("Значение должно быть неотрицательным.");
+                etInitialFuel.setError(getString(R.string.error_value_must_be_non_negative));
                 return;
             }
         } catch (NumberFormatException e) {
-            etInitialFuel.setError("Некорректное числовое значение.");
+            etInitialFuel.setError(getString(R.string.error_invalid_numeric_value));
             return;
         }
 
@@ -292,7 +292,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
             }
         });
 
-        Toast.makeText(this, "Запись начата", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.recording_started, Toast.LENGTH_SHORT).show();
     }
 
     private void hideKeyboard(View view) {
@@ -322,7 +322,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
         Button btnAddRefuel = dialogView.findViewById(R.id.btn_add_refuel);
         Button btnCancelRefuel = dialogView.findViewById(R.id.btn_cancel_refuel);
 
-        tvRefuelUnit.setText(String.format(Locale.getDefault(), "Единица измерения: %s", fuelUnit));
+        tvRefuelUnit.setText(String.format(Locale.getDefault(), getString(R.string.unit_measurement), fuelUnit));
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -333,22 +333,22 @@ public class GpsRecordingActivity extends AppCompatActivity {
         btnAddRefuel.setOnClickListener(v -> {
             String amountStr = etRefuelAmount.getText().toString().trim();
             if (amountStr.isEmpty()) {
-                etRefuelAmount.setError("Введите количество топлива.");
+                etRefuelAmount.setError(getString(R.string.enter_fuel_amount));
                 return;
             }
             try {
                 double amount = Double.parseDouble(amountStr);
                 if (amount <= 0) {
-                    etRefuelAmount.setError("Количество должно быть положительным.");
+                    etRefuelAmount.setError(getString(R.string.error_amount_must_be_positive));
                     return;
                 }
 
                 TripRecordingRepository.getInstance().addRefuel(amount);
 
-                Toast.makeText(this, String.format(Locale.getDefault(), "Заправлено: %.1f %s", amount, fuelUnit), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.fuel_added, amount, fuelUnit), Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             } catch (NumberFormatException e) {
-                etRefuelAmount.setError("Некорректное числовое значение.");
+                etRefuelAmount.setError(getString(R.string.error_invalid_numeric_value));
             }
         });
 
@@ -357,7 +357,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
     private void showSaveTripDialog() {
         if (!TripRecordingRepository.getInstance().isRecording()) {
-            Toast.makeText(this, "Запись не активна. Закрытие...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.recording_not_active), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -375,8 +375,8 @@ public class GpsRecordingActivity extends AppCompatActivity {
         Button btnSave = dialogView.findViewById(R.id.btn_save_trip);
         Button btnCancel = dialogView.findViewById(R.id.btn_cancel_final_fuel);
 
-        tvUnit.setText(String.format(Locale.getDefault(), "Единица измерения: %s (Остаток топлива)", fuelUnit));
-        tvSummary.setText(String.format(Locale.getDefault(), "Пожалуйста, введите количество топлива, оставшееся в баке (%s). Макс. возможное: %.1f %s.", fuelUnit, maxPossibleFuel, fuelUnit));
+        tvUnit.setText(String.format(Locale.getDefault(), getString(R.string.unit_measurement_remaining_fuel), fuelUnit));
+        tvSummary.setText(String.format(Locale.getDefault(), getString(R.string.enter_remaining_fuel_prompt), fuelUnit, maxPossibleFuel, fuelUnit));
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -387,18 +387,18 @@ public class GpsRecordingActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> {
             String finalFuelStr = etFinalFuel.getText().toString().trim();
             if (finalFuelStr.isEmpty()) {
-                etFinalFuel.setError("Введите остаток топлива.");
+                etFinalFuel.setError(getString(R.string.enter_remaining_fuel));
                 return;
             }
             try {
                 double finalFuelLevel = Double.parseDouble(finalFuelStr);
                 if (finalFuelLevel < 0) {
-                    etFinalFuel.setError("Значение должно быть неотрицательным.");
+                    etFinalFuel.setError(getString(R.string.error_value_must_be_non_negative));
                     return;
                 }
 
                 if (finalFuelLevel > maxPossibleFuel) {
-                    etFinalFuel.setError(String.format(Locale.getDefault(), "Остаток не может превышать %.1f %s (Начальное + Заправленное).", maxPossibleFuel, fuelUnit));
+                    etFinalFuel.setError(getString(R.string.error_remaining_exceeds_max, maxPossibleFuel, fuelUnit));
                     return;
                 }
 
@@ -406,7 +406,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
                 stopRecordingService();
                 dialog.dismiss();
             } catch (NumberFormatException e) {
-                etFinalFuel.setError("Некорректное числовое значение.");
+                etFinalFuel.setError(getString(R.string.error_invalid_numeric_value));
             }
         });
 
@@ -429,7 +429,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
 
         double fuelSpent = (initialFuel + totalFuelRecharged) - finalFuelLevel;
 
-        String tripName = name.isEmpty() ? "Поездка " + DISPLAY_DATE_FORMAT.format(new Date()) : name;
+        String tripName = name.isEmpty() ? getString(R.string.Trip) + DISPLAY_DATE_FORMAT.format(new Date()) : name;
 
         // Создаем поездку (расстояние уже в километрах)
         Trip newTrip = new Trip(
@@ -444,9 +444,9 @@ public class GpsRecordingActivity extends AppCompatActivity {
         String result = dbHelper.addTrip(newTrip);
 
         if (result != null && !result.isEmpty()) {
-            Toast.makeText(this, "Поездка успешно сохранена!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.trip_saved_successfully, Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Ошибка при сохранении поездки.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.error_saving_trip, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -477,7 +477,7 @@ public class GpsRecordingActivity extends AppCompatActivity {
         long seconds = totalSeconds % 60;
         long minutes = (totalSeconds / 60) % 60;
         long hours = totalSeconds / 3600;
-        return String.format(Locale.getDefault(), "%02d ч %02d мин %02d сек", hours, minutes, seconds);
+        return String.format(Locale.getDefault(), getString(R.string.duration_format_full), hours, minutes, seconds);
     }
 
     private boolean checkLocationPermission() {
@@ -495,9 +495,9 @@ public class GpsRecordingActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Разрешение получено. Нажмите 'Начать'.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.permission_granted_start, Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Разрешение на GPS требуется для записи поездки.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.error_gps_permission_required, Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -510,10 +510,10 @@ public class GpsRecordingActivity extends AppCompatActivity {
     private void updateUnitInfo() {
         // Показываем единицы расстояния из настроек пользователя
         if (userSettings != null) {
-            String unitSymbol = userSettings.getDistanceUnit().getDisplayName();
+            String unitSymbol = userSettings.getDistanceUnit().getDisplayName(this);
             tvUnitInfo.setText(unitSymbol);
         } else {
-            tvUnitInfo.setText("км");
+            tvUnitInfo.setText(getString(R.string.distance_unit_km));
         }
     }
 }

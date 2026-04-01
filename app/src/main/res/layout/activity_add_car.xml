@@ -16,7 +16,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Добавить автомобиль"
+            android:text="@string/add_car_title"
             android:textSize="24sp"
             android:textColor="@color/text_primary"
             android:gravity="center"
@@ -31,13 +31,13 @@
             android:scaleType="centerCrop"
             android:src="@drawable/ic_car_outline"
             android:padding="30dp"
-            android:contentDescription="Фото автомобиля"/>
+            android:contentDescription="@string/add_photo" />
 
         <Button
             android:id="@+id/btnAddPhoto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Добавить фото"
+            android:text="@string/add_photo"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_marginBottom="24dp"/>
 
@@ -46,7 +46,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:hint="Название автомобиля *">
+            android:hint="@string/car_name_hint">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etName"
                 android:layout_width="match_parent"
@@ -61,7 +61,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Описание (необязательно)">
+            android:hint="@string/car_description_hint">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDescription"
                 android:layout_width="match_parent"
@@ -79,7 +79,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:hint="Тип топлива (Напр.: АИ-95)">
+            android:hint="@string/fuel_type_hint">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etFuelType"
                 android:layout_width="match_parent"
@@ -94,7 +94,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Объем бака (в выбранных единицах)">
+            android:hint="@string/tank_volume_hint">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTankVolume"
                 android:layout_width="match_parent"
@@ -108,14 +108,13 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Единицы измерения топлива"
+            android:text="@string/fuel_unit_label"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="12dp" />
 
-        <!-- Только единицы топлива -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -138,7 +137,7 @@
                 app:cornerRadius="12dp" />
         </LinearLayout>
 
-        <!-- Скрытые старые кнопки (оставлены для совместимости, но скрыты) -->
+        <!-- Скрытые старые кнопки -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDistanceUnit"
             android:layout_width="0dp"
@@ -154,7 +153,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="* - обязательные поля"
+            android:text="@string/required_fields_note"
             android:textSize="12sp"
             android:textColor="@color/text_hint"
             android:layout_marginBottom="24dp" />
@@ -172,7 +171,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Назад"
+                android:text="@string/back"
                 android:textColor="@color/text_primary"
                 android:backgroundTint="@color/card_background_secondary"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
@@ -183,7 +182,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Сохранить"
+                android:text="@string/save"
                 android:backgroundTint="@color/primary"
                 style="@style/Widget.Material3.Button" />
         </LinearLayout>

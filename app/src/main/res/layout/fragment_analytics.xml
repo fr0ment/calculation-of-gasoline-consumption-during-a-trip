@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Аналитика"
+        android:text="@string/analytics_title"
         android:textSize="24sp"
         android:textColor="@color/text_primary"
         android:textStyle="bold"
@@ -45,7 +45,7 @@
                 android:gravity="center_vertical"
                 android:layout_marginBottom="24dp"
 
-                android:background="@drawable/car_selection_background">>
+                android:background="@drawable/car_selection_background">
 
                 <ImageView
                     android:id="@+id/iv_selected_car_icon"
@@ -59,7 +59,7 @@
                     android:id="@+id/tv_selected_car_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Выберите автомобиль"
+                    android:text="@string/select_car"
                     android:textSize="16sp"
                     android:textColor="@color/text_primary" />
 
@@ -68,7 +68,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Общая статистика"
+                android:text="@string/total_stats"
                 android:textSize="18sp"
                 android:textColor="@color/accent"
                 android:textStyle="bold"
@@ -102,7 +102,7 @@
                             android:id="@+id/tv_total_distance"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0 км"
+                            android:text="@string/distance_unit_km"
                             android:textSize="22sp"
                             android:textColor="@color/stat_value_color"
                             android:textStyle="bold" />
@@ -110,7 +110,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Общий пробег"
+                            android:text="@string/total_distance"
                             android:textSize="12sp"
                             android:textColor="@color/stat_label_color"
                             android:layout_marginTop="4dp" />
@@ -138,7 +138,7 @@
                             android:id="@+id/tv_total_fuel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0 л"
+                            android:text="@string/L"
                             android:textSize="22sp"
                             android:textColor="@color/stat_value_color"
                             android:textStyle="bold" />
@@ -146,7 +146,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Всего топлива"
+                            android:text="@string/total_fuel"
                             android:textSize="12sp"
                             android:textColor="@color/stat_label_color"
                             android:layout_marginTop="4dp" />
@@ -181,7 +181,7 @@
                             android:id="@+id/tv_avg_consumption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="0.0 л/100км"
+                            android:text="@string/l100km"
                             android:textSize="22sp"
                             android:textColor="@color/stat_value_color"
                             android:textStyle="bold" />
@@ -189,7 +189,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Средний расход"
+                            android:text="@string/avg_consumption"
                             android:textSize="12sp"
                             android:textColor="@color/stat_label_color"
                             android:layout_marginTop="4dp" />
@@ -211,7 +211,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="График расхода топлива"
+                    android:text="@string/fuel_chart_title"
                     android:textSize="18sp"
                     android:textColor="@color/accent"
                     android:textStyle="bold"
@@ -241,7 +241,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Мониторинг авто"
+                    android:text="@string/monitoring_title"
                     android:textSize="18sp"
                     android:textColor="@color/accent"
                     android:textStyle="bold"
@@ -282,7 +282,7 @@
                                 android:id="@+id/tv_warning_title"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Повышенный расход!"
+                                android:text="@string/warning_high_consumption_title"
                                 android:textSize="16sp"
                                 android:textColor="@color/white"
                                 android:textStyle="bold" />
@@ -291,7 +291,7 @@
                                 android:id="@+id/tv_warning_details"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Последние поездки показывают расход выше среднего на 15%"
+                                android:text="@string/warning_details"
                                 android:textSize="12sp"
                                 android:textColor="@color/white"
                                 android:layout_marginTop="4dp" />
@@ -305,7 +305,7 @@
                 android:id="@+id/tv_no_data"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Нет данных для анализа. Добавьте поездки, чтобы увидеть статистику."
+                android:text="@string/no_data_analytics"
                 android:textSize="16sp"
                 android:textColor="@color/text_hint"
                 android:gravity="center"

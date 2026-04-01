@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import android.content.Context;
 
 public class Trip {
     private String id;
@@ -136,10 +137,11 @@ public class Trip {
         }
     }
 
-    public String getFormattedDuration() {
+    public String getFormattedDuration(Context context) {
         long ms = getDurationMs();
         long hours = TimeUnit.MILLISECONDS.toHours(ms);
         long minutes = TimeUnit.MILLISECONDS.toMinutes(ms) % 60;
-        return String.format(Locale.getDefault(), "%d ч %02d мин", hours, minutes);
+        return String.format(Locale.getDefault(),
+                context.getString(R.string.duration_format), hours, minutes);
     }
 }

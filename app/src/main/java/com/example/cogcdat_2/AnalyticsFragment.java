@@ -134,7 +134,7 @@ public class AnalyticsFragment extends Fragment {
 
         if (carList.isEmpty()) {
             carSelectionView.setVisibility(View.GONE);
-            tvNoData.setText("Нет добавленных автомобилей");
+            tvNoData.setText(getString(R.string.no_cars_added));
             tvNoData.setVisibility(View.VISIBLE);
             hideAllDataViews();
             return;
@@ -228,10 +228,10 @@ public class AnalyticsFragment extends Fragment {
     private void updateStatistics() {
         // Получаем единицы расстояния из настроек пользователя
         DistanceUnit distanceUnit = userSettings.getDistanceUnit();
-        String distanceUnitSymbol = distanceUnit.getDisplayName();
+        String distanceUnitSymbol = distanceUnit.getDisplayName(requireContext());
 
         // Единицы топлива из выбранного автомобиля
-        String fuelUnit = selectedCar != null ? selectedCar.getFuelUnit() : "л";
+        String fuelUnit = selectedCar != null ? getLocalizedFuelUnit(selectedCar) : getString(R.string.fuel_unit_liter);
 
         // Конвертируем общее расстояние в выбранные единицы для отображения
         double displayTotalDistance = totalDistance;
@@ -244,7 +244,9 @@ public class AnalyticsFragment extends Fragment {
         if (distanceUnit == DistanceUnit.MI) {
             displayAvgConsumption = avgConsumption * 1.60934; // л/100км -> л/100миль
         }
-        String consumptionUnit = distanceUnit == DistanceUnit.MI ? "л/100миль" : "л/100км";
+        String consumptionUnit = distanceUnit == DistanceUnit.MI ?
+                getString(R.string.consumption_unit_mi) :
+                getString(R.string.consumption_unit_km);
 
         tvTotalDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
                 displayTotalDistance, distanceUnitSymbol));
@@ -256,7 +258,7 @@ public class AnalyticsFragment extends Fragment {
     private void updateChart() {
         if (dailyConsumption.isEmpty()) {
             chartFuelConsumption.clear();
-            chartFuelConsumption.setNoDataText("Нет данных для графика");
+            chartFuelConsumption.setNoDataText(getString(R.string.no_data_for_chart));
             return;
         }
 
@@ -268,7 +270,7 @@ public class AnalyticsFragment extends Fragment {
             entries.add(new Entry(i, dailyConsumption.get(labels.get(i))));
         }
 
-        LineDataSet dataSet = new LineDataSet(entries, "Расход топлива");
+        LineDataSet dataSet = new LineDataSet(entries, getString(R.string.fuel_consumption_chart));
         dataSet.setColor(getResources().getColor(R.color.primary, null));
         dataSet.setCircleColor(getResources().getColor(R.color.primary, null));
         dataSet.setValueTextColor(getResources().getColor(R.color.text_primary, null));
@@ -277,7 +279,7 @@ public class AnalyticsFragment extends Fragment {
 
         // Получаем единицы расстояния из настроек
         DistanceUnit distanceUnit = userSettings.getDistanceUnit();
-        String consumptionUnit = distanceUnit == DistanceUnit.MI ? "л/100миль" : "л/100км";
+        String consumptionUnit = distanceUnit == DistanceUnit.MI ? getString(R.string.consumption_unit_mi) : getString(R.string.consumption_unit_km);
 
         final String finalUnit = consumptionUnit;
         dataSet.setValueFormatter(new ValueFormatter() {
@@ -332,12 +334,22 @@ public class AnalyticsFragment extends Fragment {
 
         AnomalyResult anomaly = detectConsumptionAnomaly(trips);
         if (anomaly != null) {
-            tvWarningTitle.setText("Повышенный расход топлива!");
-            tvWarningDetails.setText(anomaly.getWarningMessage());
+            tvWarningTitle.setText(getString(R.string.high_consumption_warning));
+            tvWarningDetails.setText(anomaly.getWarningMessage(requireContext()));
             layoutMonitoringSection.setVisibility(View.VISIBLE);
         }
     }
-
+    private String getLocalizedFuelUnit(Car car) {
+        if (car == null) return getString(R.string.fuel_unit_liter);
+        String unit = car.getFuelUnit();
+        if ("л".equals(unit) || "L".equals(unit)) {
+            return getString(R.string.fuel_unit_liter);
+        } else if ("гал".equals(unit) || "gal".equals(unit)) {
+            return getString(R.string.unit_gallon);
+        } else {
+            return unit;
+        }
+    }
     private AnomalyResult detectConsumptionAnomaly(List<Trip> sortedTripsNewestFirst) {
         List<Trip> recent = sortedTripsNewestFirst.subList(0, RECENT_TRIPS_COUNT);
 
@@ -381,16 +393,15 @@ public class AnalyticsFragment extends Fragment {
 
     private void showNoDataState() {
         tvNoData.setVisibility(View.VISIBLE);
-        tvNoData.setText(String.format("Нет данных для автомобиля %s. Добавьте поездки, чтобы увидеть статистику.",
-                selectedCar.getName()));
+        tvNoData.setText(String.format(getString(R.string.no_data_for_car), selectedCar.getName()));
 
         // Получаем единицы расстояния из настроек
         DistanceUnit distanceUnit = userSettings.getDistanceUnit();
-        String distanceUnitSymbol = distanceUnit.getDisplayName();
-        String consumptionUnit = distanceUnit == DistanceUnit.MI ? "л/100миль" : "л/100км";
+        String distanceUnitSymbol = distanceUnit.getDisplayName(requireContext());
+        String consumptionUnit = distanceUnit == DistanceUnit.MI ? getString(R.string.consumption_unit_mi) : getString(R.string.consumption_unit_km);
 
         tvTotalDistance.setText("0 " + distanceUnitSymbol);
-        tvTotalFuel.setText("0 л");
+        tvTotalFuel.setText(getString(R.string._l));
         tvAvgConsumption.setText("0.0 " + consumptionUnit);
 
         hideAllDataViews();
@@ -403,7 +414,7 @@ public class AnalyticsFragment extends Fragment {
 
     private void updateSelectedCarDisplay(Car car) {
         if (car == null) {
-            tvSelectedCarName.setText("Выберите автомобиль");
+            tvSelectedCarName.setText(getString(R.string.select_a_car));
             ivSelectedCarIcon.setImageResource(R.drawable.ic_car_outline);
         } else {
             tvSelectedCarName.setText(car.getName());
@@ -473,11 +484,9 @@ public class AnalyticsFragment extends Fragment {
             this.previousAvg = previousAvg;
         }
 
-        String getWarningMessage() {
-            // В предупреждении всегда используем л/100км для простоты
+        String getWarningMessage(Context context) {
             return String.format(Locale.getDefault(),
-                    "Последние %d поездок на автомобиле «%s» показывают расход на %.1f%% выше среднего\n" +
-                            "(было: %.1f л/100 км, стало: %.1f л/100 км)",
+                    context.getString(R.string.consumption_anomaly_message),
                     RECENT_TRIPS_COUNT, carName, increasePercent, previousAvg, recentAvg);
         }
     }

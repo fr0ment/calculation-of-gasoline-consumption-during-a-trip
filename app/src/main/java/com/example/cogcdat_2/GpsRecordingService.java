@@ -236,17 +236,15 @@ public class GpsRecordingService extends Service implements LocationListener {
         PendingIntent pauseResumePendingIntent = PendingIntent.getBroadcast(this,
                 1, pauseResumeIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
-        String buttonText = isPaused ? "ПРОДОЛЖИТЬ" : "ПАУЗА";
+        String buttonText = isPaused ? getString(R.string.resume) : getString(R.string.pause);
         // Предполагается, что ic_car существует и используется как плейсхолдер
         int buttonIcon = R.drawable.ic_car;
 
-        String title = isPaused ? "Пауза записи поездки" : "Идет запись поездки";
+        String title = isPaused ? getString(R.string.notification_title_paused) : getString(R.string.notification_title_active);
 
         // Включаем заправленное топливо в уведомление
         double fuelRecharged = TripRecordingRepository.getInstance().getTotalFuelRecharged();
-        String content = String.format(Locale.getDefault(),
-                "Пробег: %.1f км | Время: %s | Заправка: %.2f л",
-                distanceKm, formatDuration(durationMs), fuelRecharged);
+        String content = String.format(Locale.getDefault(), getString(R.string.notification_content), distanceKm, formatDuration(durationMs), fuelRecharged);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(title)

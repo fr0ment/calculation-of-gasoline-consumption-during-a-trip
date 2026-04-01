@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Регистрация"
+            android:text="@string/register_title"
             android:textSize="28sp"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
@@ -39,7 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Имя пользователя"
+            android:hint="@string/username_hint"
             app:startIconTint="@color/accent"
             app:boxStrokeColor="@color/primary"
             app:boxStrokeWidth="2dp">
@@ -60,7 +60,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Email"
+            android:hint="@string/email_hint"
             app:startIconTint="@color/accent"
             app:boxStrokeColor="@color/primary"
             app:boxStrokeWidth="2dp">
@@ -81,7 +81,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Полное имя (необязательно)"
+            android:hint="@string/full_name_hint"
             app:startIconTint="@color/accent"
             app:boxStrokeColor="@color/primary"
             app:boxStrokeWidth="2dp">
@@ -102,7 +102,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Пароль"
+            android:hint="@string/password_hint"
             app:startIconTint="@color/accent"
             app:endIconMode="password_toggle"
             app:boxStrokeColor="@color/primary"
@@ -124,7 +124,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:hint="Подтвердите пароль"
+            android:hint="@string/confirm_password_hint"
             app:startIconTint="@color/accent"
             app:endIconMode="password_toggle"
             app:boxStrokeColor="@color/primary"
@@ -162,7 +162,7 @@
             android:id="@+id/btn_register"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Зарегистрироваться"
+            android:text="@string/register_button"
             android:textSize="16sp"
             android:textAllCaps="false"
             android:backgroundTint="@color/primary"
@@ -178,7 +178,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Уже есть аккаунт? "
+                android:text="@string/already_have_account"
                 android:textColor="@color/text_hint"
                 android:textSize="14sp" />
 
@@ -186,7 +186,7 @@
                 android:id="@+id/tv_login_link"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Войти"
+                android:text="@string/login_link"
                 android:textColor="@color/primary"
                 android:textSize="14sp"
                 android:textStyle="bold"

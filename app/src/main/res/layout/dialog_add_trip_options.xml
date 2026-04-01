@@ -15,7 +15,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Добавить Поездку"
+            android:text="@string/add_trip_options_title"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -47,7 +47,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/gps_fixed"
-                android:contentDescription="Запись GPS"
+                android:contentDescription="@string/gps_record_option"
                 app:tint="@color/white"
                 android:layout_marginEnd="16dp"/>
 
@@ -55,7 +55,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Записать GPS"
+                android:text="@string/gps_record_option"
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold"/>
@@ -92,7 +92,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pencil_fill"
-                android:contentDescription="Добавить вручную"
+                android:contentDescription="@string/manual_input_option"
                 android:layout_marginEnd="16dp"
                 app:tint="@color/colorOnPrimary"/>
 
@@ -100,7 +100,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ручной ввод"
+                android:text="@string/manual_input_option"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/colorOnPrimary"/>
@@ -126,7 +126,7 @@
             android:id="@+id/btn_cancel_refuel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Отмена"
+            android:text="@string/cancel"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
             style="@style/Widget.Material3.Button.OutlinedButton"/>

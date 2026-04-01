@@ -15,7 +15,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Заправка"
+            android:text="@string/refuel_dialog_title"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -27,7 +27,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Количество"
+        android:hint="@string/refuel_amount_hint"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -45,7 +45,7 @@
         android:layout_gravity="end"
         android:layout_marginTop="4dp"
         android:textSize="12sp"
-        android:text="Единица измерения (л/гал)"
+        android:text="@string/unit_off"
         android:textColor="@color/dialog_text_secondary" />
 
     <LinearLayout
@@ -62,7 +62,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/card_background_secondary"
-            android:text="Отмена"
+            android:text="@string/cancel"
             android:layout_weight="1"
             android:textColor="@color/text_primary" />
 
@@ -72,7 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="Добавить" />
+            android:text="@string/add" />
     </LinearLayout>
 
 </LinearLayout>

@@ -10,7 +10,7 @@
         android:id="@+id/tv_header_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Ноябрь 2025"
+        android:text="@string/November_2025"
         android:textSize="18sp"
         android:textColor="@color/accent"
         android:textStyle="bold" />

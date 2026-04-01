@@ -1,5 +1,7 @@
 package com.example.cogcdat_2;
 
+import android.content.Context;
+
 public enum DistanceUnit {
     KM("km"),
     MI("mi");
@@ -23,14 +25,11 @@ public enum DistanceUnit {
         return KM; // По умолчанию
     }
 
-    public String getDisplayName() {
+    public String getDisplayName(Context context) {
         switch (this) {
-            case KM:
-                return "км";
-            case MI:
-                return "мили";
-            default:
-                return "км";
+            case KM: return context.getString(R.string.unit_km);
+            case MI: return context.getString(R.string.unit_mile);
+            default: return context.getString(R.string.unit_km);
         }
     }
 }

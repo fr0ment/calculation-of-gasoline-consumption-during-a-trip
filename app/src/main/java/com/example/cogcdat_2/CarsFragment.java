@@ -75,6 +75,17 @@ public class CarsFragment extends Fragment {
     /**
      * Адаптер для списка автомобилей.
      */
+    private String getLocalizedFuelUnit(Car car) {
+        if (car == null) return getString(R.string.fuel_unit_liter);
+        String unit = car.getFuelUnit();
+        if ("л".equals(unit) || "L".equalsIgnoreCase(unit)) {
+            return getString(R.string.fuel_unit_liter);
+        } else if ("гал".equals(unit) || "gal".equalsIgnoreCase(unit)) {
+            return getString(R.string.unit_gallon);
+        } else {
+            return unit;
+        }
+    }
     private class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
         private final List<Car> cars;
 
@@ -98,7 +109,7 @@ public class CarsFragment extends Fragment {
 
             // Обновленная строка спецификаций: Тип топлива и Объем бака
             String specs = String.format(Locale.getDefault(), "%s • %.1f %s",
-                    car.getFuelType(), car.getTankVolume(), car.getFuelUnit());
+                    car.getFuelType(), car.getTankVolume(), getLocalizedFuelUnit(car));
             holder.tvSpecs.setText(specs);
 
 
@@ -246,7 +257,7 @@ public class CarsFragment extends Fragment {
             boolean deleted = dbHelper.deleteCar(car.getId());
             if (deleted) {
                 loadCars();
-                Toast.makeText(getContext(), "Автомобиль удален", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.car_deleted, Toast.LENGTH_SHORT).show();
 
                 // Проверяем, остались ли автомобили
                 if (dbHelper.getAllCars().isEmpty()) {
@@ -257,7 +268,7 @@ public class CarsFragment extends Fragment {
                     getActivity().finish();
                 }
             } else {
-                Toast.makeText(getContext(), "Ошибка при удалении", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.error_deleting_car, Toast.LENGTH_SHORT).show();
             }
             dialog.dismiss();
         });

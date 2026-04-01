@@ -66,9 +66,9 @@ public class TripsFragment extends Fragment {
     private Calendar endDateFilter = null;
 
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-    private static final SimpleDateFormat DISPLAY_DATE_TIME_FORMAT = new SimpleDateFormat("EEE, dd HH:mm", new Locale("ru", "RU"));
-    private static final SimpleDateFormat HEADER_DATE_FORMAT = new SimpleDateFormat("LLLL yyyy", new Locale("ru", "RU"));
-    private static final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+    // private static final SimpleDateFormat DISPLAY_DATE_TIME_FORMAT = new SimpleDateFormat("EEE, dd HH:mm", Locale.getDefault());
+    private final SimpleDateFormat HEADER_DATE_FORMAT = new SimpleDateFormat("LLLL yyyy", Locale.getDefault());
+    private final SimpleDateFormat DISPLAY_DATE_FORMAT = new SimpleDateFormat("EEE, dd HH:mm", Locale.getDefault());
 
     private View rootView;
 
@@ -129,7 +129,7 @@ public class TripsFragment extends Fragment {
 
         if (carList.isEmpty()) {
             carSelectionView.setVisibility(View.GONE);
-            tvEmptyTrips.setText("Нет добавленных автомобилей");
+            tvEmptyTrips.setText(getString(R.string.no_cars_added));
             tvEmptyTrips.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
             return;
@@ -162,7 +162,7 @@ public class TripsFragment extends Fragment {
 
     private void updateSelectedCarDisplay(Car car) {
         if (car == null) {
-            tvSelectedCarName.setText("Выберите автомобиль");
+            tvSelectedCarName.setText(getString(R.string.select_a_car));
             ivSelectedCarIcon.setImageResource(R.drawable.ic_car_outline);
         } else {
             tvSelectedCarName.setText(car.getName());
@@ -223,7 +223,7 @@ public class TripsFragment extends Fragment {
         tripListItems.clear();
 
         if (selectedCarId.isEmpty()) {
-            updateEmptyState("Выберите автомобиль");
+            updateEmptyState(getString(R.string.select_a_car));
             return;
         }
 
@@ -255,7 +255,7 @@ public class TripsFragment extends Fragment {
         }
 
         if (tripListItems.isEmpty()) {
-            updateEmptyState("Для выбранного автомобиля нет поездок.");
+            updateEmptyState(getString(R.string.no_trips_for_car));
         } else {
             tvEmptyTrips.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
@@ -405,8 +405,8 @@ public class TripsFragment extends Fragment {
         btnReset.setOnClickListener(v -> {
             tempStart[0] = null;
             tempEnd[0] = null;
-            btnSelectStartDate.setText("Дата");
-            btnSelectEndDate.setText("Дата");
+            btnSelectStartDate.setText(getString(R.string.date));
+            btnSelectEndDate.setText(getString(R.string.date));
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
@@ -429,7 +429,7 @@ public class TripsFragment extends Fragment {
 
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder
                 .datePicker()
-                .setTitleText(isStart ? "Дата от" : "Дата до")
+                .setTitleText(isStart ? getString(R.string.date_from) : getString(R.string.date_to))
                 .setSelection(selection)
                 .build();
 
@@ -445,10 +445,10 @@ public class TripsFragment extends Fragment {
 
             if (otherWrapper[0] != null) {
                 if (!isStart && targetWrapper[0].before(otherWrapper[0])) {
-                    Toast.makeText(requireContext(), "Дата до не может быть раньше даты от", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), getString(R.string.end_date_cannot_be_before_start), Toast.LENGTH_SHORT).show();
                     targetWrapper[0].setTime(otherWrapper[0].getTime());
                 } else if (isStart && targetWrapper[0].after(otherWrapper[0])) {
-                    Toast.makeText(requireContext(), "Дата от не может быть позже даты до", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), getString(R.string.start_date_cannot_be_after_end), Toast.LENGTH_SHORT).show();
                     targetWrapper[0].setTime(otherWrapper[0].getTime());
                 }
             }
@@ -462,13 +462,13 @@ public class TripsFragment extends Fragment {
     }
 
     private void updateFilterDateButtons(Button btnStart, Button btnEnd, Calendar start, Calendar end) {
-        btnStart.setText(start != null ? DISPLAY_DATE_FORMAT.format(start.getTime()) : "Дата");
-        btnEnd.setText(end != null ? DISPLAY_DATE_FORMAT.format(end.getTime()) : "Дата");
+        btnStart.setText(start != null ? DISPLAY_DATE_FORMAT.format(start.getTime()) : getString(R.string.date));
+        btnEnd.setText(end != null ? DISPLAY_DATE_FORMAT.format(end.getTime()) : getString(R.string.date));
     }
 
     private void showAddTripOptionsDialog() {
         if (selectedCarId.isEmpty()) {
-            Toast.makeText(getContext(), "Сначала выберите автомобиль", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.first_select_car), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -535,7 +535,17 @@ public class TripsFragment extends Fragment {
                 return new TripViewHolder(view);
             }
         }
-
+        private String getLocalizedFuelUnit(Car car) {
+            if (car == null) return getString(R.string.fuel_unit_liter);
+            String unit = car.getFuelUnit();
+            if ("л".equals(unit) || "L".equalsIgnoreCase(unit)) {
+                return getString(R.string.fuel_unit_liter);
+            } else if ("гал".equals(unit) || "gal".equalsIgnoreCase(unit)) {
+                return getString(R.string.unit_gallon);
+            } else {
+                return unit; // на случай других единиц
+            }
+        }
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
             TripListItem item = items.get(position);
@@ -547,11 +557,11 @@ public class TripsFragment extends Fragment {
                 Trip trip = item.getTrip();
 
                 Car car = dbHelper.getCar(trip.getCarId());
-                String fuelUnit = car != null ? car.getFuelUnit() : "л";
+                String fuelUnit = car != null ? getLocalizedFuelUnit(car) : getString(R.string.fuel_unit_liter);
 
                 // Получаем единицы расстояния из настроек пользователя
                 DistanceUnit distanceUnit = userSettings.getDistanceUnit();
-                String distanceUnitSymbol = distanceUnit.getDisplayName();
+                String distanceUnitSymbol = distanceUnit.getDisplayName(requireContext());
 
                 tripHolder.tvName.setText(trip.getName());
                 tripHolder.tvDateTime.setText(formatDateTime(trip.getStartDateTime()));
@@ -564,10 +574,12 @@ public class TripsFragment extends Fragment {
                 String consumptionDisplay;
 
                 if (distanceUnit == DistanceUnit.MI) {
-                    consumption = consumption * 1.60934; // л/100км -> л/100миль
-                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f л/100миль", consumption);
+                    consumption = consumption * 1.60934;
+                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s",
+                            consumption, getString(R.string.consumption_unit_mi));
                 } else {
-                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f л/100км", consumption);
+                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s",
+                            consumption, getString(R.string.consumption_unit_km));
                 }
 
                 tripHolder.tvDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
@@ -599,7 +611,8 @@ public class TripsFragment extends Fragment {
         private String formatDateTime(String dbDateTime) {
             try {
                 Date date = DB_DATE_FORMAT.parse(dbDateTime);
-                return DISPLAY_DATE_TIME_FORMAT.format(date);
+                SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd HH:mm", Locale.getDefault());
+                return formatter.format(date);
             } catch (ParseException e) {
                 return dbDateTime;
             }
@@ -612,7 +625,7 @@ public class TripsFragment extends Fragment {
                 long durationMs = endDate.getTime() - startDate.getTime();
                 long hours = TimeUnit.MILLISECONDS.toHours(durationMs);
                 long minutes = TimeUnit.MILLISECONDS.toMinutes(durationMs) % 60;
-                return String.format(Locale.getDefault(), "%d ч %02d мин", hours, minutes);
+                return String.format(Locale.getDefault(), getString(R.string.duration_format2), hours, minutes);
             } catch (Exception e) {
                 return "--";
             }
@@ -688,7 +701,7 @@ public class TripsFragment extends Fragment {
         btnConfirm.setOnClickListener(v -> {
             dbHelper.deleteTrip(trip.getId());
             loadTripsForCar();
-            Toast.makeText(getContext(), "Поездка удалена", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.trip_deleted, Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
 

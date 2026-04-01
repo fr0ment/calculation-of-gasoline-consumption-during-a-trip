@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class TripDetailsActivity extends AppCompatActivity {
+public class TripDetailsActivity extends BaseActivity {
 
     private DatabaseHelper dbHelper;
     private Trip trip;
@@ -33,7 +33,7 @@ public class TripDetailsActivity extends AppCompatActivity {
     private Button btnBackTrip;
 
     private static final SimpleDateFormat DB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-    private static final SimpleDateFormat DISPLAY_DATE_TIME_FORMAT = new SimpleDateFormat("EEE, dd MMMM yyyy HH:mm", new Locale("ru", "RU"));
+    private final SimpleDateFormat DISPLAY_DATE_TIME_FORMAT = new SimpleDateFormat("EEE, dd MMMM yyyy HH:mm", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +100,7 @@ public class TripDetailsActivity extends AppCompatActivity {
             updateUI();
         } else {
             Log.e("TripDetails", "Trip not found with ID: " + tripId);
-            Toast.makeText(this, "Поездка не найдена", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.trip_not_found, Toast.LENGTH_SHORT).show();
             finish();
         }
     }
@@ -114,11 +114,11 @@ public class TripDetailsActivity extends AppCompatActivity {
         tvTripDateTime.setText(formatDateTime(trip.getStartDateTime()));
 
         Car car = dbHelper.getCar(trip.getCarId());
-        String fuelUnit = car != null ? car.getFuelUnit() : "л";
+        String fuelUnit = getLocalizedFuelUnit(car);
 
         // Получаем единицы расстояния из настроек пользователя
         DistanceUnit distanceUnit = userSettings.getDistanceUnit();
-        String distanceUnitSymbol = distanceUnit.getDisplayName();
+        String distanceUnitSymbol = distanceUnit.getDisplayName(this);
 
         // Конвертируем расстояние в выбранные единицы
         double displayDistance = trip.getDistanceInUnit(distanceUnit);
@@ -128,10 +128,10 @@ public class TripDetailsActivity extends AppCompatActivity {
         String consumptionUnit;
 
         if (distanceUnit == DistanceUnit.MI) {
-            consumption = consumption * 1.60934; // л/100км -> л/100миль
-            consumptionUnit = "л/100миль";
+            consumption = consumption * 1.60934;
+            consumptionUnit = getString(R.string.consumption_unit_mi);
         } else {
-            consumptionUnit = "л/100км";
+            consumptionUnit = getString(R.string.consumption_unit_km);
         }
 
         tvTripDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
@@ -141,6 +141,18 @@ public class TripDetailsActivity extends AppCompatActivity {
         tvTripFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s",
                 consumption, consumptionUnit));
         tvTripDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));
+    }
+
+    private String getLocalizedFuelUnit(Car car) {
+        if (car == null) return getString(R.string.fuel_unit_liter);
+        String unit = car.getFuelUnit();
+        if ("л".equals(unit) || "L".equalsIgnoreCase(unit)) {
+            return getString(R.string.fuel_unit_liter);
+        } else if ("гал".equals(unit) || "gal".equalsIgnoreCase(unit)) {
+            return getString(R.string.unit_gallon);
+        } else {
+            return unit; // на случай других единиц
+        }
     }
 
     private void setupListeners() {
@@ -168,7 +180,7 @@ public class TripDetailsActivity extends AppCompatActivity {
 
         btnConfirm.setOnClickListener(v -> {
             dbHelper.deleteTrip(tripId);
-            Toast.makeText(TripDetailsActivity.this, "Поездка удалена", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.trip_deleted, Toast.LENGTH_SHORT).show();
             finish();
         });
 
@@ -182,7 +194,8 @@ public class TripDetailsActivity extends AppCompatActivity {
     private String formatDateTime(String dbDateTime) {
         try {
             Date date = DB_DATE_FORMAT.parse(dbDateTime);
-            return DISPLAY_DATE_TIME_FORMAT.format(date);
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMMM yyyy HH:mm", Locale.getDefault());
+            return formatter.format(date);
         } catch (ParseException e) {
             return dbDateTime;
         }
@@ -195,7 +208,7 @@ public class TripDetailsActivity extends AppCompatActivity {
             long durationMs = endDate.getTime() - startDate.getTime();
             long hours = TimeUnit.MILLISECONDS.toHours(durationMs);
             long minutes = TimeUnit.MILLISECONDS.toMinutes(durationMs) % 60;
-            return String.format(Locale.getDefault(), "%d ч %02d мин", hours, minutes);
+            return String.format(Locale.getDefault(), getString(R.string.duration_format2), hours, minutes);
         } catch (Exception e) {
             return "--";
         }

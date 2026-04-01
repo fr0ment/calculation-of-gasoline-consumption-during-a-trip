@@ -15,23 +15,21 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Заголовок -->
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ручное добавление поездки"
+            android:text="@string/manual_trip_title"
             android:textColor="@color/text_primary"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
 
-        <!-- Название поездки -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Название поездки *"
+            android:hint="@string/trip_name_hint"
             app:hintTextColor="@color/accent"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -45,11 +43,10 @@
                 android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Дата и время начала -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Дата и время начала:"
+            android:text="@string/start_datetime"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:layout_marginTop="8dp"
@@ -70,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Дата"
+                android:text="@string/date_button"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
@@ -82,17 +79,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-
-                android:text="Время"
+                android:text="@string/time_button"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- Дата и время конца -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Дата и время конца:"
+            android:text="@string/end_datetime"
             android:textColor="@color/text_secondary"
             android:textSize="14sp"
             android:layout_marginBottom="8dp" />
@@ -112,7 +107,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Дата"
+                android:text="@string/date_button"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
 
@@ -124,17 +119,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Время"
+                android:text="@string/time_button"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- Пройденное расстояние -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Пройденное расстояние *"
+            android:hint="@string/distance_hint"
             app:hintTextColor="@color/accent"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -147,12 +141,11 @@
                 android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Потраченное топливо -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
-            android:hint="Потраченное топливо *"
+            android:hint="@string/fuel_spent_hint"
             app:hintTextColor="@color/accent"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -165,7 +158,6 @@
                 android:textColorHint="@color/text_hint" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Кнопка внизу (прижата к низу экрана при коротком контенте) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -179,7 +171,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Назад"
+                android:text="@string/back"
                 android:textColor="@color/text_primary"
                 android:backgroundTint="@color/card_background_secondary"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
@@ -190,12 +182,11 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Сохранить"
+                android:text="@string/save"
                 android:backgroundTint="@color/primary"
                 style="@style/Widget.Material3.Button" />
         </LinearLayout>
 
-        <!-- Отступ снизу, чтобы кнопка не прилипала к краю при длинном скролле -->
         <View
             android:layout_width="match_parent"
             android:layout_height="32dp" />

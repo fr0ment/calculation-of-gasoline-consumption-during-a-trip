@@ -1,52 +1,400 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Расход топлива</string>
 
-    <!-- Add Car Activity -->
-    <string name="add_car_title">Добавить автомобиль</string>
-    <string name="car_name">Имя</string>
-    <string name="car_description">Описание</string>
-    <string name="units_title">Единицы измерения</string>
-    <string name="distance_units">Единицы расстояния</string>
-    <string name="fuel_units">Единицы топлива</string>
-    <string name="fuel_consumption">Расход топлива</string>
-    <string name="fuel_type_title">Тип топлива</string>
-    <string name="fuel_type">Бензин</string>
-    <string name="tank_volume_title">Объем бака</string>
-    <string name="tank_volume">Объем  (л)</string>>
+    <!-- Общие -->
     <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
     <string name="back">Назад</string>
+    <string name="delete">Удалить</string>
+    <string name="edit">Редактировать</string>
+    <string name="add">Добавить</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="ok">ОК</string>
+    <string name="warning">Предупреждение</string>
+    <string name="distance_unit_km">км</string>
+    <string name="fuel_unit_liter">л</string>
+    <string name="avg_consumption_unit">л/100км</string>
+    <string name="authorization_error">Ошибка авторизации</string>
+    <string name="no_data_message">Нет данных для анализа. Добавьте поездки, чтобы просмотреть статистику.</string>
+    <string name="distance_units">Единицы измерения расстояния:</string>
+    <string name="unit_measurement">Единица измерения: %s</string>
+    <string name="consumption_unit_km">л/100км</string>
+    <string name="consumption_unit_mi">л/100миль</string>
+    <!-- Экран добавления/редактирования авто -->
+    <string name="add_car_title">Добавить автомобиль</string>
+    <string name="edit_car_title">Редактировать автомобиль</string>
+    <string name="car_name_hint">Название автомобиля *</string>
+    <string name="car_description_hint">Описание (необязательно)</string>
+    <string name="fuel_type_hint">Тип топлива (Напр.: АИ-95)</string>
+    <string name="tank_volume_hint">Объем бака (в выбранных единицах)</string>
+    <string name="fuel_unit_label">Единицы измерения топлива</string>
+    <string name="add_photo">Добавить фото</string>
+    <string name="required_fields_note">* - обязательные поля</string>
+    <string name="Select_the_fuel_unit">Выберите единицу топлива</string>
 
-    <!-- Main Activity -->
+    <!-- Детали авто -->
+    <string name="car_details_fuel">Топливо:</string>
+    <string name="car_details_tank_volume">Объем бака:</string>
+    <string name="car_details_fuel_unit">Единицы топлива:</string>
+    <string name="car_photo_desc">Фото автомобиля</string>
+    <string name="car_details_name_placeholder">Название автомобиля</string>
+    <string name="car_details_desc_placeholder">Описание</string>
+    <string name="fuel_type_placeholder">АИ-95</string>
+    <string name="tank_volume_placeholder">50 л</string>
+    <string name="_l">0 л</string>
+    <string name="fuel_unit_placeholder">л</string>
+    <string name="car_specs_placeholder">Тип топлива • Объем бака</string>
+
+    <!-- Поездки (ручное добавление) -->
+    <string name="manual_trip_title">Ручное добавление поездки</string>
+    <string name="edit_trip_title">Редактирование поездки</string>
+    <string name="trip_name_hint">Название поездки *</string>
+    <string name="start_datetime">Дата и время начала:</string>
+    <string name="end_datetime">Дата и время конца:</string>
+    <string name="distance_hint">Пройденное расстояние *</string>
+    <string name="fuel_spent_hint">Потраченное топливо *</string>
+    <string name="date_button">Дата</string>
+    <string name="time_button">Время</string>
+
+    <!-- GPS запись -->
+    <string name="gps_start_title">Начало GPS записи</string>
+    <string name="trip_name_example">Название поездки (Например: Работа)</string>
+    <string name="initial_fuel_hint">Начальный уровень топлива</string>
+    <string name="start_recording">Начать запись</string>
+    <string name="pause">ПАУЗА</string>
+    <string name="resume">ПРОДОЛЖИТЬ</string>
+    <string name="refuel">ЗАПРАВКА</string>
+    <string name="cancel_recording">ОТМЕНА</string>
+    <string name="stop_recording">СОХРАНИТЬ</string>
+    <string name="status_waiting_gps">Статус: В ожидании GPS...</string>
+    <string name="distance_title">Пройденное расстояние:</string>
+    <string name="duration_title">Время в пути:</string>
+    <string name="fuel_recharged_title">Заправленное топливо:</string>
+
+    <!-- Аналитика -->
+    <string name="analytics_title">Аналитика</string>
+    <string name="select_car">Выберите автомобиль</string>
+    <string name="total_stats">Общая статистика</string>
+    <string name="total_distance">Общий пробег</string>
+    <string name="total_fuel">Всего топлива</string>
+    <string name="avg_consumption">Средний расход</string>
+    <string name="fuel_chart_title">График расхода топлива</string>
+    <string name="monitoring_title">Мониторинг авто</string>
+    <string name="warning_high_consumption_title">Повышенный расход!</string>
+    <string name="no_data_analytics">Нет данных для анализа. Добавьте поездки, чтобы увидеть статистику.</string>
+    <string name="warning_details">Последние поездки показывают расход выше среднего на 15%</string>
+
+    <!-- Настройки -->
+    <string name="settings_title">Настройки</string>
+    <string name="profile">Профиль</string>
+    <string name="username_label">Логин:</string>
+    <string name="email_label">Email:</string>
+    <string name="full_name_label">Имя:</string>
+    <string name="edit_profile">Редактировать имя</string>
+    <string name="preferences">Предпочтения</string>
+    <string name="distance_units_label">Единицы расстояния:</string>
+    <string name="theme_label">Тема:</string>
+    <string name="language_label">Язык:</string>
+    <string name="change">Изменить</string>
+    <string name="sync_title">Синхронизация</string>
+    <string name="last_sync">Последняя синхронизация:</string>
+    <string name="sync_now">Синхронизировать сейчас</string>
+    <string name="security_title">Безопасность</string>
+    <string name="change_password">Изменить пароль</string>
+    <string name="delete_account">Удалить аккаунт</string>
+    <string name="logout">Выйти</string>
+
+    <!-- Диалоги -->
+    <string name="car_delete_confirm_title">Удалить автомобиль?</string>
+    <string name="car_delete_confirm_message">Эта операция необратима. Автомобиль и связанные с ним записи будут удалены навсегда.</string>
+    <string name="trip_delete_confirm_title">Удалить поездку?</string>
+    <string name="trip_delete_confirm_message">Эта операция необратима. Запись будет удалена навсегда.</string>
+    <string name="refuel_dialog_title">Заправка</string>
+    <string name="refuel_amount_hint">Количество</string>
+    <string name="save_trip_dialog_title">Завершение поездки</string>
+    <string name="final_fuel_hint">Остаток топлива</string>
+    <string name="final_fuel_prompt">Пожалуйста, введите количество топлива, оставшееся в баке.</string>
+    <string name="save_trip">Сохранить поездку</string>
+    <string name="cancel_gps_dialog_title">Отменить поездку?</string>
+    <string name="cancel_gps_dialog_message">Запись поездки будет остановлена без сохранения. Вы действительно хотите отменить запись поездки?</string>
+    <string name="select_car_dialog_title">Выберите автомобиль</string>
+    <string name="change_password_title">Изменить пароль</string>
+    <string name="current_password_hint">Текущий пароль</string>
+    <string name="new_password_hint">Новый пароль</string>
+    <string name="confirm_new_password_hint">Подтвердите новый пароль</string>
+    <string name="edit_profile_title">Редактировать профиль</string>
+    <string name="delete_account_title">Удаление аккаунта</string>
+    <string name="delete_account_confirm_message">Вы уверены, что хотите удалить аккаунт?</string>
+    <string name="delete_account_warning">Все ваши данные будут безвозвратно удалены с сервера. Это действие нельзя отменить.</string>
+    <string name="confirm_password">Введите пароль для подтверждения</string>
+    <string name="actions_title">Действия</string>
+    <string name="filter_date">Фильтрация по дате</string>
+    <string name="date_from">Дата от:</string>
+    <string name="date_to">Дата до:</string>
+    <string name="reset">Сбросить</string>
+    <string name="apply">Применить</string>
+
+    <!-- Единицы измерения -->
+    <string name="unit_selector_title">Выберите единицу измерения</string>
+    <string name="unit_liter">Литры (л)</string>
+    <string name="unit_gallon">Галлоны (гал)</string>
+    <string name="unit_km">Километры (км)</string>
+    <string name="unit_mile">Мили (миль)</string>
+    <string name="select">ВЫБРАТЬ</string>
+
+    <!-- Тема -->
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+
+    <!-- Язык -->
+    <string name="lang_russian">Русский</string>
+    <string name="lang_english">Английский</string>
+
+    <!-- Дополнительно для экранов -->
+    <string name="your_cars">Ваши Автомобили</string>
+    <string name="your_trips">Ваши Поездки</string>
+    <string name="no_cars_message">Нет добавленных автомобилей</string>
+    <string name="no_trips_message">Для выбранного автомобиля нет поездок.</string>
+    <string name="search_hint">Поиск по названию</string>
+    <string name="fuel_spent">Потраченное топливо</string>
+    <string name="avg_consumption_label">Средний расход</string>
+    <string name="duration_label">Длительность</string>
+    <string name="distance_label">Расстояние:</string>
+    <string name="distance_placeholder">15.5 км</string>
+    <string name="fuel_spent_label">Топливо (потрачено):</string>
+    <string name="fuel_spent_placeholder">1.8 л</string>
+    <string name="avg_consumption_placeholder">11.61 л/100км</string>
+    <string name="duration_placeholder">0 ч 45 мин</string>
+    <string name="trip_details_title">Детали поездки</string>
+    <string name="trip_name_placeholder">Название поездки</string>
+    <string name="trip_date_time_placeholder">Дата и время</string>
+    <string name="welcome_title">Добро пожаловать!</string>
+    <string name="welcome_message">Для использования приложения нужно добавить машину</string>
+    <string name="continue_btn">Продолжить</string>
+    <string name="add_trip_options_title">Добавить Поездку</string>
+    <string name="gps_record_option">Записать GPS</string>
+    <string name="manual_input_option">Ручной ввод</string>
+
+    <!-- Login / Register -->
+    <string name="username_hint">Имя пользователя</string>
+    <string name="password_hint">Пароль</string>
+    <string name="login">Войти</string>
+    <string name="no_account">Нет аккаунта? </string>
+    <string name="register_link">Зарегистрироваться</string>
+    <string name="register_title">Регистрация</string>
+    <string name="email_hint">Email</string>
+    <string name="full_name_hint">Полное имя (необязательно)</string>
+    <string name="full_name">Полное имя </string>
+    <string name="confirm_password_hint">Подтвердите пароль</string>
+    <string name="register_button">Зарегистрироваться</string>
+    <string name="already_have_account">Уже есть аккаунт? </string>
+    <string name="login_link">Войти</string>
+    <string name="unit_off">Единица измерения (л/гал)</string>
+    <string name="Unit_of_measurement">Единица измерения: Литры (Остаток топлива)</string>
+    <!-- Logout dialog -->
+    <string name="logout_confirm_title">Выход из аккаунта</string>
+    <string name="logout_confirm_message">Вы уверены, что хотите выйти?</string>
+    <string name="not_specified">Не указано</string>
+    <string name="never">никогда</string>
+    <string name="About_the_app">О приложении</string>
+    <string name="Version">Версия: </string>
+    <string name="The_server">Сервер:</string>
+    <string name="Search">Поиск </string>
+    <string name="Car">Автомобиль</string>
+    <string name="Mark">Метка:</string>
+    <string name="November_2025">Ноябрь 2025</string>
+    <string name="logout_warning">Все локальные данные будут удалены. Это действие нельзя отменить.</string>
+
+    <string name="settings_fragment_title">Настройки</string>
+    <string name="default_username">Пользователь</string>
+    <string name="default_email">email@example.com</string>
+
+    <string name="default_version">1.0.0</string>
+    <string name="sync_started">Синхронизация запущена</string>
+    <string name="no_internet_connection">Нет подключения к интернету</string>
+
+    <string name="distance_units_dialog_title">Единицы расстояния</string>
+    <string name="theme_dialog_title">Тема оформления</string>
+    <string name="language_dialog_title">Язык</string>
+    <string name="language_change_notice">Смена языка будет доступна в следующей версии</string>
+    <string name="error_user_not_identified">Ошибка: пользователь не идентифицирован</string>
+    <string name="profile_edit_requires_internet">Для изменения профиля требуется подключение к интернету</string>
+    <string name="saving">Сохранение...</string>
+    <string name="profile_updated">Профиль обновлен</string>
+    <string name="profile_update_error">Ошибка обновления профиля</string>
+    <string name="email_already_in_use">Email уже используется</string>
+    <string name="session_expired">Сессия истекла, войдите заново</string>
+    <string name="network_error">Ошибка сети: </string>
+    <string name="password_change_requires_internet">Для смены пароля требуется подключение к интернету</string>
+    <string name="enter_current_password">Введите текущий пароль</string>
+    <string name="enter_new_password">Введите новый пароль</string>
+    <string name="password_min_length">Пароль должен быть не менее 6 символов</string>
+    <string name="passwords_do_not_match">Пароли не совпадают</string>
+    <string name="password_changed_successfully">Пароль успешно изменен</string>
+    <string name="invalid_current_password">Неверный текущий пароль</string>
+    <string name="password_change_error">Ошибка при смене пароля</string>
+    <string name="account_delete_requires_internet">Для удаления аккаунта требуется подключение к интернету</string>
+    <string name="enter_password_to_confirm">Введите пароль для подтверждения</string>
+    <string name="deleting">Удаление...</string>
+    <string name="account_deleted_successfully">Аккаунт успешно удален</string>
+    <string name="account_delete_error">Ошибка при удалении аккаунта</string>
+    <string name="invalid_password">Неверный пароль</string>
+    <string name="logout_warning_message">Все локальные данные будут удалены. Это действие нельзя отменить.</string>
+    <string name="confirm_logout">Вы уверены, что хотите выйти?</string>
+    <string name="save_button">Сохранить</string>
+    <string name="cancel_button">Отмена</string>
+    <string name="delete_button">Удалить</string>
+    <string name="confirm_button">Подтвердить</string>
+    <string name="duration_format2">%d ч %02d мин</string>
+    <string name="l100m">"л/100миль"</string>
+    <string name="l100km">"л/100км"</string>
+
     <string name="trips">Поездки</string>
-    <string name="cars">Авто</string>
+    <string name="cars">Автомобили</string>
     <string name="analytics">Аналитика</string>
-    <string name="no_cars">Нет добавленных автомобилей</string>
-    <string name="add_first_car">Добавьте первый автомобиль</string>
-
-    <!-- Arrays for spinners -->
-    <string-array name="distance_units">
-        <item>км</item>
-        <item>мили</item>
-    </string-array>
-
+    <string name="settings">Настройки</string>
     <string-array name="fuel_units">
-        <item>л</item>
-        <item>галлоны (США)</item>
-        <item>галлоны (Великобритания)</item>
-        <item>кВтч</item>
-        <item>м³</item>
+        <item>Литры (л)</item>
+        <item>Галлоны (гал)</item>
     </string-array>
+    <!-- Фрагмент аналитики -->
+    <string name="no_cars_added">Нет добавленных автомобилей</string>
+    <string name="no_data_for_car">Нет данных для автомобиля %s. Добавьте поездки, чтобы увидеть статистику.</string>
+    <string name="select_a_car">Выберите автомобиль</string>
+    <string name="high_consumption_warning">Повышенный расход топлива!</string>
+    <string name="fuel_consumption_chart">Расход топлива</string>
+    <string name="no_data_for_chart">Нет данных для графика</string>
+    <string name="consumption_anomaly_message">Последние %d поездок на автомобиле «%s» показывают расход на %.1f%% выше среднего\n(было: %.1f л/100 км, стало: %.1f л/100 км)</string>
+    <!-- Добавление поездки вручную -->
+    <string name="error_car_not_selected">Ошибка: Автомобиль не выбран</string>
+    <string name="distance_hint_miles">Расстояние (мили)</string>
+    <string name="distance_hint_km">Расстояние (км)</string>
+    <string name="start_date">Дата начала</string>
+    <string name="end_date">Дата окончания</string>
+    <string name="start_time">Время начала</string>
+    <string name="end_time">Время окончания</string>
+    <string name="error_end_before_start_date">Дата конца не может быть раньше начала</string>
+    <string name="error_end_before_start_time">Время конца не может быть раньше начала</string>
+    <string name="error_trip_name_required">Название поездки является обязательным полем</string>
+    <string name="error_please_enter_trip_name">Пожалуйста, введите название поездки</string>
+    <string name="error_distance_required">Пройденное расстояние является обязательным полем</string>
+    <string name="error_please_enter_distance">Пожалуйста, введите пройденное расстояние</string>
+    <string name="error_invalid_distance">Некорректное значение расстояния</string>
+    <string name="error_fuel_required">Потраченное топливо является обязательным полем</string>
+    <string name="error_please_enter_fuel">Пожалуйста, введите потраченное топливо</string>
+    <string name="error_invalid_fuel">Некорректное значение топлива</string>
+    <string name="error_distance_must_be_positive">Расстояние должно быть больше 0</string>
+    <string name="error_fuel_must_be_positive">Топливо должно быть больше 0</string>
+    <string name="error_end_before_start">Время окончания не может быть раньше времени начала</string>
+    <string name="error_min_duration">Длительность поездки должна быть не менее 1 минуты</string>
+    <string name="success_trip_added">Поездка успешно добавлена!</string>
+    <string name="error_adding_trip">Ошибка при добавлении поездки</string>
+    <!-- Фрагмент автомобилей -->
+    <string name="car_deleted">Автомобиль удален</string>
+    <string name="error_deleting_car">Ошибка при удалении</string>
+    <!-- Детали автомобиля -->
 
-    <string-array name="fuel_consumption_units">
-        <item>л/100км</item>
-        <item>100км/галлон (США)</item>
-        <item>100км/галлон (Великобритания)</item>
-        <item>кВтч/100км</item>
-        <item>м³/100км</item>
-        <item>100 миль/галлон (США))</item>
-        <item>100 миль/галлон (Великобритания)</item>
-        <item>кВтч/100 миль</item>
-        <item>м³/100 миль</item>
-    </string-array>
+    <!-- Редактирование автомобиля -->
+    <string name="error_car_id_not_provided">Ошибка: ID автомобиля не передан</string>
+    <string name="car_not_found">Автомобиль не найден</string>
+    <string name="error_enter_car_name">Введите название автомобиля</string>
+    <string name="error_invalid_tank_volume">Некорректный объем бака</string>
+    <string name="select_fuel_unit">Выберите единицу топлива</string>
+    <string name="car_updated">Автомобиль обновлён</string>
+    <string name="error_updating_car">Ошибка обновления</string>
+    <string name="error_gallery_permission_denied">Разрешение на чтение галереи отклонено</string>
+    <string name="photo_updated">Фото обновлено</string>
+    <string name="error_saving_photo">Ошибка сохранения фото</string>
+    <string name="select_image">Выберите изображение</string>
+    <string name="car_saved">Автомобиль сохранен</string>
+    <string name="error_saving_db">Ошибка сохранения в БД</string>
+    <string name="photo_uploaded">Фото загружено</string>
+    <!-- Редактирование поездки -->
+    <string name="error_trip_not_selected">Ошибка: Поездка не выбрана</string>
+    <string name="trip_not_found">Поездка не найдена</string>
+    <string name="error_end_date_before_start">Дата конца не может быть раньше начала</string>
+    <string name="error_end_time_before_start">Время конца не может быть раньше начала</string>
+    <string name="trip_updated_successfully">Поездка успешно обновлена</string>
+    <string name="error_updating_trip">Ошибка при обновлении поездки</string>
+    <string name="Trip">"Поездка"</string>
+
+    <!-- GPS запись поездки -->
+    <string name="enter_initial_fuel">Введите начальный уровень топлива</string>
+    <string name="error_value_must_be_non_negative">Значение должно быть неотрицательным</string>
+    <string name="error_invalid_numeric_value">Некорректное числовое значение</string>
+    <string name="recording_started">Запись начата</string>
+    <string name="enter_fuel_amount">Введите количество топлива</string>
+    <string name="error_amount_must_be_positive">Количество должно быть положительным</string>
+    <string name="fuel_added">Заправлено: %.1f %s</string>
+    <string name="recording_not_active">Запись не активна. Закрытие...</string>
+    <string name="unit_measurement_remaining_fuel">Единица измерения: %s (Остаток топлива)</string>
+    <string name="enter_remaining_fuel_prompt">Пожалуйста, введите количество топлива, оставшееся в баке (%s). Макс. возможное: %.1f %s.</string>
+    <string name="enter_remaining_fuel">Введите остаток топлива</string>
+    <string name="error_remaining_exceeds_max">Остаток не может превышать %.1f %s (Начальное + Заправленное).</string>
+    <string name="trip_saved_successfully">Поездка успешно сохранена</string>
+    <string name="error_saving_trip">Ошибка при сохранении поездки</string>
+    <string name="permission_granted_start">Разрешение получено. Нажмите \'Начать\'.</string>
+    <string name="error_gps_permission_required">Разрешение на GPS требуется для записи поездки</string>
+    <string name="duration_format">%02d ч %02d мин %02d сек</string>
+    <string name="btn_resume">ВОЗОБНОВИТЬ</string>
+    <string name="btn_pause">ПАУЗА</string>
+    <string name="status_recording_paused">ЗАПИСЬ ПРИОСТАНОВЛЕНА</string>
+    <string name="status_recording_active">ЗАПИСЬ АКТИВНА</string>
+    <string name="duration_format_full">%02d ч %02d мин %02d сек</string>
+
+    <!-- GPS сервис -->
+    <string name="notification_channel_name">Сервис записи GPS</string>
+    <string name="notification_title_paused">Пауза записи поездки</string>
+    <string name="notification_title_active">Идет запись поездки</string>
+    <string name="notification_content">Пробег: %.1f км | Время: %s | Заправка: %.2f л</string>
+    <!-- Вход -->
+    <string name="enter_password">Введите пароль</string>
+    <string name="enter_username">Введите имя пользователя</string>
+    <string name="username_min_length">Имя должно быть не менее 3 символов</string>
+    <string name="logging_in">Вход в систему...</string>
+    <string name="loading_data">Загрузка данных с сервера...</string>
+    <string name="timeout_message">Превышено время ожидания. Проверьте соединение.</string>
+    <string name="login_error">Ошибка входа</string>
+    <string name="Uploading_data">"Загрузка данных..."</string>
+    <!-- Регистрация -->
+
+    <string name="enter_email">Введите email</string>
+    <string name="invalid_email">Некорректный email</string>
+    <string name="registration_success">Регистрация успешна! Теперь войдите в систему.</string>
+    <string name="registration_error">Ошибка регистрации</string>
+    <string name="user_already_exists">Пользователь с таким именем или email уже существует</string>
+    <string name="server_error">Ошибка сервера: </string>
+    <!-- Детали поездки -->
+    <string name="trip_deleted">Поездка удалена</string>
+    <string name="edit_trip">Редактировать поездку</string>
+    <string name="delete_trip">Удалить поездку</string>
+    <string name="trip_name">Название поездки</string>
+    <string name="trip_date_time">Дата и время</string>
+    <string name="trip_distance">Расстояние</string>
+    <string name="trip_fuel_spent">Потраченное топливо</string>
+    <string name="trip_fuel_consumption">Расход топлива</string>
+    <string name="trip_duration">Длительность</string>
+    <!-- Фрагмент поездок -->
+    <string name="no_trips_for_car">Для выбранного автомобиля нет поездок.</string>
+    <string name="first_select_car">Сначала выберите автомобиль</string>
+    <string name="date">Дата</string>
+    <string name="L">"л"</string>
+    <string name="end_date_cannot_be_before_start">Дата до не может быть раньше даты от</string>
+    <string name="start_date_cannot_be_after_end">Дата от не может быть позже даты до</string>
+    <string name="filter_by_date">Фильтрация по дате</string>
+    <string name="add_trip">Добавить Поездку</string>
+    <string name="record_gps">Записать GPS</string>
+    <string name="manual_entry">Ручной ввод</string>
+    <string name="search_by_name">Поиск по названию</string>
+    <string name="consumption_per_km">%.2f л/100км</string>
+    <string name="consumption_per_mile">%.2f л/100миль</string>
+
+
+
+
+
+
+
 </resources>

@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class AddCarActivity extends AppCompatActivity {
+public class AddCarActivity extends BaseActivity {
 
     private static final int PICK_IMAGE_REQUEST = 1;
     private static final int PERMISSION_REQUEST_READ_EXTERNAL_STORAGE = 2;
@@ -72,7 +72,7 @@ public class AddCarActivity extends AppCompatActivity {
 
     private void initViews() {
         TextView tvTitle = findViewById(R.id.tvTitle);
-        tvTitle.setText("Добавить автомобиль");
+        tvTitle.setText(R.string.add_car_title);
         etName = findViewById(R.id.etName);
         etDescription = findViewById(R.id.etDescription);
         etFuelType = findViewById(R.id.etFuelType);
@@ -92,19 +92,39 @@ public class AddCarActivity extends AppCompatActivity {
 
         // Устанавливаем начальные значения на кнопках
         btnFuelUnit.setText(selectedFuelUnit);
-    }
 
+    }
+    private String getLocalizedFuelUnit(Car car) {
+        if (car == null) return getString(R.string.fuel_unit_liter);
+        String unit = car.getFuelUnit();
+        if ("л".equals(unit) || "L".equals(unit)) {
+            return getString(R.string.fuel_unit_liter);
+        } else if ("гал".equals(unit) || "gal".equals(unit)) {
+            return getString(R.string.unit_gallon);
+        } else {
+            return unit; // на случай других единиц
+        }
+    }
+    private void updateFuelUnitButtonText() {
+        if ("л".equals(selectedFuelUnit) || "L".equals(selectedFuelUnit)) {
+            btnFuelUnit.setText(getString(R.string.fuel_unit_liter));
+        } else if ("гал".equals(selectedFuelUnit) || "gal".equals(selectedFuelUnit)) {
+            btnFuelUnit.setText(getString(R.string.unit_gallon));
+        } else {
+            updateFuelUnitButtonText();
+        }
+    }
     private void setupListeners() {
         btnSave.setOnClickListener(v -> saveCar());
         btnBack.setOnClickListener(v -> finish());
         btnAddPhoto.setOnClickListener(v -> checkPermissionAndOpenPicker());
         btnFuelUnit.setOnClickListener(v -> showUnitSelectorDialog(
                 getResources().getStringArray(R.array.fuel_units),
-                "Выберите единицу топлива",
+                getString(R.string.Select_the_fuel_unit),
                 selectedFuelUnit,
                 unit -> {
                     selectedFuelUnit = unit;
-                    btnFuelUnit.setText(unit);
+                    updateFuelUnitButtonText();
                 }));
     }
 
@@ -157,7 +177,7 @@ public class AddCarActivity extends AppCompatActivity {
         double tankVolume = 0.0;
 
         if (name.isEmpty()) {
-            etName.setError("Введите название автомобиля.");
+            etName.setError(getString(R.string.error_enter_car_name));
             return;
         }
 
@@ -168,7 +188,7 @@ public class AddCarActivity extends AppCompatActivity {
                 tankVolume = Double.parseDouble(volumeStr);
             }
         } catch (NumberFormatException e) {
-            etTankVolume.setError("Некорректный объем бака.");
+            etTankVolume.setError(getString(R.string.error_invalid_tank_volume));
             return;
         }
 
@@ -196,7 +216,7 @@ public class AddCarActivity extends AppCompatActivity {
                 }
             }
 
-            Toast.makeText(this, "Автомобиль сохранен", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.car_saved, Toast.LENGTH_SHORT).show();
 
             if (isFirstLaunch) {
                 getSharedPreferences("app_prefs", MODE_PRIVATE)
@@ -207,7 +227,7 @@ public class AddCarActivity extends AppCompatActivity {
             }
             finish();
         } else {
-            Toast.makeText(this, "Ошибка сохранения в БД", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_saving_db, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -234,7 +254,7 @@ public class AddCarActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Выберите изображение"), PICK_IMAGE_REQUEST);
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.select_image)), PICK_IMAGE_REQUEST);
     }
 
     @Override
@@ -244,7 +264,7 @@ public class AddCarActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 launchImagePicker();
             } else {
-                Toast.makeText(this, "Разрешение на чтение галереи отклонено.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.error_gallery_permission_denied), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -260,9 +280,9 @@ public class AddCarActivity extends AppCompatActivity {
             if (internalPath != null) {
                 selectedImagePath = internalPath;
                 setPic(ivCarPhoto, selectedImagePath);
-                Toast.makeText(this, "Фото загружено", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.photo_uploaded, Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Ошибка сохранения фото", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.error_saving_photo), Toast.LENGTH_SHORT).show();
                 setDefaultImage(ivCarPhoto);
             }
         }

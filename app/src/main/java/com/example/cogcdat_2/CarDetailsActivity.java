@@ -18,7 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
 import java.util.Locale;
 
-public class CarDetailsActivity extends AppCompatActivity {
+public class CarDetailsActivity extends BaseActivity {
 
     private DatabaseHelper dbHelper;
     private Car car;
@@ -75,7 +75,7 @@ public class CarDetailsActivity extends AppCompatActivity {
             updateUI();
         } else {
             Log.e("CarDetails", "Car not found with ID: " + carId);
-            Toast.makeText(this, "Автомобиль не найден", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.car_not_found), Toast.LENGTH_SHORT).show();
             finish();
         }
     }
@@ -86,17 +86,26 @@ public class CarDetailsActivity extends AppCompatActivity {
         tvFuelType.setText(car.getFuelType());
 
         // Форматируем объем бака
+        String localizedFuelUnit = getLocalizedFuelUnit(car);
         String tankVolumeText = String.format(Locale.getDefault(), "%.1f %s",
-                car.getTankVolume(), car.getFuelUnit());
+                car.getTankVolume(), localizedFuelUnit);
         tvTankVolume.setText(tankVolumeText);
-
-        // Показываем единицы топлива в отдельной строке
-        tvFuelUnitInfo.setText(car.getFuelUnit());
+        tvFuelUnitInfo.setText(localizedFuelUnit);
 
         // Загрузка изображения
         loadImageSafe(ivCarImage, car.getImagePath());
     }
-
+    private String getLocalizedFuelUnit(Car car) {
+        if (car == null) return getString(R.string.fuel_unit_liter);
+        String unit = car.getFuelUnit();
+        if ("л".equals(unit) || "L".equals(unit)) {
+            return getString(R.string.fuel_unit_liter);
+        } else if ("гал".equals(unit) || "gal".equals(unit)) {
+            return getString(R.string.unit_gallon);
+        } else {
+            return unit; // на случай других единиц
+        }
+    }
     private void setupListeners() {
         btnEdit.setOnClickListener(v -> editCar());
         btnDelete.setOnClickListener(v -> deleteCar());
@@ -123,10 +132,10 @@ public class CarDetailsActivity extends AppCompatActivity {
         btnConfirm.setOnClickListener(v -> {
             boolean deleted = dbHelper.deleteCar(carId);
             if (deleted) {
-                Toast.makeText(CarDetailsActivity.this, "Автомобиль удален", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.car_deleted, Toast.LENGTH_SHORT).show();
                 finish();
             } else {
-                Toast.makeText(CarDetailsActivity.this, "Ошибка при удалении", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.error_deleting_car, Toast.LENGTH_SHORT).show();
             }
         });
 

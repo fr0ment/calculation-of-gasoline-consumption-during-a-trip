@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class EditTripActivity extends AppCompatActivity {
+public class EditTripActivity extends BaseActivity {
 
     private DatabaseHelper dbHelper;
     private String tripId;
@@ -67,7 +67,7 @@ public class EditTripActivity extends AppCompatActivity {
         }
 
         if (tripId == null || tripId.isEmpty()) {
-            Toast.makeText(this, "Ошибка: Поездка не выбрана.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.error_trip_not_selected, Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -75,7 +75,7 @@ public class EditTripActivity extends AppCompatActivity {
         // Загружаем поездку
         trip = getTripById(tripId);
         if (trip == null) {
-            Toast.makeText(this, "Поездка не найдена.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.trip_not_found, Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -112,9 +112,9 @@ public class EditTripActivity extends AppCompatActivity {
      */
     private void updateDistanceHint() {
         if (userSettings != null && userSettings.getDistanceUnit() == DistanceUnit.MI) {
-            etDistance.setHint("Расстояние (мили)");
+            etDistance.setHint(getString(R.string.distance_hint_miles));
         } else {
-            etDistance.setHint("Расстояние (км)");
+            etDistance.setHint(getString(R.string.distance_hint_km));
         }
     }
 
@@ -159,7 +159,7 @@ public class EditTripActivity extends AppCompatActivity {
 
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder
                 .datePicker()
-                .setTitleText(isStart ? "Дата начала" : "Дата окончания")
+                .setTitleText(isStart ? getString(R.string.start_date) : getString(R.string.end_date))
                 .setSelection(selection)
                 .build();
 
@@ -175,7 +175,7 @@ public class EditTripActivity extends AppCompatActivity {
 
             // Проверка логики начала/окончания
             if (!isStart && endDateTime.before(startDateTime)) {
-                Toast.makeText(this, "Дата конца не может быть раньше начала", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.error_end_before_start_date), Toast.LENGTH_SHORT).show();
                 endDateTime.setTime(startDateTime.getTime());
                 updateDateTimeButtons();
             }
@@ -189,7 +189,7 @@ public class EditTripActivity extends AppCompatActivity {
                 .setTimeFormat(TimeFormat.CLOCK_24H)
                 .setHour(calendar.get(Calendar.HOUR_OF_DAY))
                 .setMinute(calendar.get(Calendar.MINUTE))
-                .setTitleText(isStart ? "Время начала" : "Время окончания")
+                .setTitleText(isStart ? getString(R.string.start_time) : getString(R.string.end_time))
                 .build();
 
         timePicker.addOnPositiveButtonClickListener(v -> {
@@ -200,7 +200,7 @@ public class EditTripActivity extends AppCompatActivity {
 
             // Проверка конца ≥ начала
             if (!isStart && endDateTime.before(startDateTime)) {
-                Toast.makeText(this, "Время конца не может быть раньше начала", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.error_end_before_start_time), Toast.LENGTH_SHORT).show();
                 endDateTime.setTime(startDateTime.getTime());
                 updateDateTimeButtons();
             }
@@ -232,8 +232,8 @@ public class EditTripActivity extends AppCompatActivity {
         // 1. Считывание и валидация обязательного поля (Название)
         String name = etTripName.getText().toString().trim();
         if (name.isEmpty()) {
-            etTripName.setError("Название поездки является обязательным полем!");
-            Toast.makeText(this, "Пожалуйста, введите название поездки.", Toast.LENGTH_SHORT).show();
+            etTripName.setError(getString(R.string.error_trip_name_required));
+            Toast.makeText(this, R.string.error_please_enter_trip_name, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -247,7 +247,7 @@ public class EditTripActivity extends AppCompatActivity {
                 userDistance = parseDoubleWithComma(distanceStr);
             }
         } catch (NumberFormatException e) {
-            etDistance.setError("Некорректное значение расстояния.");
+            etDistance.setError(getString(R.string.error_invalid_distance));
             return;
         }
 
@@ -257,21 +257,21 @@ public class EditTripActivity extends AppCompatActivity {
                 fuelSpent = parseDoubleWithComma(fuelSpentStr);
             }
         } catch (NumberFormatException e) {
-            etFuelSpent.setError("Некорректное значение топлива.");
+            etFuelSpent.setError(getString(R.string.error_invalid_fuel));
             return;
         }
 
         // Дополнительная валидация данных
         if (userDistance <= 0) {
-            etDistance.setError("Расстояние должно быть больше 0.");
+            etDistance.setError(getString(R.string.error_distance_must_be_positive));
             return;
         }
         if (fuelSpent <= 0) {
-            etFuelSpent.setError("Топливо должно быть больше 0.");
+            etFuelSpent.setError(getString(R.string.error_fuel_must_be_positive));
             return;
         }
         if (endDateTime.before(startDateTime)) {
-            Toast.makeText(this, "Время окончания не может быть раньше времени начала.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.error_end_before_start, Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -298,11 +298,11 @@ public class EditTripActivity extends AppCompatActivity {
         boolean success = dbHelper.updateTrip(trip);
 
         if (success) {
-            Toast.makeText(this, "Поездка успешно обновлена!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.trip_updated_successfully, Toast.LENGTH_SHORT).show();
             setResult(RESULT_OK);
             finish();
         } else {
-            Toast.makeText(this, "Ошибка при обновлении поездки.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_updating_trip, Toast.LENGTH_SHORT).show();
         }
     }
 

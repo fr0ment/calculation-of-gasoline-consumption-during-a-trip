@@ -20,7 +20,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="Фото автомобиля"/>
+            android:contentDescription="@string/car_photo_desc" />
 
         <LinearLayout
             android:id="@+id/layout_info"
@@ -36,7 +36,7 @@
                 android:id="@+id/tvName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Название автомобиля"
+                android:text="@string/car_details_name_placeholder"
                 android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -46,12 +46,11 @@
                 android:id="@+id/tvDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Описание"
+                android:text="@string/car_details_desc_placeholder"
                 android:textColor="@color/text_hint"
                 android:textSize="16sp"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- Тип топлива -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -61,7 +60,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Топливо:"
+                    android:text="@string/car_details_fuel"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -70,12 +69,11 @@
                     android:id="@+id/tvFuelType"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="АИ-95"
+                    android:text="@string/fuel_type_placeholder"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"/>
             </LinearLayout>
 
-            <!-- Объем бака -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -85,7 +83,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Объем бака:"
+                    android:text="@string/car_details_tank_volume"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -94,12 +92,11 @@
                     android:id="@+id/tvTankVolume"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="50 л"
+                    android:text="@string/tank_volume_placeholder"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"/>
             </LinearLayout>
 
-            <!-- Единицы топлива (в том же стиле) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -109,7 +106,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Единицы топлива:"
+                    android:text="@string/car_details_fuel_unit"
                     android:textColor="@color/text_secondary"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -118,12 +115,11 @@
                     android:id="@+id/tvFuelUnitInfo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="л"
+                    android:text="@string/fuel_unit_placeholder"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"/>
             </LinearLayout>
 
-            <!-- Кнопки удаления и редактирования -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -138,7 +134,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="Редактировать"
+                    android:text="@string/edit"
                     android:backgroundTint="@color/primary"
                     style="@style/Widget.Material3.Button" />
 
@@ -148,7 +144,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:text="Удалить"
+                    android:text="@string/delete"
                     android:backgroundTint="@color/error"
                     style="@style/Widget.Material3.Button" />
             </LinearLayout>
@@ -159,7 +155,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="@color/card_background_secondary"
-                android:text="Назад"
+                android:text="@string/back"
                 android:textColor="@color/text_primary"
                 app:icon="@drawable/ic_back"
                 app:iconGravity="textStart"

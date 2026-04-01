@@ -1,5 +1,7 @@
 package com.example.cogcdat_2;
 
+import android.content.Context;
+
 public enum Language {
     RU("ru"),
     EN("en");
@@ -23,14 +25,14 @@ public enum Language {
         return RU;
     }
 
-    public String getDisplayName() {
+    public String getDisplayName(Context context) {
         switch (this) {
             case RU:
-                return "Русский";
+                return context.getString(R.string.lang_russian);
             case EN:
-                return "English";
+                return context.getString(R.string.lang_english);
             default:
-                return "Русский";
+                return context.getString(R.string.lang_russian);
         }
     }
 }

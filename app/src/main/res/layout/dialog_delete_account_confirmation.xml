@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Удаление аккаунта"
+        android:text="@string/delete_account_title"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -20,7 +20,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Вы уверены, что хотите удалить аккаунт?"
+        android:text="@string/delete_account_confirm_message"
         android:textColor="@color/dialog_text_secondary"
         android:gravity="center"
         android:textSize="16sp"
@@ -30,7 +30,7 @@
         android:id="@+id/tv_warning"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Все ваши данные будут безвозвратно удалены с сервера. Это действие нельзя отменить."
+        android:text="@string/delete_account_warning"
         android:textColor="@color/error"
         android:gravity="center"
         android:textSize="14sp"
@@ -43,7 +43,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
-        android:hint="Введите пароль для подтверждения"
+        android:hint="@string/confirm_password"
         app:endIconMode="password_toggle"
         app:boxStrokeColor="@color/primary"
         app:boxStrokeWidth="2dp">
@@ -68,7 +68,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:text="Отмена"
+            android:text="@string/cancel"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
             style="@style/Widget.Material3.Button.OutlinedButton"/>
@@ -79,7 +79,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Удалить"
+            android:text="@string/delete"
             android:backgroundTint="@color/error"/>
     </LinearLayout>
 

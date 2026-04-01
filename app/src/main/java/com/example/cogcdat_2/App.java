@@ -42,4 +42,5 @@ public class App extends Application {
         // Применяем тему немедленно
         applyTheme(theme);
     }
+
 }

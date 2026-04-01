@@ -11,7 +11,7 @@
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Настройки"
+        android:text="@string/settings_title"
         android:textSize="24sp"
         android:textColor="@color/text_primary"
         android:textStyle="bold"
@@ -50,7 +50,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Профиль"
+                        android:text="@string/profile"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -66,7 +66,7 @@
                         <TextView
                             android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:text="Логин:"
+                            android:text="@string/username_label"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -91,7 +91,7 @@
                         <TextView
                             android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:text="Email:"
+                            android:text="@string/email_label"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -115,7 +115,7 @@
                         <TextView
                             android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:text="Имя:"
+                            android:text="@string/full_name_label"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -124,7 +124,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Не указано"
+                            android:text="@string/not_specified"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -133,7 +133,7 @@
                         android:id="@+id/btn_edit_profile"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Редактировать имя"
+                        android:text="@string/edit_profile"
                         android:backgroundTint="@color/card_background"
                         android:textColor="@color/primary"
                         style="@style/Widget.Material3.Button.OutlinedButton"
@@ -163,7 +163,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Предпочтения"
+                        android:text="@string/preferences"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -181,7 +181,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Единицы расстояния:"
+                            android:text="@string/distance_units_label"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -199,7 +199,7 @@
                             android:id="@+id/btn_change_distance_unit"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Изменить"
+                            android:text="@string/change"
                             android:backgroundTint="@color/primary"
                             style="@style/Widget.Material3.Button" />
                     </LinearLayout>
@@ -216,7 +216,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Тема:"
+                            android:text="@string/theme_label"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -224,7 +224,7 @@
                             android:id="@+id/tv_theme_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Системная"
+                            android:text="@string/theme_system"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold"
@@ -234,7 +234,7 @@
                             android:id="@+id/btn_change_theme"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Изменить"
+                            android:text="@string/change"
                             android:backgroundTint="@color/primary"
                             style="@style/Widget.Material3.Button" />
                     </LinearLayout>
@@ -250,7 +250,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Язык:"
+                            android:text="@string/language_label"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -258,7 +258,7 @@
                             android:id="@+id/tv_language_value"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Русский"
+                            android:text="@string/lang_russian"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold"
@@ -268,7 +268,7 @@
                             android:id="@+id/btn_change_language"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Изменить"
+                            android:text="@string/change"
                             android:backgroundTint="@color/primary"
                             style="@style/Widget.Material3.Button" />
                     </LinearLayout>
@@ -295,7 +295,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Синхронизация"
+                        android:text="@string/sync_title"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -325,7 +325,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Синхронизация..."
+                            android:text="@string/sync_title"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -342,7 +342,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Последняя синхронизация:"
+                            android:text="@string/last_sync"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -350,7 +350,7 @@
                             android:id="@+id/tv_last_sync"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="никогда"
+                            android:text="@string/never"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -360,7 +360,7 @@
                         android:id="@+id/btn_sync_now"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Синхронизировать сейчас"
+                        android:text="@string/sync_now"
                         android:backgroundTint="@color/primary"
 
                         app:iconGravity="textStart"
@@ -388,7 +388,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Безопасность"
+                        android:text="@string/security_title"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -398,7 +398,7 @@
                         android:id="@+id/btn_change_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Изменить пароль"
+                        android:text="@string/change_password"
                         android:backgroundTint="@color/card_background"
                         android:textColor="@color/primary"
                         style="@style/Widget.Material3.Button.OutlinedButton"
@@ -411,7 +411,7 @@
                         android:id="@+id/btn_delete_account"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Удалить аккаунт"
+                        android:text="@string/delete_account"
                         android:backgroundTint="@color/card_background"
                         android:textColor="@color/error"
                         style="@style/Widget.Material3.Button.OutlinedButton"
@@ -424,7 +424,7 @@
                         android:id="@+id/btn_logout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Выйти"
+                        android:text="@string/logout"
                         android:backgroundTint="@color/error"
 
                         app:iconGravity="textStart"
@@ -453,7 +453,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="О приложении"
+                        android:text="@string/About_the_app"
                         android:textColor="@color/text_primary"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -468,7 +468,7 @@
                         <TextView
                             android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:text="Версия:"
+                            android:text="@string/Version"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 
@@ -490,7 +490,7 @@
                         <TextView
                             android:layout_width="100dp"
                             android:layout_height="wrap_content"
-                            android:text="Сервер:"
+                            android:text="@string/The_server"
                             android:textColor="@color/text_hint"
                             android:textSize="14sp" />
 

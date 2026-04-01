@@ -1,5 +1,6 @@
 package com.example.cogcdat_2;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -16,7 +17,7 @@ import androidx.fragment.app.Fragment;
 import com.example.cogcdat_2.sync.SyncManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     private BottomNavigationView bottomNavigationView;
     private static final String KEY_SELECTED_ITEM = "selected_nav_item";
     private boolean isUISetup = false; // Флаг для отслеживания инициализации UI
@@ -170,4 +171,5 @@ public class MainActivity extends AppCompatActivity {
                     return true;
                 }
             };
+
 }

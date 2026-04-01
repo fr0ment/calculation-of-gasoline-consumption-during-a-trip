@@ -29,7 +29,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Рабочая поездка в офис"
+                android:text="@string/trip_name_placeholder"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -38,7 +38,7 @@
                 android:id="@+id/tv_trip_date_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="25, Пн"
+                android:text="@string/trip_date_time_placeholder"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
         </LinearLayout>
@@ -57,7 +57,7 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="Расстояние:"
+                    android:text="@string/distance_label"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
                 <TextView
@@ -65,7 +65,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="15.5 км"
+                    android:text="@string/distance_placeholder"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp" />
             </TableRow>
@@ -74,7 +74,7 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="Топливо (потрачено):"
+                    android:text="@string/fuel_spent_label"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
                 <TextView
@@ -82,7 +82,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="1.8 л"
+                    android:text="@string/fuel_spent_placeholder"
                     android:textColor="@color/accent"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -92,7 +92,7 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="Средний расход:"
+                    android:text="@string/avg_consumption_label"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
                 <TextView
@@ -100,7 +100,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="11.61 л/100км"
+                    android:text="@string/avg_consumption_placeholder"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp" />
             </TableRow>
@@ -109,7 +109,7 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="Длительность:"
+                    android:text="@string/duration_label"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp" />
                 <TextView
@@ -117,7 +117,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="0 ч 45 мин"
+                    android:text="@string/duration_placeholder"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp" />
             </TableRow>

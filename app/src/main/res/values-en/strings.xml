@@ -1,0 +1,403 @@
+<resources>
+    <string name="app_name">Fuel Consumption</string>
+
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="add">Add</string>
+    <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="_l">0 l</string>
+
+    <!-- Add/Edit Car -->
+    <string name="add_car_title">Add Car</string>
+    <string name="edit_car_title">Edit Car</string>
+    <string name="car_name_hint">Car Name *</string>
+    <string name="car_description_hint">Description (optional)</string>
+    <string name="fuel_type_hint">Fuel Type (e.g., AI-95)</string>
+    <string name="tank_volume_hint">Tank Volume (in selected units)</string>
+    <string name="fuel_unit_label">Fuel Units</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="required_fields_note">* - required fields</string>
+    <string name="Select_the_fuel_unit">Select the fuel unit</string>
+    <!-- Car Details -->
+    <string name="car_details_fuel">Fuel:</string>
+    <string name="car_details_tank_volume">Tank Volume:</string>
+    <string name="car_details_fuel_unit">Fuel Units:</string>
+    <string name="car_saved">The car is saved</string>
+    <string name="error_saving_db">Error saving to the database</string>
+    <string name="photo_uploaded">Photo uploaded</string>
+    <string name="Trip">"Trip"</string>
+    <string name="unit_measurement">Unit of measurement: %s</string>
+    <string name="duration_format_full">%02d h %02d min %02d sec</string>
+    <string name="Uploading_data">"Uploading data..."</string>
+    <string name="duration_format2">%d h %02d min</string>
+    <string name="l100m">"l/100miles"</string>
+    <string name="l100km">"l/100km"</string>
+    <string name="L">"l"</string>
+
+    <!-- Trips -->
+    <string name="trip_name_hint">Trip Name *</string>
+    <string name="start_datetime">Start date and time:</string>
+    <string name="end_datetime">End date and time:</string>
+    <string name="distance_hint">Distance traveled *</string>
+    <string name="fuel_spent_hint">Fuel spent *</string>
+    <string name="distance_unit_km">km</string>
+    <string name="fuel_unit_liter">l</string>
+    <string name="avg_consumption_unit">l/100km</string>
+    <string name="authorization_error">Authorization error</string>
+    <!-- GPS Recording -->
+    <string name="gps_start_title">Start GPS Recording</string>
+    <string name="trip_name_example">Trip name (e.g., Work)</string>
+    <string name="initial_fuel_hint">Initial fuel level</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="pause">PAUSE</string>
+    <string name="resume">RESUME</string>
+    <string name="refuel">REFUEL</string>
+    <string name="cancel_recording">CANCEL</string>
+    <string name="stop_recording">SAVE</string>
+    <string name="status_waiting_gps">Status: Waiting for GPS...</string>
+    <string name="distance_title">Distance traveled:</string>
+    <string name="duration_title">Duration:</string>
+    <string name="fuel_recharged_title">Fuel refilled:</string>
+
+    <!-- Analytics -->
+    <string name="analytics_title">Analytics</string>
+    <string name="select_car">Select a car</string>
+    <string name="total_stats">Total Statistics</string>
+    <string name="total_distance">Total Distance</string>
+    <string name="total_fuel">Total Fuel</string>
+    <string name="avg_consumption">Average Consumption</string>
+    <string name="fuel_chart_title">Fuel Consumption Chart</string>
+    <string name="monitoring_title">Car Monitoring</string>
+    <string name="warning_high_consumption_title">High Consumption!</string>
+    <string name="no_data_message">No data for analysis. Add trips to see statistics.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="profile">Profile</string>
+    <string name="username_label">Username:</string>
+    <string name="email_label">Email:</string>
+    <string name="full_name_label">Full name:</string>
+    <string name="edit_profile">Edit name</string>
+    <string name="preferences">Preferences</string>
+    <string name="distance_units">Distance units:</string>
+    <string name="theme_label">Theme:</string>
+    <string name="language_label">Language:</string>
+    <string name="change">Change</string>
+    <string name="sync_title">Synchronization</string>
+    <string name="last_sync">Last sync:</string>
+    <string name="sync_now">Sync now</string>
+    <string name="security_title">Security</string>
+    <string name="change_password">Change password</string>
+    <string name="delete_account">Delete account</string>
+    <string name="logout">Log out</string>
+    <string name="logout_confirm_title">Log out</string>
+    <string name="logout_confirm_message">Are you sure you want to log out?</string>
+    <string name="logout_warning">All local data will be deleted. This action cannot be undone.</string>
+    <string name="warning">Warning</string>
+    <!-- Dialogs -->
+    <string name="car_delete_confirm_title">Delete car?</string>
+    <string name="car_delete_confirm_message">This operation is irreversible. The car and all related records will be permanently deleted.</string>
+    <string name="trip_delete_confirm_title">Delete trip?</string>
+    <string name="trip_delete_confirm_message">This operation is irreversible. The record will be permanently deleted.</string>
+    <string name="refuel_dialog_title">Refuel</string>
+    <string name="refuel_amount_hint">Amount</string>
+    <string name="save_trip_dialog_title">Finish Trip</string>
+    <string name="final_fuel_hint">Remaining fuel</string>
+    <string name="cancel_gps_dialog_title">Cancel trip?</string>
+    <string name="cancel_gps_dialog_message">The trip recording will be stopped without saving. Do you really want to cancel the trip recording?</string>
+
+    <!-- Units -->
+    <string name="unit_selector_title">Select unit</string>
+    <string name="unit_liter">Liters (L)</string>
+    <string name="unit_gallon">Gallons (gal)</string>
+    <string name="unit_km">Kilometers (km)</string>
+    <string name="unit_mile">Miles (mi)</string>
+
+    <!-- Theme -->
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+
+    <!-- Language -->
+    <string name="lang_russian">Russian</string>
+    <string name="lang_english">English</string>
+
+    <string name="manual_trip_title">Manual trip entry</string>
+    <string name="edit_trip_title">Edit trip</string>
+    <string name="date_button">Date</string>
+    <string name="time_button">Time</string>
+    <string name="car_photo_desc">Car photo</string>
+    <string name="car_details_name_placeholder">Car name</string>
+    <string name="car_details_desc_placeholder">Description</string>
+    <string name="fuel_type_placeholder">AI-95</string>
+    <string name="tank_volume_placeholder">50 L</string>
+    <string name="fuel_unit_placeholder">L</string>
+    <string name="car_specs_placeholder">Fuel type • Tank volume</string>
+    <string name="no_data_analytics">No data for analysis. Add trips to see statistics.</string>
+    <string name="warning_details">Recent trips show consumption 15% above average</string>
+    <string name="distance_units_label">Distance units:</string>
+    <string name="final_fuel_prompt">Please enter the amount of fuel remaining in the tank.</string>
+    <string name="save_trip">Save trip</string>
+    <string name="select_car_dialog_title">Select a car</string>
+    <string name="change_password_title">Change password</string>
+    <string name="current_password_hint">Current password</string>
+    <string name="new_password_hint">New password</string>
+    <string name="confirm_new_password_hint">Confirm new password</string>
+    <string name="edit_profile_title">Edit profile</string>
+    <string name="delete_account_title">Delete account</string>
+    <string name="delete_account_confirm_message">Are you sure you want to delete your account?</string>
+    <string name="delete_account_warning">All your data will be permanently deleted from the server. This action cannot be undone.</string>
+    <string name="confirm_password">Enter password to confirm</string>
+    <string name="actions_title">Actions</string>
+    <string name="filter_date">Filter by date</string>
+    <string name="date_from">Date from:</string>
+    <string name="date_to">Date to:</string>
+    <string name="reset">Reset</string>
+    <string name="apply">Apply</string>
+    <string name="select">SELECT</string>
+    <string name="your_cars">Your Cars</string>
+    <string name="your_trips">Your Trips</string>
+    <string name="no_cars_message">No cars added</string>
+    <string name="no_trips_message">No trips for the selected car.</string>
+    <string name="search_hint">Search by name</string>
+    <string name="fuel_spent">Fuel spent</string>
+    <string name="avg_consumption_label">Average consumption</string>
+    <string name="duration_label">Duration</string>
+    <string name="distance_label">Distance:</string>
+    <string name="distance_placeholder">15.5 km</string>
+    <string name="fuel_spent_label">Fuel spent:</string>
+    <string name="fuel_spent_placeholder">1.8 L</string>
+    <string name="avg_consumption_placeholder">11.61 l/100km</string>
+    <string name="duration_placeholder">0 h 45 min</string>
+    <string name="trip_details_title">Trip details</string>
+    <string name="trip_name_placeholder">Trip name</string>
+    <string name="trip_date_time_placeholder">Date and time</string>
+    <string name="welcome_title">Welcome!</string>
+    <string name="welcome_message">To use the app, you need to add a car</string>
+    <string name="continue_btn">Continue</string>
+    <string name="add_trip_options_title">Add Trip</string>
+    <string name="gps_record_option">Record GPS</string>
+    <string name="manual_input_option">Manual entry</string>
+    <string name="username_hint">Username</string>
+    <string name="password_hint">Password</string>
+    <string name="login">Log in</string>
+    <string name="no_account">Don\'t have an account? </string>
+    <string name="register_link">Sign up</string>
+    <string name="register_title">Sign up</string>
+    <string name="email_hint">Email</string>
+    <string name="full_name_hint">Full name (optional)</string>
+    <string name="full_name">Full name</string>
+    <string name="confirm_password_hint">Confirm password</string>
+    <string name="register_button">Sign up</string>
+    <string name="already_have_account">Already have an account? </string>
+    <string name="login_link">Log in</string>
+
+
+
+    <string name="unit_off">Unit of measurement (l/gal)</string>
+    <string name="not_specified">Not specified</string>
+    <string name="never">never</string>
+    <string name="About_the_app">About the app</string>
+    <string name="Version">Version: </string>
+    <string name="The_server">The server:</string>
+    <string name="Search">Search </string>
+    <string name="Car">Car</string>
+    <string name="Mark">Mark:</string>
+    <string name="November_2025">November 2025</string>
+    <string name="Unit_of_measurement">Unit of measurement: Liters (Fuel remaining)</string>
+
+    <string name="settings_fragment_title">Settings</string>
+    <string name="default_username">User</string>
+    <string name="default_email">email@example.com</string>
+
+    <string name="default_version">1.0.0</string>
+    <string name="sync_started">Synchronization started</string>
+    <string name="no_internet_connection">No internet connection</string>
+
+    <string name="distance_units_dialog_title">Distance Units</string>
+    <string name="theme_dialog_title">Theme</string>
+    <string name="language_dialog_title">Language</string>
+    <string name="language_change_notice">Language change will be available in the next version</string>
+    <string name="error_user_not_identified">Error: User not identified</string>
+    <string name="profile_edit_requires_internet">Internet connection required to edit profile</string>
+    <string name="saving">Saving...</string>
+    <string name="profile_updated">Profile updated</string>
+    <string name="profile_update_error">Profile update error</string>
+    <string name="email_already_in_use">Email already in use</string>
+    <string name="session_expired">Session expired, please log in again</string>
+    <string name="network_error">Network error: </string>
+    <string name="password_change_requires_internet">Internet connection required to change password</string>
+    <string name="enter_current_password">Enter current password</string>
+    <string name="enter_new_password">Enter new password</string>
+    <string name="password_min_length">Password must be at least 6 characters</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
+    <string name="password_changed_successfully">Password changed successfully</string>
+    <string name="invalid_current_password">Invalid current password</string>
+    <string name="password_change_error">Error changing password</string>
+    <string name="account_delete_requires_internet">Internet connection required to delete account</string>
+    <string name="enter_password_to_confirm">Enter password to confirm</string>
+    <string name="deleting">Deleting...</string>
+    <string name="account_deleted_successfully">Account deleted successfully</string>
+    <string name="account_delete_error">Error deleting account</string>
+    <string name="invalid_password">Invalid password</string>
+    <string name="logout_warning_message">All local data will be deleted. This action cannot be undone.</string>
+    <string name="confirm_logout">Are you sure you want to log out?</string>
+    <string name="save_button">Save</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="delete_button">Delete</string>
+    <string name="confirm_button">Confirm</string>
+
+    <string name="trips">Trips</string>
+    <string name="cars">Cars</string>
+    <string name="analytics">Analytics</string>
+    <string name="settings">Settings</string>
+    <string-array name="fuel_units">
+        <item>Liters (L)</item>
+        <item>Gallons (gal)</item>
+    </string-array>
+
+    <string name="no_cars_added">No cars added</string>
+    <string name="no_data_for_car">No data for car %s. Add trips to see statistics.</string>
+    <string name="select_a_car">Select a car</string>
+    <string name="high_consumption_warning">High fuel consumption!</string>
+    <string name="fuel_consumption_chart">Fuel Consumption</string>
+    <string name="no_data_for_chart">No data for chart</string>
+    <string name="consumption_anomaly_message">Last %d trips on "%s" show consumption %.1f%% above average\n(was: %.1f l/100km, now: %.1f l/100km)</string>
+    <!-- Add Trip Manual Activity -->
+    <string name="error_car_not_selected">Error: Car not selected</string>
+    <string name="distance_hint_miles">Distance (miles)</string>
+    <string name="distance_hint_km">Distance (km)</string>
+    <string name="start_date">Start date</string>
+    <string name="end_date">End date</string>
+    <string name="start_time">Start time</string>
+    <string name="end_time">End time</string>
+    <string name="error_end_before_start_date">End date cannot be before start date</string>
+    <string name="error_end_before_start_time">End time cannot be before start time</string>
+    <string name="error_trip_name_required">Trip name is required</string>
+    <string name="error_please_enter_trip_name">Please enter trip name</string>
+    <string name="error_distance_required">Distance is required</string>
+    <string name="error_please_enter_distance">Please enter distance</string>
+    <string name="error_invalid_distance">Invalid distance value</string>
+    <string name="error_fuel_required">Fuel spent is required</string>
+    <string name="error_please_enter_fuel">Please enter fuel spent</string>
+    <string name="error_invalid_fuel">Invalid fuel value</string>
+    <string name="error_distance_must_be_positive">Distance must be greater than 0</string>
+    <string name="error_fuel_must_be_positive">Fuel must be greater than 0</string>
+    <string name="error_end_before_start">End time cannot be before start time</string>
+    <string name="error_min_duration">Trip duration must be at least 1 minute</string>
+    <string name="success_trip_added">Trip successfully added!</string>
+    <string name="error_adding_trip">Error adding trip</string>
+
+    <!-- Cars Fragment -->
+    <string name="car_deleted">Car deleted</string>
+    <string name="error_deleting_car">Error deleting car</string>
+    <!-- Car Details Activity -->
+    <string name="car_not_found">Car not found</string>
+    <!-- Edit Car Activity -->
+
+    <string name="error_car_id_not_provided">Error: Car ID not provided</string>
+
+    <string name="error_enter_car_name">Enter car name</string>
+    <string name="error_invalid_tank_volume">Invalid tank volume</string>
+    <string name="select_fuel_unit">Select fuel unit</string>
+    <string name="car_updated">Car updated</string>
+    <string name="error_updating_car">Error updating car</string>
+    <string name="error_gallery_permission_denied">Gallery permission denied</string>
+    <string name="photo_updated">Photo updated</string>
+    <string name="error_saving_photo">Error saving photo</string>
+    <string name="select_image">Select image</string>
+
+    <!-- Edit Trip Activity -->
+    <string name="error_trip_not_selected">Error: Trip not selected</string>
+    <string name="trip_not_found">Trip not found</string>
+
+    <string name="error_end_date_before_start">End date cannot be before start date</string>
+    <string name="error_end_time_before_start">End time cannot be before start time</string>
+
+    <string name="trip_updated_successfully">Trip updated successfully</string>
+    <string name="error_updating_trip">Error updating trip</string>
+
+    <!-- GPS Recording Activity -->
+
+    <string name="enter_initial_fuel">Enter initial fuel level</string>
+    <string name="error_value_must_be_non_negative">Value must be non-negative</string>
+    <string name="error_invalid_numeric_value">Invalid numeric value</string>
+    <string name="recording_started">Recording started</string>
+    <string name="enter_fuel_amount">Enter fuel amount</string>
+    <string name="error_amount_must_be_positive">Amount must be positive</string>
+    <string name="fuel_added">Fuel added: %.1f %s</string>
+    <string name="recording_not_active">Recording not active. Closing...</string>
+    <string name="unit_measurement_remaining_fuel">Unit: %s (Remaining fuel)</string>
+    <string name="enter_remaining_fuel_prompt">Please enter remaining fuel in tank (%s). Max possible: %.1f %s.</string>
+    <string name="enter_remaining_fuel">Enter remaining fuel</string>
+    <string name="error_remaining_exceeds_max">Remaining cannot exceed %.1f %s (Initial + Refueled).</string>
+    <string name="trip_saved_successfully">Trip saved successfully</string>
+    <string name="error_saving_trip">Error saving trip</string>
+    <string name="permission_granted_start">Permission granted. Press \'Start\'.</string>
+    <string name="error_gps_permission_required">GPS permission required for trip recording</string>
+    <string name="duration_format">%02d h %02d min %02d sec</string>
+    <string name="btn_resume">RESUME</string>
+    <string name="btn_pause">PAUSE</string>
+    <string name="status_recording_paused">RECORDING PAUSED</string>
+    <string name="status_recording_active">RECORDING ACTIVE</string>
+
+    <!-- GPS Recording Service -->
+    <string name="notification_channel_name">GPS Recording Service</string>
+    <string name="notification_title_paused">Trip recording paused</string>
+    <string name="notification_title_active">Trip recording in progress</string>
+    <string name="notification_content">Distance: %.1f km | Time: %s | Refueled: %.2f L</string>
+    <!-- Login Activity -->
+    <string name="enter_password">Enter password</string>
+    <string name="enter_username">Enter username</string>
+    <string name="username_min_length">Username must be at least 3 characters</string>
+    <string name="logging_in">Logging in...</string>
+    <string name="loading_data">Loading data from server...</string>
+    <string name="timeout_message">Timeout exceeded. Check your connection.</string>
+    <string name="login_error">Login error</string>
+    <!-- Register Activity -->
+
+    <string name="enter_email">Enter email</string>
+    <string name="invalid_email">Invalid email</string>
+
+    <string name="registration_success">Registration successful! Please log in.</string>
+    <string name="registration_error">Registration error</string>
+    <string name="user_already_exists">User with this username or email already exists</string>
+    <string name="server_error">Server error: </string>
+
+    <!-- Trip Details Activity -->
+
+    <string name="trip_deleted">Trip deleted</string>
+    <string name="edit_trip">Edit trip</string>
+    <string name="delete_trip">Delete trip</string>
+    <string name="trip_name">Trip name</string>
+    <string name="trip_date_time">Date and time</string>
+    <string name="trip_distance">Distance</string>
+    <string name="trip_fuel_spent">Fuel spent</string>
+    <string name="trip_fuel_consumption">Fuel consumption</string>
+    <string name="trip_duration">Duration</string>
+    <!-- Trips Fragment -->
+    <string name="consumption_unit_km">l/100km</string>
+    <string name="consumption_unit_mi">L/100mi</string>
+    <string name="no_trips_for_car">No trips for the selected car.</string>
+    <string name="first_select_car">First select a car</string>
+
+    <string name="date">Date</string>
+    <string name="end_date_cannot_be_before_start">End date cannot be before start date</string>
+    <string name="start_date_cannot_be_after_end">Start date cannot be after end date</string>
+    <string name="filter_by_date">Filter by date</string>
+
+    <string name="add_trip">Add Trip</string>
+    <string name="record_gps">Record GPS</string>
+    <string name="manual_entry">Manual entry</string>
+    <string name="search_by_name">Search by name</string>
+    <string name="consumption_per_km">%.2f l/100km</string>
+    <string name="consumption_per_mile">%.2f L/100mi</string>
+
+
+</resources>

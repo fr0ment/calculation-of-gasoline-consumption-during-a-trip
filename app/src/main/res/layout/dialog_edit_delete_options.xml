@@ -15,7 +15,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Действия"
+            android:text="@string/actions_title"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -46,7 +46,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/pencil_fill"
-                android:contentDescription="Редактировать"
+                android:contentDescription="@string/edit"
                 app:tint="@color/white"
                 android:layout_marginEnd="16dp"/>
 
@@ -54,7 +54,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Редактировать"
+                android:text="@string/edit"
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold"/>
@@ -90,7 +90,7 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/ic_warning"
-                android:contentDescription="Удалить"
+                android:contentDescription="@string/delete"
                 app:tint="@color/white"
                 android:layout_marginEnd="16dp"/>
 
@@ -98,7 +98,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Удалить"
+                android:text="@string/delete"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"/>
@@ -124,7 +124,7 @@
             android:id="@+id/btn_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Отмена"
+            android:text="@string/cancel"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/card_background_secondary"
             style="@style/Widget.Material3.Button.OutlinedButton"/>
