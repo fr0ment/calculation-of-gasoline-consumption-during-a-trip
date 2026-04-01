@@ -14,13 +14,13 @@
     <string name="warning">Предупреждение</string>
     <string name="distance_unit_km">км</string>
     <string name="fuel_unit_liter">л</string>
-    <string name="avg_consumption_unit">л/100км</string>
+    <string name="avg_consumption_unit">100км</string>
     <string name="authorization_error">Ошибка авторизации</string>
     <string name="no_data_message">Нет данных для анализа. Добавьте поездки, чтобы просмотреть статистику.</string>
     <string name="distance_units">Единицы измерения расстояния:</string>
     <string name="unit_measurement">Единица измерения: %s</string>
-    <string name="consumption_unit_km">л/100км</string>
-    <string name="consumption_unit_mi">л/100миль</string>
+    <string name="consumption_unit_km">100км</string>
+    <string name="consumption_unit_mi">100миль</string>
     <!-- Экран добавления/редактирования авто -->
     <string name="add_car_title">Добавить автомобиль</string>
     <string name="edit_car_title">Редактировать автомобиль</string>
@@ -137,9 +137,11 @@
 
     <!-- Единицы измерения -->
     <string name="unit_selector_title">Выберите единицу измерения</string>
-    <string name="unit_liter">Литры (л)</string>
-    <string name="unit_gallon">Галлоны (гал)</string>
-    <string name="unit_km">Километры (км)</string>
+    <string name="unit_liter">л</string>
+    <string name="unit_gallon">гал</string>
+    <string name="unit_kwh">кВтч</string>
+    <string name="unit_m3">м³</string>
+    <string name="unit_km">км</string>
     <string name="unit_mile">Мили (миль)</string>
     <string name="select">ВЫБРАТЬ</string>
 
@@ -258,6 +260,8 @@
     <string-array name="fuel_units">
         <item>Литры (л)</item>
         <item>Галлоны (гал)</item>
+        <item>кВтч</item>
+        <item>м³</item>
     </string-array>
     <!-- Фрагмент аналитики -->
     <string name="no_cars_added">Нет добавленных автомобилей</string>
@@ -269,8 +273,6 @@
     <string name="consumption_anomaly_message">Последние %d поездок на автомобиле «%s» показывают расход на %.1f%% выше среднего\n(было: %.1f л/100 км, стало: %.1f л/100 км)</string>
     <!-- Добавление поездки вручную -->
     <string name="error_car_not_selected">Ошибка: Автомобиль не выбран</string>
-    <string name="distance_hint_miles">Расстояние (мили)</string>
-    <string name="distance_hint_km">Расстояние (км)</string>
     <string name="start_date">Дата начала</string>
     <string name="end_date">Дата окончания</string>
     <string name="start_time">Время начала</string>

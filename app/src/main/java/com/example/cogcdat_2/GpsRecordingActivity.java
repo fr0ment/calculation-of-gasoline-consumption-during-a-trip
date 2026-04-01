@@ -310,7 +310,7 @@ public class GpsRecordingActivity extends BaseActivity {
     }
 
     private void showRefuelDialog() {
-        String fuelUnit = selectedCar.getFuelUnit();
+        String fuelUnit = getLocalizedFuelUnit(selectedCar);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
@@ -355,13 +355,18 @@ public class GpsRecordingActivity extends BaseActivity {
         btnCancelRefuel.setOnClickListener(v -> dialog.dismiss());
     }
 
+    private String getLocalizedFuelUnit(Car car) {
+        if (car == null) return getString(R.string.fuel_unit_liter);
+        return BaseActivity.getLocalizedFuelUnit(this, car.getFuelUnit());
+    }
+
     private void showSaveTripDialog() {
         if (!TripRecordingRepository.getInstance().isRecording()) {
             Toast.makeText(this, getString(R.string.recording_not_active), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
-        String fuelUnit = selectedCar.getFuelUnit();
+        String fuelUnit = getLocalizedFuelUnit(selectedCar);
         double maxPossibleFuel = initialFuelLevel + TripRecordingRepository.getInstance().getTotalFuelRecharged();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

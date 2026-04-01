@@ -83,7 +83,7 @@ public class RegisterActivity extends BaseActivity {
         View focusView = null;
 
         // Проверка подтверждения пароля
-        if (!TextUtils.isEmpty(password) && !password.equals(confirmPassword)) {
+        if (!TextUtils.isEmpty(password) && !password.equalsIgnoreCase(confirmPassword)) {
             tilConfirmPassword.setError(getString(R.string.passwords_do_not_match));
             focusView = tilConfirmPassword;
             cancel = true;

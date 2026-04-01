@@ -38,7 +38,7 @@ public class LocaleHelper {
         }
         String lang = locale.getLanguage();
         // Поддерживаем только русский и английский
-        if (lang.equals("ru")) return "ru";
+        if (lang.equalsIgnoreCase("ru")) return "ru";
         else return "en";
     }
 

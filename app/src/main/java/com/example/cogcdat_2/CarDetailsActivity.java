@@ -97,14 +97,7 @@ public class CarDetailsActivity extends BaseActivity {
     }
     private String getLocalizedFuelUnit(Car car) {
         if (car == null) return getString(R.string.fuel_unit_liter);
-        String unit = car.getFuelUnit();
-        if ("л".equals(unit) || "L".equals(unit)) {
-            return getString(R.string.fuel_unit_liter);
-        } else if ("гал".equals(unit) || "gal".equals(unit)) {
-            return getString(R.string.unit_gallon);
-        } else {
-            return unit; // на случай других единиц
-        }
+        return BaseActivity.getLocalizedFuelUnit(this, car.getFuelUnit());
     }
     private void setupListeners() {
         btnEdit.setOnClickListener(v -> editCar());

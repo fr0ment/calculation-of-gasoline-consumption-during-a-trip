@@ -301,7 +301,6 @@
             }
 
             if (userSettings != null) {
-                // Передаём контекст requireContext()
                 tvDistanceUnitValue.setText(userSettings.getDistanceUnit().getDisplayName(requireContext()));
                 tvThemeValue.setText(userSettings.getTheme().getDisplayName(requireContext()));
                 tvLanguageValue.setText(userSettings.getLanguage().getDisplayName(requireContext()));
@@ -491,38 +490,68 @@
          * Красивый диалог выбора языка
          */
         private void showLanguageDialog() {
-            String[] languages = {
-                    getString(R.string.lang_russian),
-                    getString(R.string.lang_english)
-            };
-            int checkedItem = getSavedLanguageIndex();
+            View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_unit_selector, null);
 
-            new AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.language_label)
-                    .setSingleChoiceItems(languages, checkedItem, (dialog, which) -> {
-                        String newLang = (which == 0) ? "ru" : "en";
-                        String currentLang = LocaleHelper.getLanguage(requireContext());
+            TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
+            RecyclerView rvUnits = dialogView.findViewById(R.id.rv_units);
+            Button btnCancel = dialogView.findViewById(R.id.btn_cancel_unit);
+            Button btnConfirm = dialogView.findViewById(R.id.btn_confirm_unit);
 
-                        if (!newLang.equals(currentLang)) {
-                            // Сохраняем язык в UserSettings (БД)
-                            if (userSettings != null) {
-                                userSettings.setLanguage(newLang);
-                                dbHelper.saveUserSettings(userSettings);
-                            }
-                            // Применяем локаль через LocaleHelper (SharedPreferences)
-                            LocaleHelper.setLocale(requireContext(), newLang);
-                            // Пересоздаём текущую активность для обновления интерфейса
-                            requireActivity().recreate();
-                        }
-                        dialog.dismiss();
-                    })
-                    .setNegativeButton(R.string.cancel, null)
-                    .show();
+            tvTitle.setText(getString(R.string.language_label));
+
+            // Список языков
+            List<Language> languages = Arrays.asList(Language.RU, Language.EN);
+            List<String> languageNames = new ArrayList<>();
+            for (Language lang : languages) {
+                languageNames.add(lang.getDisplayName(requireContext()));
+            }
+
+            // Создаем адаптер
+            UnitSelectionAdapter adapter = new UnitSelectionAdapter(languageNames, null);
+
+            // Находим текущую позицию
+            int currentPosition = languages.indexOf(userSettings.getLanguage());
+            adapter.setSelectedPosition(currentPosition);
+
+            rvUnits.setLayoutManager(new LinearLayoutManager(requireContext()));
+            rvUnits.setAdapter(adapter);
+
+            AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                    .setView(dialogView)
+                    .create();
+
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+            btnConfirm.setOnClickListener(v -> {
+                int selectedPos = adapter.getSelectedPosition();
+                if (selectedPos >= 0 && selectedPos < languages.size()) {
+                    Language selectedLang = languages.get(selectedPos);
+
+                    if (selectedLang != userSettings.getLanguage()) {
+                        // Сохраняем язык в настройках
+                        userSettings.setLanguage(selectedLang);
+                        saveSettings();
+
+                        // Применяем локаль
+                        LocaleHelper.setLocale(requireContext(), selectedLang.getValue());
+
+                        // Перезапускаем активность для обновления интерфейса
+                        requireActivity().recreate();
+                    }
+                }
+                dialog.dismiss();
+            });
+
+            dialog.show();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            }
         }
 
         private int getSavedLanguageIndex() {
             String lang = LocaleHelper.getLanguage(requireContext());
-            return lang.equals("ru") ? 0 : 1;
+            return lang.equalsIgnoreCase("ru") ? 0 : 1;
         }
 
         private void restartApp() {
@@ -801,7 +830,7 @@
                     return;
                 }
 
-                if (!newPass.equals(confirmPass)) {
+                if (!newPass.equalsIgnoreCase(confirmPass)) {
                     tilConfirmPassword.setError(getString(R.string.passwords_do_not_match));
                     return;
                 }

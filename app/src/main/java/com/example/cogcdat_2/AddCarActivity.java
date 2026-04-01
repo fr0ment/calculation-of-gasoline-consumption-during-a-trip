@@ -96,23 +96,22 @@ public class AddCarActivity extends BaseActivity {
     }
     private String getLocalizedFuelUnit(Car car) {
         if (car == null) return getString(R.string.fuel_unit_liter);
-        String unit = car.getFuelUnit();
-        if ("л".equals(unit) || "L".equals(unit)) {
-            return getString(R.string.fuel_unit_liter);
-        } else if ("гал".equals(unit) || "gal".equals(unit)) {
-            return getString(R.string.unit_gallon);
-        } else {
-            return unit; // на случай других единиц
-        }
+        return BaseActivity.getLocalizedFuelUnit(this, car.getFuelUnit());
     }
     private void updateFuelUnitButtonText() {
-        if ("L".equals(selectedFuelUnit)) {
-            btnFuelUnit.setText(getString(R.string.fuel_unit_liter));
-        } else if ("GAL".equals(selectedFuelUnit)) {
-            btnFuelUnit.setText(getString(R.string.unit_gallon));
+        String displayText;
+        if ("L".equalsIgnoreCase(selectedFuelUnit) || "л".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.fuel_unit_liter);
+        } else if ("GAL".equalsIgnoreCase(selectedFuelUnit) || "гал".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.unit_gallon);
+        } else if ("kWh".equalsIgnoreCase(selectedFuelUnit) || "кВтч".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.unit_kwh);
+        } else if ("m³".equalsIgnoreCase(selectedFuelUnit) || "м³".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.unit_m3);
         } else {
-            //btnFuelUnit.setText(selectedFuelUnit); // fallback
+            displayText = selectedFuelUnit;
         }
+        btnFuelUnit.setText(displayText);
     }
     private void setupListeners() {
         btnSave.setOnClickListener(v -> saveCar());
@@ -123,9 +122,13 @@ public class AddCarActivity extends BaseActivity {
                 getString(R.string.Select_the_fuel_unit),
                 selectedFuelUnit,
                 unit -> {
-                    // unit — это локализованное название из массива
+                    // Нормализуем выбранную единицу к внутреннему формату
                     if (unit.toLowerCase().contains("гал") || unit.toLowerCase().contains("gal")) {
                         selectedFuelUnit = "GAL";
+                    } else if (unit.toLowerCase().contains("квтч") || unit.toLowerCase().contains("kwh")) {
+                        selectedFuelUnit = "kWh";
+                    } else if (unit.toLowerCase().contains("м³") || unit.toLowerCase().contains("m³")) {
+                        selectedFuelUnit = "m³";
                     } else {
                         selectedFuelUnit = "L";
                     }

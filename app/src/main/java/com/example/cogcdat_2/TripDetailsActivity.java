@@ -123,36 +123,30 @@ public class TripDetailsActivity extends BaseActivity {
         // Конвертируем расстояние в выбранные единицы
         double displayDistance = trip.getDistanceInUnit(distanceUnit);
 
-        // Получаем расход топлива в нужных единицах
+        // Получаем расход топлива в л/100км
         double consumption = trip.getFuelConsumption();
-        String consumptionUnit;
+        String consumptionDisplay;
 
         if (distanceUnit == DistanceUnit.MI) {
-            consumption = consumption * 1.60934;
-            consumptionUnit = getString(R.string.consumption_unit_mi);
+            consumption = consumption * 1.60934; // л/100км -> л/100миль
+            consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s/%s",
+                    consumption, fuelUnit, getString(R.string.consumption_unit_mi));
         } else {
-            consumptionUnit = getString(R.string.consumption_unit_km);
+            consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s/%s",
+                    consumption, fuelUnit, getString(R.string.consumption_unit_km));
         }
 
         tvTripDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
                 displayDistance, distanceUnitSymbol));
         tvTripFuelSpent.setText(String.format(Locale.getDefault(), "%.2f %s",
                 trip.getFuelSpent(), fuelUnit));
-        tvTripFuelConsumption.setText(String.format(Locale.getDefault(), "%.2f %s",
-                consumption, consumptionUnit));
+        tvTripFuelConsumption.setText(consumptionDisplay);
         tvTripDuration.setText(formatDuration(trip.getStartDateTime(), trip.getEndDateTime()));
     }
 
     private String getLocalizedFuelUnit(Car car) {
         if (car == null) return getString(R.string.fuel_unit_liter);
-        String unit = car.getFuelUnit();
-        if ("л".equals(unit) || "L".equalsIgnoreCase(unit)) {
-            return getString(R.string.fuel_unit_liter);
-        } else if ("гал".equals(unit) || "gal".equalsIgnoreCase(unit)) {
-            return getString(R.string.unit_gallon);
-        } else {
-            return unit; // на случай других единиц
-        }
+        return BaseActivity.getLocalizedFuelUnit(this, car.getFuelUnit());
     }
 
     private void setupListeners() {

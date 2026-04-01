@@ -91,9 +91,6 @@ public class EditTripActivity extends BaseActivity {
         btnSaveTrip = findViewById(R.id.btn_save_trip);
         btnBack = findViewById(R.id.btnBack);
 
-        // Обновляем подсказку для поля расстояния
-        updateDistanceHint();
-
         // Загружаем данные в поля
         loadTripData();
 
@@ -107,22 +104,11 @@ public class EditTripActivity extends BaseActivity {
         btnBack.setOnClickListener(v -> finish());
     }
 
-    /**
-     * Обновляет подсказку в поле расстояния в зависимости от единиц измерения
-     */
-    private void updateDistanceHint() {
-        if (userSettings != null && userSettings.getDistanceUnit() == DistanceUnit.MI) {
-            etDistance.setHint(getString(R.string.distance_hint_miles));
-        } else {
-            etDistance.setHint(getString(R.string.distance_hint_km));
-        }
-    }
-
     private Trip getTripById(String id) {
         // Обходной путь, как в TripDetailsActivity
         for (Car car : dbHelper.getAllCars()) {
             for (Trip t : dbHelper.getTripsForCar(car.getId())) {
-                if (t.getId().equals(id)) {
+                if (t.getId().equalsIgnoreCase(id)) {
                     return t;
                 }
             }
@@ -312,7 +298,6 @@ public class EditTripActivity extends BaseActivity {
         // Обновляем настройки при возврате на экран
         if (currentUserId != null) {
             userSettings = dbHelper.getUserSettings(currentUserId);
-            updateDistanceHint();
 
             // Обновляем отображаемое расстояние с новыми единицами
             if (trip != null) {

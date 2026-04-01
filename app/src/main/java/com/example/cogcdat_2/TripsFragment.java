@@ -141,7 +141,7 @@ public class TripsFragment extends Fragment {
         String savedCarId = SelectedCarManager.getSelectedCarId(requireContext());
         Car selectedCar = null;
         for (Car car : carList) {
-            if (savedCarId.isEmpty() || car.getId().equals(savedCarId)) {
+            if (savedCarId.isEmpty() || car.getId().equalsIgnoreCase(savedCarId)) {
                 selectedCar = car;
                 break;
             }
@@ -204,7 +204,7 @@ public class TripsFragment extends Fragment {
         // Подсвечиваем текущий выбранный автомобиль
         int selectedPos = -1;
         for (int i = 0; i < carList.size(); i++) {
-            if (carList.get(i).getId().equals(selectedCarId)) {
+            if (carList.get(i).getId().equalsIgnoreCase(selectedCarId)) {
                 selectedPos = i;
                 break;
             }
@@ -332,9 +332,9 @@ public class TripsFragment extends Fragment {
         for (Trip trip : trips) {
             try {
                 Date date = DB_DATE_FORMAT.parse(trip.getStartDateTime());
-                String header = HEADER_DATE_FORMAT.format(date); // "Ноябрь 2025"
+                String header = formatHeaderDate(date); // Используем новый метод
 
-                if (!header.equals(currentHeader)) {
+                if (!header.equalsIgnoreCase(currentHeader)) {
                     tripListItems.add(new TripListItem(header));
                     currentHeader = header;
                 }
@@ -537,15 +537,9 @@ public class TripsFragment extends Fragment {
         }
         private String getLocalizedFuelUnit(Car car) {
             if (car == null) return getString(R.string.fuel_unit_liter);
-            String unit = car.getFuelUnit();
-            if ("л".equals(unit) || "L".equalsIgnoreCase(unit)) {
-                return getString(R.string.fuel_unit_liter);
-            } else if ("гал".equals(unit) || "gal".equalsIgnoreCase(unit)) {
-                return getString(R.string.unit_gallon);
-            } else {
-                return unit; // на случай других единиц
-            }
+            return BaseActivity.getLocalizedFuelUnit(requireContext(), car.getFuelUnit());
         }
+
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
             TripListItem item = items.get(position);
@@ -557,7 +551,7 @@ public class TripsFragment extends Fragment {
                 Trip trip = item.getTrip();
 
                 Car car = dbHelper.getCar(trip.getCarId());
-                String fuelUnit = car != null ? getLocalizedFuelUnit(car) : getString(R.string.fuel_unit_liter);
+                String fuelUnit = getLocalizedFuelUnit(car);
 
                 // Получаем единицы расстояния из настроек пользователя
                 DistanceUnit distanceUnit = userSettings.getDistanceUnit();
@@ -569,17 +563,18 @@ public class TripsFragment extends Fragment {
                 // Конвертируем расстояние в выбранные единицы
                 double displayDistance = trip.getDistanceInUnit(distanceUnit);
 
-                // Получаем расход топлива в нужных единицах
+                // Получаем расход топлива в л/100км
                 double consumption = trip.getFuelConsumption();
-                String consumptionDisplay;
 
+                // Форматируем расход с учетом единиц топлива и расстояния
+                String consumptionDisplay;
                 if (distanceUnit == DistanceUnit.MI) {
-                    consumption = consumption * 1.60934;
-                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s",
-                            consumption, getString(R.string.consumption_unit_mi));
+                    consumption = consumption * 1.60934; // л/100км -> л/100миль
+                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s/%s",
+                            consumption, fuelUnit, getString(R.string.consumption_unit_mi));
                 } else {
-                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s",
-                            consumption, getString(R.string.consumption_unit_km));
+                    consumptionDisplay = String.format(Locale.getDefault(), "%.2f %s/%s",
+                            consumption, fuelUnit, getString(R.string.consumption_unit_km));
                 }
 
                 tripHolder.tvDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
@@ -710,5 +705,18 @@ public class TripsFragment extends Fragment {
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
+    }
+
+    /**
+     * Форматирует дату для заголовка с большой буквы
+     */
+    private String formatHeaderDate(Date date) {
+        String formatted = HEADER_DATE_FORMAT.format(date);
+
+        // Делаем первую букву заглавной для всех языков
+        if (formatted != null && !formatted.isEmpty()) {
+            return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
+        }
+        return formatted;
     }
 }

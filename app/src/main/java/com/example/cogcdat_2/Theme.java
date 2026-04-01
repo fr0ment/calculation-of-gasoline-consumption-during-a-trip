@@ -19,7 +19,7 @@ public enum Theme {
 
     public static Theme fromValue(String value) {
         for (Theme theme : Theme.values()) {
-            if (theme.value.equals(value)) {
+            if (theme.value.equalsIgnoreCase(value)) {
                 return theme;
             }
         }

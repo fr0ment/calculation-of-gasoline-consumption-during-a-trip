@@ -27,6 +27,10 @@ public interface ApiService {
     @GET("auth/me")
     Call<User> getCurrentUser(@Header("Authorization") String token);
 
+    // НОВЫЙ: Обновление токена
+    @POST("auth/refresh")
+    Call<TokenResponse> refreshToken(@Header("Authorization") String token);
+
     // Обновление профиля
     @PUT("users/{userId}")
     Call<User> updateUser(@Header("Authorization") String token,

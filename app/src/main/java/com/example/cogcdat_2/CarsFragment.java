@@ -77,14 +77,7 @@ public class CarsFragment extends Fragment {
      */
     private String getLocalizedFuelUnit(Car car) {
         if (car == null) return getString(R.string.fuel_unit_liter);
-        String unit = car.getFuelUnit();
-        if ("л".equals(unit) || "L".equalsIgnoreCase(unit)) {
-            return getString(R.string.fuel_unit_liter);
-        } else if ("гал".equals(unit) || "gal".equalsIgnoreCase(unit)) {
-            return getString(R.string.unit_gallon);
-        } else {
-            return unit;
-        }
+        return BaseActivity.getLocalizedFuelUnit(getContext(), car.getFuelUnit());
     }
     private class CarAdapter extends RecyclerView.Adapter<CarAdapter.ViewHolder> {
         private final List<Car> cars;

@@ -18,7 +18,7 @@ public enum DistanceUnit {
 
     public static DistanceUnit fromValue(String value) {
         for (DistanceUnit unit : DistanceUnit.values()) {
-            if (unit.value.equals(value)) {
+            if (unit.value.equalsIgnoreCase(value)) {
                 return unit;
             }
         }

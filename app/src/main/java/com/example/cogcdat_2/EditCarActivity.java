@@ -84,14 +84,7 @@ public class EditCarActivity extends BaseActivity {
     }
     private String getLocalizedFuelUnit(Car car) {
         if (car == null) return getString(R.string.fuel_unit_liter);
-        String unit = car.getFuelUnit();
-        if ("л".equals(unit) || "L".equals(unit)) {
-            return getString(R.string.fuel_unit_liter);
-        } else if ("гал".equals(unit) || "gal".equals(unit)) {
-            return getString(R.string.unit_gallon);
-        } else {
-            return unit; // на случай других единиц
-        }
+        return BaseActivity.getLocalizedFuelUnit(this, car.getFuelUnit());
     }
     private void initViews() {
         tvTitle = findViewById(R.id.tvTitle);
@@ -116,13 +109,19 @@ public class EditCarActivity extends BaseActivity {
         updateFuelUnitButtonText();
     }
     private void updateFuelUnitButtonText() {
-        if ("л".equals(selectedFuelUnit) || "L".equals(selectedFuelUnit)) {
-            btnFuelUnit.setText(getString(R.string.fuel_unit_liter));
-        } else if ("гал".equals(selectedFuelUnit) || "gal".equals(selectedFuelUnit)) {
-            btnFuelUnit.setText(getString(R.string.unit_gallon));
+        String displayText;
+        if ("л".equalsIgnoreCase(selectedFuelUnit) || "L".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.fuel_unit_liter);
+        } else if ("гал".equalsIgnoreCase(selectedFuelUnit) || "GAL".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.unit_gallon);
+        } else if ("кВтч".equalsIgnoreCase(selectedFuelUnit) || "kWh".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.unit_kwh);
+        } else if ("м³".equalsIgnoreCase(selectedFuelUnit) || "m³".equalsIgnoreCase(selectedFuelUnit)) {
+            displayText = getString(R.string.unit_m3);
         } else {
-            btnFuelUnit.setText(selectedFuelUnit);
+            displayText = selectedFuelUnit;
         }
+        btnFuelUnit.setText(displayText);
     }
     private void loadCarData() {
         etName.setText(car.getName());
@@ -152,7 +151,16 @@ public class EditCarActivity extends BaseActivity {
                 getString(R.string.Select_the_fuel_unit),
                 selectedFuelUnit,
                 unit -> {
-                    selectedFuelUnit = unit;
+                    // Нормализуем выбранную единицу
+                    if (unit.toLowerCase().contains("гал") || unit.toLowerCase().contains("gal")) {
+                        selectedFuelUnit = "GAL";
+                    } else if (unit.toLowerCase().contains("квтч") || unit.toLowerCase().contains("kwh")) {
+                        selectedFuelUnit = "kWh";
+                    } else if (unit.toLowerCase().contains("м³") || unit.toLowerCase().contains("m³")) {
+                        selectedFuelUnit = "m³";
+                    } else {
+                        selectedFuelUnit = "L";
+                    }
                     updateFuelUnitButtonText();
                 }));
     }
@@ -236,7 +244,7 @@ public class EditCarActivity extends BaseActivity {
         if (success) {
             // Если фото изменилось
             if (selectedImagePath != null && !selectedImagePath.isEmpty() &&
-                    !selectedImagePath.equals(oldImagePath)) {
+                    !selectedImagePath.equalsIgnoreCase(oldImagePath)) {
 
                 // Увеличиваем версию!
                 int newVersion = oldVersion + 1;

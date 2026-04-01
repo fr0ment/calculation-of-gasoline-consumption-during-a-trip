@@ -18,7 +18,7 @@ public enum Language {
 
     public static Language fromValue(String value) {
         for (Language lang : Language.values()) {
-            if (lang.value.equals(value)) {
+            if (lang.value.equalsIgnoreCase(value)) {
                 return lang;
             }
         }

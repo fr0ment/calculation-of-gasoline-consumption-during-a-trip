@@ -108,7 +108,7 @@ public class SyncManager {
         return currentUserId;
     }
 
-    private void saveToken(String token) {
+    public void saveToken(String token) {
         context.getSharedPreferences("auth", Context.MODE_PRIVATE)
                 .edit()
                 .putString(PREF_AUTH_TOKEN, token)
@@ -192,7 +192,7 @@ public class SyncManager {
                     String token = response.body().getAccessToken();
 
                     String oldToken = getSavedToken();
-                    if (oldToken != null && !oldToken.equals(token)) {
+                    if (oldToken != null && !oldToken.equalsIgnoreCase(token)) {
                         clearLocalData();
                     }
 
@@ -370,6 +370,7 @@ public class SyncManager {
         db.close();
         return settings;
     }
+
 
     private void processSyncResponse(SyncResponse response) {
         Log.d(TAG, "Processing sync response. Cars received: " +
@@ -735,4 +736,5 @@ public class SyncManager {
             Log.e(TAG, "Error saving image", e);
         }
     }
+
 }

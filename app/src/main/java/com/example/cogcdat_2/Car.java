@@ -132,7 +132,7 @@ public class Car {
         public void setDistanceUnit(String distanceUnit) { this.distanceUnit = distanceUnit; }
 
         public boolean isUsingMiles() {
-            return "mi".equals(distanceUnit);
+            return "mi".equalsIgnoreCase(distanceUnit);
         }
 
         public String getTheme() { return theme; }

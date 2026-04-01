@@ -4,6 +4,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.Locale;
+
 public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -27,12 +29,48 @@ public abstract class BaseActivity extends AppCompatActivity {
             if (settings != null) {
                 String savedLang = settings.getLanguage().getValue();
                 String currentLang = LocaleHelper.getLanguage(this);
-                if (!savedLang.equals(currentLang)) {
+                if (!savedLang.equalsIgnoreCase(currentLang)) {
                     // Если язык в настройках не совпадает с текущим, применяем его
                     LocaleHelper.setLocale(this, savedLang);
                     recreate(); // пересоздаём активность, чтобы применить новый язык
                 }
             }
         }
+    }
+
+    public static String getLocalizedFuelUnit(Context context, String unit) {
+        if (unit == null) return context.getString(R.string.fuel_unit_liter);
+
+        String normalized = unit.toLowerCase();
+
+        // Литр / литры
+        if (normalized.equals("л") || normalized.equals("l") ||
+                normalized.contains("liter") || normalized.contains("litre")) {
+            return context.getString(R.string.fuel_unit_liter);
+        }
+        // Галлон
+        else if (normalized.equals("гал") || normalized.equals("gal") ||
+                normalized.contains("gallon")) {
+            return context.getString(R.string.unit_gallon);
+        }
+        // кВтч
+        else if (normalized.equals("квтч") || normalized.equals("kwh")) {
+            return context.getString(R.string.unit_kwh);
+        }
+        // м³
+        else if (normalized.equals("м³") || normalized.equals("m³")) {
+            return context.getString(R.string.unit_m3);
+        }
+
+        return unit;
+    }
+
+    public static String formatFuelConsumption(Context context, double consumption, Car car) {
+        if (car == null) return String.format(Locale.getDefault(), "%.2f л/100км", consumption);
+
+        String fuelUnit = getLocalizedFuelUnit(context, car.getFuelUnit());
+        String consumptionUnit = context.getString(R.string.consumption_unit_km);
+
+        return String.format(Locale.getDefault(), "%.2f %s/%s", consumption, fuelUnit, consumptionUnit);
     }
 }

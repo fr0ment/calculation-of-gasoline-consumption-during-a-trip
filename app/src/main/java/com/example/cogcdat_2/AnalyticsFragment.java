@@ -147,7 +147,7 @@ public class AnalyticsFragment extends Fragment {
         selectedCar = null;
 
         for (Car car : carList) {
-            if (car.getId().equals(savedCarId)) {
+            if (car.getId().equalsIgnoreCase(savedCarId)) {
                 selectedCar = car;
                 break;
             }
@@ -220,8 +220,16 @@ public class AnalyticsFragment extends Fragment {
         for (String key : dailyFuel.keySet()) {
             double dist = dailyDist.getOrDefault(key, 0.0);
             if (dist > 0) {
-                dailyConsumption.put(key, (float) ((dailyFuel.get(key) / dist) * 100));
+                // Расход всегда в л/100км (независимо от единиц расстояния)
+                double consumption = (dailyFuel.get(key) / dist) * 100;
+                dailyConsumption.put(key, (float) consumption);
             }
+        }
+
+        // Для отладки
+        Log.d("Analytics", "Daily consumption entries: " + dailyConsumption.size());
+        for (Map.Entry<String, Float> entry : dailyConsumption.entrySet()) {
+            Log.d("Analytics", "Date: " + entry.getKey() + ", Consumption: " + entry.getValue());
         }
     }
 
@@ -239,20 +247,21 @@ public class AnalyticsFragment extends Fragment {
             displayTotalDistance = totalDistance / 1.60934; // км -> мили
         }
 
-        // Расход всегда л/100км или л/100миль в зависимости от единиц расстояния
-        double displayAvgConsumption = avgConsumption;
+        // Расход: сначала в л/100км, потом конвертируем в нужные единицы
+        double displayAvgConsumption = avgConsumption; // avgConsumption уже в л/100км
+        String consumptionUnit;
         if (distanceUnit == DistanceUnit.MI) {
             displayAvgConsumption = avgConsumption * 1.60934; // л/100км -> л/100миль
+            consumptionUnit = getString(R.string.consumption_unit_mi);
+        } else {
+            consumptionUnit = getString(R.string.consumption_unit_km);
         }
-        String consumptionUnit = distanceUnit == DistanceUnit.MI ?
-                getString(R.string.consumption_unit_mi) :
-                getString(R.string.consumption_unit_km);
 
         tvTotalDistance.setText(String.format(Locale.getDefault(), "%.2f %s",
                 displayTotalDistance, distanceUnitSymbol));
         tvTotalFuel.setText(String.format(Locale.getDefault(), "%.2f %s", totalFuel, fuelUnit));
-        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.2f %s",
-                displayAvgConsumption, consumptionUnit));
+        tvAvgConsumption.setText(String.format(Locale.getDefault(), "%.2f %s/%s",
+                displayAvgConsumption, fuelUnit, consumptionUnit));
     }
 
     private void updateChart() {
@@ -265,9 +274,21 @@ public class AnalyticsFragment extends Fragment {
         List<String> labels = new ArrayList<>(dailyConsumption.keySet());
         Collections.sort(labels);
 
+        // Получаем единицы расстояния из настроек
+        DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+
         List<Entry> entries = new ArrayList<>();
         for (int i = 0; i < labels.size(); i++) {
-            entries.add(new Entry(i, dailyConsumption.get(labels.get(i))));
+            float consumptionLPer100Km = dailyConsumption.get(labels.get(i));
+
+            // Конвертируем расход в зависимости от выбранных единиц
+            float displayConsumption = consumptionLPer100Km;
+            if (distanceUnit == DistanceUnit.MI) {
+                // л/100км -> л/100миль (умножаем на 1.60934)
+                displayConsumption = (float) (consumptionLPer100Km * 1.60934);
+            }
+
+            entries.add(new Entry(i, displayConsumption));
         }
 
         LineDataSet dataSet = new LineDataSet(entries, getString(R.string.fuel_consumption_chart));
@@ -277,11 +298,14 @@ public class AnalyticsFragment extends Fragment {
         dataSet.setLineWidth(2.5f);
         dataSet.setCircleRadius(4f);
 
-        // Получаем единицы расстояния из настроек
-        DistanceUnit distanceUnit = userSettings.getDistanceUnit();
-        String consumptionUnit = distanceUnit == DistanceUnit.MI ? getString(R.string.consumption_unit_mi) : getString(R.string.consumption_unit_km);
+        // Форматируем значения на графике
+        String fuelUnit = selectedCar != null ? getLocalizedFuelUnit(selectedCar) : getString(R.string.fuel_unit_liter);
+        String consumptionUnit = distanceUnit == DistanceUnit.MI ?
+                getString(R.string.consumption_unit_mi) :
+                getString(R.string.consumption_unit_km);
 
-        final String finalUnit = consumptionUnit;
+        final String finalUnit = fuelUnit + "/" + consumptionUnit;
+
         dataSet.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
@@ -335,20 +359,13 @@ public class AnalyticsFragment extends Fragment {
         AnomalyResult anomaly = detectConsumptionAnomaly(trips);
         if (anomaly != null) {
             tvWarningTitle.setText(getString(R.string.high_consumption_warning));
-            tvWarningDetails.setText(anomaly.getWarningMessage(requireContext()));
+            tvWarningDetails.setText(anomaly.getWarningMessage(requireContext(), selectedCar.getFuelUnit()));
             layoutMonitoringSection.setVisibility(View.VISIBLE);
         }
     }
     private String getLocalizedFuelUnit(Car car) {
         if (car == null) return getString(R.string.fuel_unit_liter);
-        String unit = car.getFuelUnit();
-        if ("л".equals(unit) || "L".equals(unit)) {
-            return getString(R.string.fuel_unit_liter);
-        } else if ("гал".equals(unit) || "gal".equals(unit)) {
-            return getString(R.string.unit_gallon);
-        } else {
-            return unit;
-        }
+        return BaseActivity.getLocalizedFuelUnit(requireContext(), car.getFuelUnit());
     }
     private AnomalyResult detectConsumptionAnomaly(List<Trip> sortedTripsNewestFirst) {
         List<Trip> recent = sortedTripsNewestFirst.subList(0, RECENT_TRIPS_COUNT);
@@ -456,7 +473,7 @@ public class AnalyticsFragment extends Fragment {
         // Подсвечиваем текущий выбранный
         int selectedPos = -1;
         for (int i = 0; i < carList.size(); i++) {
-            if (carList.get(i).getId().equals(selectedCar.getId())) {
+            if (carList.get(i).getId().equalsIgnoreCase(selectedCar.getId())) {
                 selectedPos = i;
                 break;
             }
@@ -484,7 +501,11 @@ public class AnalyticsFragment extends Fragment {
             this.previousAvg = previousAvg;
         }
 
-        String getWarningMessage(Context context) {
+        String getWarningMessage(Context context, String fuelUnitRaw) {
+            // Получаем локализованную единицу топлива
+            String fuelUnit = BaseActivity.getLocalizedFuelUnit(context, fuelUnitRaw);
+            String consumptionUnit = context.getString(R.string.consumption_unit_km);
+
             return String.format(Locale.getDefault(),
                     context.getString(R.string.consumption_anomaly_message),
                     RECENT_TRIPS_COUNT, carName, increasePercent, previousAvg, recentAvg);

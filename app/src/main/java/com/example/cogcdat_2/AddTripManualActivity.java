@@ -84,9 +84,6 @@ public class AddTripManualActivity extends BaseActivity {
         btnSaveTrip = findViewById(R.id.btn_save_trip);
         btnBack = findViewById(R.id.btnBack);
 
-        // Устанавливаем подсказку для поля расстояния с учетом единиц измерения
-        updateDistanceHint();
-
         // Установка текущей даты/времени по умолчанию
         updateDateTimeButtons();
 
@@ -98,19 +95,6 @@ public class AddTripManualActivity extends BaseActivity {
 
         btnSaveTrip.setOnClickListener(v -> saveTrip());
         btnBack.setOnClickListener(v -> finish());
-    }
-
-    /**
-     * Обновляет подсказку в поле расстояния в зависимости от единиц измерения
-     */
-    private void updateDistanceHint() {
-        String unitHint;
-        if (userSettings != null && userSettings.getDistanceUnit() == DistanceUnit.MI) {
-            unitHint = getString(R.string.distance_hint_miles);
-        } else {
-            unitHint = getString(R.string.distance_hint_km);
-        }
-        etDistance.setHint(unitHint);
     }
 
     // --- ВЫБОР ДАТЫ/ВРЕМЕНИ ---
@@ -293,7 +277,6 @@ public class AddTripManualActivity extends BaseActivity {
         // Обновляем настройки при возврате на экран
         if (currentUserId != null) {
             userSettings = dbHelper.getUserSettings(currentUserId);
-            updateDistanceHint();
         }
     }
 }

@@ -74,7 +74,7 @@ public class GpsRecordingService extends Service implements LocationListener {
     private final BroadcastReceiver notificationActionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (ACTION_PAUSE_RESUME.equals(intent.getAction())) {
+            if (ACTION_PAUSE_RESUME.equalsIgnoreCase(intent.getAction())) {
                 togglePauseResume();
             }
         }
