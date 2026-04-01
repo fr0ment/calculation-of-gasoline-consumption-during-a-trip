@@ -50,7 +50,7 @@ public class AddCarActivity extends BaseActivity {
     private boolean isFirstLaunch = false;
 
     // Выбранные единицы измерения (только топливо)
-    private String selectedFuelUnit = "л";
+    private String selectedFuelUnit = "L";
     private String createdCarId;
 
     @Override
@@ -91,7 +91,7 @@ public class AddCarActivity extends BaseActivity {
         ivCarPhoto = findViewById(R.id.ivCarPhoto);
 
         // Устанавливаем начальные значения на кнопках
-        btnFuelUnit.setText(selectedFuelUnit);
+        updateFuelUnitButtonText();
 
     }
     private String getLocalizedFuelUnit(Car car) {
@@ -106,12 +106,12 @@ public class AddCarActivity extends BaseActivity {
         }
     }
     private void updateFuelUnitButtonText() {
-        if ("л".equals(selectedFuelUnit) || "L".equals(selectedFuelUnit)) {
+        if ("L".equals(selectedFuelUnit)) {
             btnFuelUnit.setText(getString(R.string.fuel_unit_liter));
-        } else if ("гал".equals(selectedFuelUnit) || "gal".equals(selectedFuelUnit)) {
+        } else if ("GAL".equals(selectedFuelUnit)) {
             btnFuelUnit.setText(getString(R.string.unit_gallon));
         } else {
-            updateFuelUnitButtonText();
+            //btnFuelUnit.setText(selectedFuelUnit); // fallback
         }
     }
     private void setupListeners() {
@@ -123,7 +123,12 @@ public class AddCarActivity extends BaseActivity {
                 getString(R.string.Select_the_fuel_unit),
                 selectedFuelUnit,
                 unit -> {
-                    selectedFuelUnit = unit;
+                    // unit — это локализованное название из массива
+                    if (unit.toLowerCase().contains("гал") || unit.toLowerCase().contains("gal")) {
+                        selectedFuelUnit = "GAL";
+                    } else {
+                        selectedFuelUnit = "L";
+                    }
                     updateFuelUnitButtonText();
                 }));
     }

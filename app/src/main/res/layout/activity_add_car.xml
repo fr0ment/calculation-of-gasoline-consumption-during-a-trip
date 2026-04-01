@@ -128,7 +128,7 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:padding="16dp"
-                android:text="л"
+
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:gravity="center"
