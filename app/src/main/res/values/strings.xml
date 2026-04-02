@@ -270,7 +270,7 @@
     <string name="high_consumption_warning">Повышенный расход топлива!</string>
     <string name="fuel_consumption_chart">Расход топлива</string>
     <string name="no_data_for_chart">Нет данных для графика</string>
-    <string name="consumption_anomaly_message">Последние %d поездок на автомобиле «%s» показывают расход на %.1f%% выше среднего\n(было: %.1f л/100 км, стало: %.1f л/100 км)</string>
+    <string name="consumption_anomaly_message">Последние %d поездок на автомобиле «%s» показывают расход на %.1f%% выше среднего\n(было: %.1f, стало: %.1f)</string>
     <!-- Добавление поездки вручную -->
     <string name="error_car_not_selected">Ошибка: Автомобиль не выбран</string>
     <string name="start_date">Дата начала</string>

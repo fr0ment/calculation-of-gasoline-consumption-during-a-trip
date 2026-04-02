@@ -204,10 +204,13 @@ public class AnalyticsFragment extends Fragment {
         Map<String, Double> dailyDist = new HashMap<>();
         Map<String, Double> dailyFuel = new HashMap<>();
 
+        // Используем полную дату для ключа, чтобы учитывать год
+        SimpleDateFormat fullDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
         for (Trip trip : allTrips) {
             try {
                 Date date = DB_DATE_FORMAT.parse(trip.getStartDateTime());
-                String key = CHART_DATE_FORMAT.format(date);
+                String key = fullDateFormat.format(date); // "2026-03-28"
 
                 dailyDist.put(key, dailyDist.getOrDefault(key, 0.0) + trip.getDistance());
                 dailyFuel.put(key, dailyFuel.getOrDefault(key, 0.0) + trip.getFuelSpent());
@@ -220,16 +223,9 @@ public class AnalyticsFragment extends Fragment {
         for (String key : dailyFuel.keySet()) {
             double dist = dailyDist.getOrDefault(key, 0.0);
             if (dist > 0) {
-                // Расход всегда в л/100км (независимо от единиц расстояния)
                 double consumption = (dailyFuel.get(key) / dist) * 100;
                 dailyConsumption.put(key, (float) consumption);
             }
-        }
-
-        // Для отладки
-        Log.d("Analytics", "Daily consumption entries: " + dailyConsumption.size());
-        for (Map.Entry<String, Float> entry : dailyConsumption.entrySet()) {
-            Log.d("Analytics", "Date: " + entry.getKey() + ", Consumption: " + entry.getValue());
         }
     }
 
@@ -359,7 +355,9 @@ public class AnalyticsFragment extends Fragment {
         AnomalyResult anomaly = detectConsumptionAnomaly(trips);
         if (anomaly != null) {
             tvWarningTitle.setText(getString(R.string.high_consumption_warning));
-            tvWarningDetails.setText(anomaly.getWarningMessage(requireContext(), selectedCar.getFuelUnit()));
+            tvWarningDetails.setText(anomaly.getWarningMessage(requireContext(),
+                    selectedCar.getFuelUnit(),
+                    userSettings.getDistanceUnit()));
             layoutMonitoringSection.setVisibility(View.VISIBLE);
         }
     }
@@ -501,14 +499,26 @@ public class AnalyticsFragment extends Fragment {
             this.previousAvg = previousAvg;
         }
 
-        String getWarningMessage(Context context, String fuelUnitRaw) {
+        String getWarningMessage(Context context, String fuelUnitRaw, DistanceUnit distanceUnit) {
             // Получаем локализованную единицу топлива
             String fuelUnit = BaseActivity.getLocalizedFuelUnit(context, fuelUnitRaw);
-            String consumptionUnit = context.getString(R.string.consumption_unit_km);
+
+            // Определяем единицу расстояния для отображения
+            String distanceUnitDisplay = distanceUnit == DistanceUnit.MI ? "100 миль" : "100 км";
+
+            // Конвертируем расход в выбранные единицы для отображения
+            double displayRecentAvg = recentAvg;
+            double displayPreviousAvg = previousAvg;
+
+            if (distanceUnit == DistanceUnit.MI) {
+                displayRecentAvg = recentAvg * 1.60934; // л/100км -> л/100миль
+                displayPreviousAvg = previousAvg * 1.60934;
+            }
 
             return String.format(Locale.getDefault(),
                     context.getString(R.string.consumption_anomaly_message),
-                    RECENT_TRIPS_COUNT, carName, increasePercent, previousAvg, recentAvg);
+                    RECENT_TRIPS_COUNT, carName, increasePercent,
+                    displayPreviousAvg, displayRecentAvg);
         }
     }
 }

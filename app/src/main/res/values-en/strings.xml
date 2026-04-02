@@ -272,7 +272,7 @@
     <string name="high_consumption_warning">High fuel consumption!</string>
     <string name="fuel_consumption_chart">Fuel Consumption</string>
     <string name="no_data_for_chart">No data for chart</string>
-    <string name="consumption_anomaly_message">Last %d trips on "%s" show consumption %.1f%% above average\n(was: %.1f l/100km, now: %.1f l/100km)</string>
+    <string name="consumption_anomaly_message">Last %d trips on "%s" show consumption %.1f%% above average\n(was: %.1f, now: %.1f)</string>
     <!-- Add Trip Manual Activity -->
     <string name="error_car_not_selected">Error: Car not selected</string>
     <string name="start_date">Start date</string>

@@ -7,6 +7,8 @@
     import android.net.ConnectivityManager;
     import android.net.NetworkInfo;
     import android.os.Bundle;
+    import android.os.Handler;
+    import android.os.Looper;
     import android.util.Log;
     import android.view.LayoutInflater;
     import android.view.View;
@@ -65,6 +67,8 @@
         private User currentUser;
         private String currentUserId;
 
+        private Call<?> currentCall;
+
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.fragment_settings, container, false);
@@ -75,8 +79,22 @@
 
             initViews(view);
             loadCurrentUserId();
-            loadUserProfile();
-            loadUserSettings();
+
+            // Сначала показываем локальные данные (сразу, без задержки)
+            loadUserSettingsFromLocal();
+            loadUserProfileFromLocal();
+
+            // Обновляем UI с локальными данными
+            updateUI();
+            updateSettingsUI();
+            updateLastSyncTime();
+
+            // Затем пытаемся загрузить с сервера (если есть интернет)
+            if (isNetworkAvailable() && syncManager.getSavedToken() != null) {
+                loadUserProfile();
+                loadSettingsFromServerWithTimeout();
+            }
+
             setupObservers();
             setupListeners();
 
@@ -84,6 +102,13 @@
         }
 
         private boolean isFragmentAttached = true;
+
+        private void cancelPendingCalls() {
+            if (currentCall != null) {
+                currentCall.cancel();
+                currentCall = null;
+            }
+        }
 
         @Override
         public void onAttach(@NonNull Context context) {
@@ -95,12 +120,14 @@
         public void onDetach() {
             super.onDetach();
             isFragmentAttached = false;
+            cancelPendingCalls();
         }
 
         @Override
         public void onDestroyView() {
             super.onDestroyView();
             isFragmentAttached = false;
+            cancelPendingCalls();
         }
 
 
@@ -109,9 +136,19 @@
         public void onResume() {
             super.onResume();
             loadCurrentUserId();
-            loadUserProfile();
-            loadUserSettings();
+
+            // Обновляем локальные данные при возврате
+            loadUserSettingsFromLocal();
+            loadUserProfileFromLocal();
+            updateUI();
+            updateSettingsUI();
             updateLastSyncTime();
+
+            // Если есть интернет, пытаемся обновить
+            if (isNetworkAvailable() && syncManager.getSavedToken() != null) {
+                loadUserProfile();
+                loadSettingsFromServerWithTimeout();
+            }
         }
 
         private void initViews(View view) {
@@ -167,6 +204,24 @@
             currentUserId = prefs.getString("user_id", null);
         }
 
+        private void loadUserProfileFromLocal() {
+            SharedPreferences prefs = requireContext().getSharedPreferences("user", Context.MODE_PRIVATE);
+            String username = prefs.getString("username", getString(R.string.default_username));
+            String email = prefs.getString("email", "email@example.com");
+            String fullName = prefs.getString("full_name", "");
+
+            tvUsername.setText(username);
+            tvEmail.setText(email);
+            tvFullName.setText(fullName.isEmpty() ? getString(R.string.not_specified) : fullName);
+        }
+
+        private void loadUserSettingsFromLocal() {
+            if (currentUserId != null) {
+                userSettings = dbHelper.getUserSettings(currentUserId);
+                updateSettingsUI();
+            }
+        }
+
         private void loadUserProfile() {
             String token = syncManager.getSavedToken();
             if (token == null) return;
@@ -200,27 +255,32 @@
             });
         }
 
-        private void loadUserSettings() {
-            if (currentUserId == null) return;
-
-            userSettings = dbHelper.getUserSettings(currentUserId);
-            updateSettingsUI();
-
-            if (isNetworkAvailable() && syncManager.getSavedToken() != null) {
-                loadSettingsFromServer();
-            }
-        }
-
-        private void loadSettingsFromServer() {
+        private void loadSettingsFromServerWithTimeout() {
             String token = syncManager.getSavedToken();
             if (token == null) return;
 
-            apiService.getSettings("Bearer " + token).enqueue(new Callback<ApiUserSettings>() {
+            // Устанавливаем таймаут 10 секунд
+            Handler timeoutHandler = new Handler(Looper.getMainLooper());
+            Runnable timeoutRunnable = () -> {
+                if (currentCall != null && !currentCall.isCanceled()) {
+                    currentCall.cancel();
+                    currentCall = null;
+                    Log.d("Settings", "Settings loading timeout");
+                }
+            };
+            timeoutHandler.postDelayed(timeoutRunnable, 10000);
+
+            Call<ApiUserSettings> call = apiService.getSettings("Bearer " + token);
+            currentCall = call;
+
+            call.enqueue(new Callback<ApiUserSettings>() {
                 @Override
                 public void onResponse(Call<ApiUserSettings> call, Response<ApiUserSettings> response) {
                     if (!isFragmentAttached || !isAdded() || getActivity() == null) {
                         return;
                     }
+
+                    timeoutHandler.removeCallbacks(timeoutRunnable);
 
                     if (response.isSuccessful() && response.body() != null) {
                         ApiUserSettings serverSettings = response.body();
@@ -235,13 +295,15 @@
                             userSettings = serverLocalSettings;
                             updateSettingsUI();
 
-                            // Применяем тему
                             if (isFragmentAttached && getActivity() != null) {
                                 App.saveAndApplyTheme(requireContext(), serverLocalSettings.getTheme());
                             }
 
                             Log.d("Settings", "Settings updated from server");
                         }
+                    }
+                    if (currentCall == call) {
+                        currentCall = null;
                     }
                 }
 
@@ -250,7 +312,13 @@
                     if (!isFragmentAttached || !isAdded() || getActivity() == null) {
                         return;
                     }
-                    Log.e("Settings", "Failed to load settings from server", t);
+
+                    timeoutHandler.removeCallbacks(timeoutRunnable);
+
+                    if (currentCall == call) {
+                        currentCall = null;
+                    }
+                    Log.d("Settings", "Failed to load settings from server: " + t.getMessage());
                 }
             });
         }
@@ -499,17 +567,14 @@
 
             tvTitle.setText(getString(R.string.language_label));
 
-            // Список языков
             List<Language> languages = Arrays.asList(Language.RU, Language.EN);
             List<String> languageNames = new ArrayList<>();
             for (Language lang : languages) {
                 languageNames.add(lang.getDisplayName(requireContext()));
             }
 
-            // Создаем адаптер
             UnitSelectionAdapter adapter = new UnitSelectionAdapter(languageNames, null);
 
-            // Находим текущую позицию
             int currentPosition = languages.indexOf(userSettings.getLanguage());
             adapter.setSelectedPosition(currentPosition);
 
@@ -528,15 +593,10 @@
                     Language selectedLang = languages.get(selectedPos);
 
                     if (selectedLang != userSettings.getLanguage()) {
-                        // Сохраняем язык в настройках
                         userSettings.setLanguage(selectedLang);
                         saveSettings();
 
-                        // Применяем локаль
-                        LocaleHelper.setLocale(requireContext(), selectedLang.getValue());
-
-                        // Перезапускаем активность для обновления интерфейса
-                        requireActivity().recreate();
+                        Toast.makeText(getContext(), R.string.language_change_notice, Toast.LENGTH_SHORT).show();
                     }
                 }
                 dialog.dismiss();
@@ -547,20 +607,6 @@
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             }
-        }
-
-        private int getSavedLanguageIndex() {
-            String lang = LocaleHelper.getLanguage(requireContext());
-            return lang.equalsIgnoreCase("ru") ? 0 : 1;
-        }
-
-        private void restartApp() {
-            if (getActivity() == null) return;
-
-            Intent intent = new Intent(requireContext(), MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            getActivity().finishAffinity(); // Корректное завершение вместо exit(0)
         }
 
 
