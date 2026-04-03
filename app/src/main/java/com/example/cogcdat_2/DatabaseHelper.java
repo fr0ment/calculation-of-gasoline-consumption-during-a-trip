@@ -561,7 +561,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         try {
             SyncManager syncManager = SyncManager.getInstance(context);
             if (syncManager.getSavedToken() != null) {
-                syncManager.syncAll();
+                syncManager.triggerSync();
             }
         } catch (Exception e) {
             Log.e(TAG, "Ошибка при запуске синхронизации: " + e.getMessage());

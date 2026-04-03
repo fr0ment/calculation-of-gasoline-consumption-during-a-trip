@@ -396,7 +396,7 @@
                     Toast.makeText(getContext(), getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show();
                     return;
                 }
-                syncManager.syncAll();
+                syncManager.triggerSync();
                 Toast.makeText(getContext(), R.string.sync_started, Toast.LENGTH_SHORT).show();
             });
             btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());

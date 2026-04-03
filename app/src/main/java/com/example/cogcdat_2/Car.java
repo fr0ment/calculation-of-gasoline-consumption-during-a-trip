@@ -97,10 +97,6 @@ public class Car {
     public String getOwnerId() { return ownerId; }
     public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
 
-    public void incrementImageVersion() {
-        this.imageVersion++;
-    }
-
     @Override
     public String toString() {
         return name;

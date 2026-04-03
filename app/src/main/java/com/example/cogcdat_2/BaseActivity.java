@@ -65,12 +65,4 @@ public abstract class BaseActivity extends AppCompatActivity {
         return unit;
     }
 
-    public static String formatFuelConsumption(Context context, double consumption, Car car) {
-        if (car == null) return String.format(Locale.getDefault(), "%.2f л/100км", consumption);
-
-        String fuelUnit = getLocalizedFuelUnit(context, car.getFuelUnit());
-        String consumptionUnit = context.getString(R.string.consumption_unit_km);
-
-        return String.format(Locale.getDefault(), "%.2f %s/%s", consumption, fuelUnit, consumptionUnit);
-    }
 }

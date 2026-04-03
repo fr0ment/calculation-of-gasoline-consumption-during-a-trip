@@ -3,6 +3,7 @@ package com.example.cogcdat_2.sync;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
@@ -346,7 +347,16 @@ public class SyncManager {
             }
         });
     }
+    private Handler syncHandler = new Handler();
+    private Runnable syncRunnable;
 
+    public void triggerSync() {
+        if (syncRunnable != null) {
+            syncHandler.removeCallbacks(syncRunnable);
+        }
+        syncRunnable = () -> syncAll();
+        syncHandler.postDelayed(syncRunnable, 100);
+    }
     private UserSettings getUserSettingsDirect(String userId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.query("user_settings", null,

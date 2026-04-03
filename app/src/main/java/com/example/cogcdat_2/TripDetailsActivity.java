@@ -117,7 +117,7 @@ public class TripDetailsActivity extends BaseActivity {
         String fuelUnit = getLocalizedFuelUnit(car);
 
         // Получаем единицы расстояния из настроек пользователя
-        DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+        DistanceUnit distanceUnit = userSettings != null ? userSettings.getDistanceUnit() : DistanceUnit.KM;
         String distanceUnitSymbol = distanceUnit.getDisplayName(this);
 
         // Конвертируем расстояние в выбранные единицы

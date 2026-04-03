@@ -554,7 +554,7 @@ public class TripsFragment extends Fragment {
                 String fuelUnit = getLocalizedFuelUnit(car);
 
                 // Получаем единицы расстояния из настроек пользователя
-                DistanceUnit distanceUnit = userSettings.getDistanceUnit();
+                DistanceUnit distanceUnit = userSettings != null ? userSettings.getDistanceUnit() : DistanceUnit.KM;
                 String distanceUnitSymbol = distanceUnit.getDisplayName(requireContext());
 
                 tripHolder.tvName.setText(trip.getName());
