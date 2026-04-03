@@ -152,7 +152,7 @@
 
     <!-- Язык -->
     <string name="lang_russian">Русский</string>
-    <string name="lang_english">Английский</string>
+    <string name="lang_english">English</string>
 
     <!-- Дополнительно для экранов -->
     <string name="your_cars">Ваши Автомобили</string>

@@ -310,7 +310,6 @@
                         android:gravity="center_vertical"
                         android:layout_marginBottom="16dp"
                         android:padding="12dp"
-                        android:background="@color/card_background"
                         android:visibility="gone">
 
                         <ProgressBar

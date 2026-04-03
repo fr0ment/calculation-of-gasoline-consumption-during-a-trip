@@ -593,10 +593,15 @@
                     Language selectedLang = languages.get(selectedPos);
 
                     if (selectedLang != userSettings.getLanguage()) {
+                        // Сохраняем язык в настройках
                         userSettings.setLanguage(selectedLang);
                         saveSettings();
 
-                        Toast.makeText(getContext(), R.string.language_change_notice, Toast.LENGTH_SHORT).show();
+                        // Применяем локаль
+                        LocaleHelper.setLocale(requireContext(), selectedLang.getValue());
+
+                        // Перезапускаем активность для обновления интерфейса
+                        requireActivity().recreate();
                     }
                 }
                 dialog.dismiss();
