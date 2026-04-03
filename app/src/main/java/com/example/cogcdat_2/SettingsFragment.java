@@ -143,12 +143,6 @@
             updateUI();
             updateSettingsUI();
             updateLastSyncTime();
-
-            // Если есть интернет, пытаемся обновить
-            if (isNetworkAvailable() && syncManager.getSavedToken() != null) {
-                loadUserProfile();
-                loadSettingsFromServerWithTimeout();
-            }
         }
 
         private void initViews(View view) {
@@ -396,8 +390,7 @@
                     Toast.makeText(getContext(), getString(R.string.no_internet_connection), Toast.LENGTH_SHORT).show();
                     return;
                 }
-                syncManager.triggerSync();
-                Toast.makeText(getContext(), R.string.sync_started, Toast.LENGTH_SHORT).show();
+                syncManager.syncAll();
             });
             btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
             btnDeleteAccount.setOnClickListener(v -> showDeleteAccountConfirmation());

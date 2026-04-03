@@ -5,7 +5,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.appcompat.app.AppCompatDelegate;
 
+import com.example.cogcdat_2.sync.SyncManager;
+import com.example.cogcdat_2.sync.SyncScheduler;
+
 public class App extends Application {
+
+    private SyncScheduler syncScheduler;
 
     @Override
     public void onCreate() {
@@ -15,6 +20,23 @@ public class App extends Application {
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         String themeValue = prefs.getString("theme", Theme.SYSTEM.getValue());
         applyTheme(Theme.fromValue(themeValue));
+
+        // Запускаем периодическую синхронизацию
+        SyncManager syncManager = SyncManager.getInstance(this);
+        if (syncManager.getSavedToken() != null) {
+            syncScheduler = SyncScheduler.getInstance(syncManager);
+            syncScheduler.startPeriodicSync();
+        }
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        // Синхронизация при закрытии приложения
+        if (syncScheduler != null) {
+            syncScheduler.syncOnAppExit();
+            syncScheduler.stopPeriodicSync();
+        }
     }
 
     public static void applyTheme(Theme theme) {
@@ -33,14 +55,10 @@ public class App extends Application {
     }
 
     public static void saveAndApplyTheme(Context context, Theme theme) {
-        // Сохраняем в SharedPreferences
         context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
                 .edit()
                 .putString("theme", theme.getValue())
                 .apply();
-
-        // Применяем тему немедленно
         applyTheme(theme);
     }
-
 }

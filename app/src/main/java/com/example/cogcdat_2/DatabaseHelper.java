@@ -225,7 +225,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Вызываем синхронизацию только если нужно
         if (triggerSync) {
-            triggerSync();
         }
     }
 
@@ -272,7 +271,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         if (result != -1) {
             car.setId(id);
-            triggerSync();
             return id;
         }
         return null;
@@ -351,9 +349,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_ID + " = ?", new String[]{car.getId()});
         db.close();
 
-        if (rowsAffected > 0) {
-            triggerSync();
-        }
         return rowsAffected > 0;
     }
 
@@ -370,9 +365,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_ID + " = ?", new String[]{carId});
         db.close();
 
-        if (rowsAffected > 0) {
-            triggerSync();
-        }
         return rowsAffected > 0;
     }
 
@@ -382,9 +374,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 new String[]{carId});
         db.close();
 
-        if (rowsAffected > 0) {
-            triggerSync();
-        }
         return rowsAffected > 0;
     }
 
@@ -434,7 +423,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         if (result != -1) {
             trip.setId(id);
-            triggerSync();
             return id;
         }
         return null;
@@ -509,9 +497,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_TRIP_ID + " = ?", new String[]{trip.getId()});
         db.close();
 
-        if (rowsAffected > 0) {
-            triggerSync();
-        }
         return rowsAffected > 0;
     }
 
@@ -527,7 +512,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TABLE_TRIPS, values, COLUMN_TRIP_ID + " = ?", new String[]{tripId});
         db.close();
 
-        triggerSync();
     }
 
     public void permanentDeleteTrip(String tripId) {
@@ -535,7 +519,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.delete(TABLE_TRIPS, COLUMN_TRIP_ID + " = ?", new String[]{tripId});
         db.close();
 
-        triggerSync();
     }
 
     private Trip extractTripFromCursor(Cursor cursor) {
@@ -555,18 +538,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return trip;
     }
 
-    // ========== СИНХРОНИЗАЦИЯ ==========
-
-    private void triggerSync() {
-        try {
-            SyncManager syncManager = SyncManager.getInstance(context);
-            if (syncManager.getSavedToken() != null) {
-                syncManager.triggerSync();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Ошибка при запуске синхронизации: " + e.getMessage());
-        }
-    }
 
     public Context getContext() {
         return context;

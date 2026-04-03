@@ -264,11 +264,6 @@ public class SyncManager {
         return syncStatus;
     }
 
-    private String getLastSyncTime() {
-        return context.getSharedPreferences("sync", Context.MODE_PRIVATE)
-                .getString(PREF_LAST_SYNC, null);
-    }
-
     private void saveLastSyncTime() {
         String now = DB_DATE_FORMAT.format(new Date());
         context.getSharedPreferences("sync", Context.MODE_PRIVATE)
@@ -350,13 +345,6 @@ public class SyncManager {
     private Handler syncHandler = new Handler();
     private Runnable syncRunnable;
 
-    public void triggerSync() {
-        if (syncRunnable != null) {
-            syncHandler.removeCallbacks(syncRunnable);
-        }
-        syncRunnable = () -> syncAll();
-        syncHandler.postDelayed(syncRunnable, 100);
-    }
     private UserSettings getUserSettingsDirect(String userId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.query("user_settings", null,
@@ -745,6 +733,58 @@ public class SyncManager {
         } catch (IOException e) {
             Log.e(TAG, "Error saving image", e);
         }
+    }
+    /**
+     * Синхронная синхронизация (для выхода из приложения)
+     */
+    public void syncAllSync() {
+        if (getSavedToken() == null) {
+            Log.d(TAG, "No token, skipping sync");
+            return;
+        }
+
+        try {
+            List<ApiCar> apiCars = new ArrayList<>();
+            for (Car car : dbHelper.getAllCars(true)) {
+                apiCars.add(new ApiCar(car));
+            }
+
+            List<ApiTrip> apiTrips = new ArrayList<>();
+            for (Trip trip : getAllTrips(true)) {
+                apiTrips.add(new ApiTrip(trip));
+            }
+
+            ApiUserSettings apiSettings = null;
+            if (currentUserId != null) {
+                UserSettings settings = getUserSettingsDirect(currentUserId);
+                if (settings != null) {
+                    apiSettings = new ApiUserSettings(settings);
+                }
+            }
+
+            String lastSync = getLastSyncTime();
+            SyncRequest request = new SyncRequest(lastSync, apiCars, apiTrips, apiSettings);
+
+            retrofit2.Response<SyncResponse> response = apiService
+                    .syncData("Bearer " + getSavedToken(), request)
+                    .execute(); // Синхронный вызов!
+
+            if (response.isSuccessful() && response.body() != null) {
+                processSyncResponse(response.body());
+                saveLastSyncTime();
+                Log.d(TAG, "Final sync completed successfully");
+            } else {
+                Log.e(TAG, "Final sync failed: " + response.code());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Final sync error", e);
+        }
+    }
+
+    // Добавьте этот метод, если его нет (для получения lastSyncTime)
+    private String getLastSyncTime() {
+        return context.getSharedPreferences("sync", Context.MODE_PRIVATE)
+                .getString(PREF_LAST_SYNC, null);
     }
 
 }
